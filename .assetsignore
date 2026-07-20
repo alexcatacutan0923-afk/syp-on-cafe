@@ -1,4 +1,8 @@
 _worker.js
-_routes.json
-_headers
-_redirects
+wrangler.jsonc
+.assetsignore
+PHASE1_1_README.txt
+PHASE1_2_INSTALL.txt
+PHASE2_INSTALL.txt
+README.txt
+V3_INSTALL.txt
