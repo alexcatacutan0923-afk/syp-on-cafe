@@ -1,0 +1,24 @@
+SYP ON CAFE V3 INSTALL
+
+1) APPS SCRIPT
+- Add ACCOUNT_API.GS.txt as a new script file if not already added.
+- Add V3_API.GS.txt as a new script file.
+- Open the REAL doGet(e) in SYPLOYALTY-CODE.gs.
+- Paste the exact block from DOGET_INSERT.txt immediately after function doGet(e) {
+- Save and Deploy > Manage deployments > Edit > New version > Deploy.
+
+2) TEST API
+Open:
+YOUR_APPS_SCRIPT_URL?action=v3api&payload=e30=
+Expected: JSON, not an HTML page. "Unknown V3 action" is okay for this test.
+
+3) CLOUDFLARE
+Upload all website files EXCEPT the APPS_SCRIPT_PATCH folder.
+The _worker.js file must be in the upload root.
+
+4) TEST
+/account/ - login/create/activate
+/order/ - native menu/cart/checkout
+/track/ - native tracking
+
+No Guest Checkout or Find Order button should redirect to script.google.com anymore.

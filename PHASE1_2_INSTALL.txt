@@ -1,0 +1,19 @@
+SYP ON CAFE - PHASE 1.2 MENU FIX
+
+FIX INCLUDED:
+The menu API is now self-contained and no longer calls getProducts().
+This resolves: ReferenceError: getProducts is not defined.
+
+APPS SCRIPT:
+1. Open APPS_SCRIPT_PATCH/SYPLOYALTY-CODE.gs.txt
+2. Replace the content of your current SYPLOYALTY-CODE.gs only.
+3. Save.
+4. Deploy > Manage deployments > Edit > New version > Deploy.
+5. Test:
+   .../exec?action=menu
+
+Expected output:
+{"success":true,"products":[...],"updatedAt":"..."}
+
+CLOUDFLARE:
+Upload the SYP_ON_CAFE_PHASE1_2_MENU folder only after the API test succeeds.

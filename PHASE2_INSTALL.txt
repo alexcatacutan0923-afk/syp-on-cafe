@@ -1,0 +1,24 @@
+SYP ON CAFE PHASE 2 - ACCOUNTS
+
+1) GOOGLE APPS SCRIPT
+- Add a NEW script file named ACCOUNT_API.GS
+- Copy everything from APPS_SCRIPT_PATCH/ACCOUNT_API.GS.txt
+- Save.
+- Deploy > Manage deployments > Edit > New version > Deploy.
+- Keep Execute as: Me and Who has access: Anyone.
+
+2) CLOUDFLARE
+- Do NOT upload APPS_SCRIPT_PATCH to Cloudflare.
+- Upload every website file/folder including _worker.js.
+- _worker.js creates the same-domain /api/account proxy.
+
+3) TEST
+- Open /account
+- Create a test account with a NEW mobile number.
+- Test Log Out and Log In.
+- For an old member, use Old Member and enter exact SYP ID, registered mobile, and birthday.
+
+IMPORTANT
+- Existing member stamps and IDs are not reset.
+- Passwords are stored as salted repeated SHA-256 hashes in a new CustomerAuth sheet.
+- Sessions are stored in AuthSessions and expire after 7 days.

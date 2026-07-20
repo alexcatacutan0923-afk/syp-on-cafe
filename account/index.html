@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#4a2c20" />
+  <meta name="description" content="SYP ON CAFÉ digital loyalty membership and account portal." />
+  <title>SYP ON CAFÉ — Loyalty</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <div class="ambient ambient-one"></div>
+  <div class="ambient ambient-two"></div>
+
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="SYP ON CAFÉ home">
+      <span class="brand-mark"><img src="assets/logo.webp" alt="SYP ON CAFÉ logo"></span>
+      <span class="brand-copy"><strong>SYP ON CAFÉ</strong><small>Street • Iced • Brewed</small></span>
+    </a>
+    <nav class="header-actions" aria-label="Account navigation">
+      <a class="header-link" href="/">← Back to dashboard</a>
+      <a class="header-link" href="/order/">Order now</a>
+      <button class="ghost-button hidden" id="headerLogout" type="button">Log out</button>
+    </nav>
+  </header>
+
+  <main class="shell">
+    <section class="view active" id="homeView" data-view="home">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <span class="eyebrow">DIGITAL LOYALTY</span>
+          <h1>Your coffee rewards, always with you.</h1>
+          <p>Join SYP ON CAFÉ, collect stamps, track your reward, and keep your membership in one simple account.</p>
+          <div class="hero-actions">
+            <button class="primary-button" type="button" data-open="register">Create account</button>
+            <button class="secondary-button" type="button" data-open="login">Log in</button>
+          </div>
+          <button class="text-button" type="button" data-open="activate">Already a member? Activate your old loyalty account</button>
+        </div>
+
+        <div class="loyalty-preview" aria-label="Loyalty card preview">
+          <div class="preview-top">
+            <div>
+              <small>SYP ON CAFÉ</small>
+              <h2>KaSyp! Loyalty</h2>
+            </div>
+            <span class="preview-chip">MEMBER</span>
+          </div>
+          <div class="cup-symbol">☕</div>
+          <div class="preview-progress">
+            <div class="progress-copy"><span>7 stamps</span><span>3 to free drink</span></div>
+            <div class="progress-track"><span style="width:70%"></span></div>
+          </div>
+          <div class="preview-footer"><span>SYP0001</span><span>Apollo, Orani</span></div>
+        </div>
+      </div>
+
+      <div class="feature-row">
+        <article><span>01</span><h3>Collect stamps</h3><p>Your progress updates in your digital account.</p></article>
+        <article><span>02</span><h3>See rewards</h3><p>Know instantly when your free drink is ready.</p></article>
+        <article><span>03</span><h3>Stay connected</h3><p>Your membership remains available on any device.</p></article>
+      </div>
+    </section>
+
+    <section class="view auth-view" id="authView" data-view="auth">
+      <div class="auth-card">
+        <a class="back-button" id="backHome" href="/" aria-label="Back to main website">← Back to website</a>
+
+        <div class="auth-tabs" role="tablist" aria-label="Account options">
+          <button type="button" class="tab active" data-tab="login">Log in</button>
+          <button type="button" class="tab" data-tab="register">Create</button>
+          <button type="button" class="tab" data-tab="activate">Activate</button>
+        </div>
+
+        <div class="form-panel active" data-panel="login">
+          <div class="panel-heading"><span class="eyebrow">WELCOME BACK</span><h2>Log in to your account</h2><p>Use the mobile number and password you registered.</p></div>
+          <form id="loginForm" novalidate>
+            <label>Mobile number<input name="mobile" type="tel" inputmode="numeric" autocomplete="tel" placeholder="09XXXXXXXXX" required /></label>
+            <label>Password<input name="password" type="password" autocomplete="current-password" placeholder="Your password" required /></label>
+            <button class="primary-button full" type="submit">Log in</button>
+          </form>
+        </div>
+
+        <div class="form-panel" data-panel="register">
+          <div class="panel-heading"><span class="eyebrow">NEW MEMBER</span><h2>Create your loyalty account</h2><p>Register once and start collecting stamps.</p></div>
+          <form id="registerForm" novalidate>
+            <label>Full name<input name="name" type="text" autocomplete="name" placeholder="Your full name" required /></label>
+            <label>Mobile number<input name="mobile" type="tel" inputmode="numeric" autocomplete="tel" placeholder="09XXXXXXXXX" required /></label>
+            <label>Birthday<span class="date-wrap"><input name="birthday" type="date" autocomplete="bday" required /></span></label>
+            <label>Password<input name="password" type="password" autocomplete="new-password" placeholder="At least 8 characters" required /></label>
+            <label>Confirm password<input name="confirmPassword" type="password" autocomplete="new-password" placeholder="Repeat password" required /></label>
+            <label>Referral code <small>(optional)</small><input name="referrer" type="text" autocapitalize="characters" placeholder="Example: SYP0001" /></label>
+            <button class="primary-button full" type="submit">Create account</button>
+          </form>
+        </div>
+
+        <div class="form-panel" data-panel="activate">
+          <div class="panel-heading"><span class="eyebrow">EXISTING MEMBER</span><h2>Activate your old membership</h2><p>Connect your existing SYP member ID to a secure login.</p></div>
+          <form id="activateForm" novalidate>
+            <label>Member ID<input name="customerId" type="text" autocapitalize="characters" placeholder="SYP0001" required /></label>
+            <label>Mobile number<input name="mobile" type="tel" inputmode="numeric" autocomplete="tel" placeholder="09XXXXXXXXX" required /></label>
+            <label>Birthday<span class="date-wrap"><input name="birthday" type="date" autocomplete="bday" required /></span></label>
+            <label>Create password<input name="password" type="password" autocomplete="new-password" placeholder="At least 8 characters" required /></label>
+            <label>Confirm password<input name="confirmPassword" type="password" autocomplete="new-password" placeholder="Repeat password" required /></label>
+            <button class="primary-button full" type="submit">Activate membership</button>
+          </form>
+        </div>
+
+        <div id="authMessage" class="message" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="view dashboard-view" id="dashboardView" data-view="dashboard">
+      <div class="dashboard-heading">
+        <div>
+          <a class="dashboard-back" href="/">← Back to main dashboard</a>
+          <span class="eyebrow">MY SYP ACCOUNT</span>
+          <h1 id="welcomeName">Welcome back</h1>
+          <p>Your rewards, visits, and member benefits — all in one beautiful space.</p>
+        </div>
+        <div class="heading-badges">
+          <span class="status-pill" id="accountStatus">ACTIVE</span>
+          <span class="member-tier">KASYP! MEMBER</span>
+        </div>
+      </div>
+
+      <div class="quick-actions" aria-label="Quick actions">
+        <a href="/order/" class="quick-action primary-quick"><span>☕</span><div><strong>Order your favorites</strong><small>Fast pickup or delivery</small></div><b>→</b></a>
+        <a href="/menu/" class="quick-action"><span>📖</span><div><strong>Browse the menu</strong><small>See every drink and bite</small></div><b>→</b></a>
+        <a href="/track/" class="quick-action"><span>📦</span><div><strong>Track an order</strong><small>Check your order status</small></div><b>→</b></a>
+      </div>
+
+      <div class="dashboard-grid">
+        <article class="member-card">
+          <div class="member-card-top"><div><small>SYP ON CAFÉ</small><h2>Digital Membership</h2></div><span id="memberId">SYP----</span></div>
+          <div class="member-identity">
+            <div class="avatar" id="avatar">S</div>
+            <div><h3 id="memberName">Member</h3><p id="memberMobile">09•••0000</p></div>
+          </div>
+          <div class="stamp-count"><strong id="stampNumber">0</strong><span>/ 10 stamps</span></div>
+          <div class="progress-track large"><span id="stampProgress" style="width:0%"></span></div>
+          <div class="stamp-dots" id="stampDots" aria-label="Loyalty stamp progress"></div>
+          <div class="reward-banner" id="rewardBanner">10 stamps = 1 free drink</div>
+        </article>
+
+        <div class="side-stack">
+          <article class="info-card"><span class="card-icon">🎁</span><div><small>REWARD STATUS</small><h3 id="rewardTitle">Keep sipping</h3><p id="rewardCopy">Your next free drink is getting closer.</p></div></article>
+          <article class="info-card"><span class="card-icon">🤝</span><div><small>REFERRALS</small><h3 id="referralCount">0 friends</h3><p>Share your member ID with friends when they register.</p></div></article>
+          <article class="info-card"><span class="card-icon">⭐</span><div><small>LIFETIME STAMPS</small><h3 id="totalStamps">0 stamps</h3><p>Your total recorded loyalty activity.</p></div></article>
+        </div>
+      </div>
+
+      <section class="journey-section">
+        <div class="section-heading"><div><span class="eyebrow">YOUR CAFÉ JOURNEY</span><h2>Small sips, memorable moments.</h2></div><span class="journey-note">Every visit gets you closer.</span></div>
+        <div class="journey-grid">
+          <article class="journey-card featured">
+            <span class="journey-icon">🌙</span>
+            <div><small>LATE-NIGHT MEMBER</small><h3>Made for your after-hours coffee runs.</h3><p>Enjoy rewards while SYP ON CAFÉ keeps serving until 4AM.</p></div>
+          </article>
+          <article class="journey-card"><span class="journey-icon">🎂</span><div><small>BIRTHDAY PERK</small><h3>A little birthday surprise</h3><p>Keep your birthday details updated for member-only treats.</p></div></article>
+          <article class="journey-card"><span class="journey-icon">💛</span><div><small>MEMBER TIP</small><h3>Share your ID</h3><p>Use your member ID as a referral code when friends join.</p></div></article>
+        </div>
+      </section>
+
+      <div class="account-tools">
+        <article class="tool-card">
+          <div><span class="eyebrow">SECURITY</span><h2>Change password</h2><p>Update your password while logged in.</p></div>
+          <form id="passwordForm" novalidate>
+            <label>Current password<input name="currentPassword" type="password" autocomplete="current-password" required /></label>
+            <label>New password<input name="newPassword" type="password" autocomplete="new-password" required /></label>
+            <label>Confirm new password<input name="confirmPassword" type="password" autocomplete="new-password" required /></label>
+            <button class="secondary-button" type="submit">Update password</button>
+          </form>
+          <div id="passwordMessage" class="message" aria-live="polite"></div>
+        </article>
+        <article class="tool-card contact-card">
+          <span class="eyebrow">VISIT US</span><h2>See you tonight.</h2>
+          <p>Apollo, Orani, Bataan<br />Besides 7‑Eleven &amp; in front of Mangan Tamu</p>
+          <strong>Open daily • 5PM–4AM</strong>
+          <div class="visit-actions"><a href="/">Main website</a><a href="/order/">Order now</a></div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <div class="loading-overlay hidden" id="loadingOverlay" aria-live="polite" aria-busy="true">
+    <div class="loader"></div><p id="loadingText">Please wait…</p>
+  </div>
+
+  <script src="assets/app.js" defer></script>
+</body>
+</html>
