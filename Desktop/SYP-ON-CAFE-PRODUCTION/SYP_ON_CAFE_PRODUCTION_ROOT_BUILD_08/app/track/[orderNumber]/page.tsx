@@ -36,6 +36,7 @@ type TrackedOrder = {
   delivery_fee: number;
   total: number;
   payment_method: string | null;
+  payment_status?: string | null;
   created_at: string;
   rider_name: string | null;
   rider_mobile: string | null;
@@ -120,6 +121,20 @@ function formatDateTime(value: string) {
   }).format(new Date(value));
 }
 
+
+function extractRiderTip(notes: string | null | undefined) {
+  const match = String(notes || "").match(/\[RIDER TIP: ₱([0-9]+)\]/i);
+  return match ? Number(match[1]) : 0;
+}
+
+function cleanCustomerNotes(notes: string | null | undefined) {
+  return String(notes || "")
+    .split("\n")
+    .filter((line) => !/^\[(RIDER TIP|GCASH PAYMENT):/i.test(line.trim()))
+    .join("\n")
+    .trim();
+}
+
 export default function TrackOrderPage() {
   const params = useParams<{ orderNumber: string }>();
   const rawOrderNumber = params?.orderNumber;
@@ -148,7 +163,7 @@ export default function TrackOrderPage() {
         const { data: orderRow, error: orderError } = await supabase
           .from("orders")
           .select(
-            "id, order_number, customer_name, order_type, address, notes, status, subtotal, delivery_fee, total, payment_method, created_at, rider_name, rider_mobile, rider_vehicle, rider_eta, accepted_by_rider_at, out_for_delivery_at, delivered_at",
+            "id, order_number, customer_name, order_type, address, notes, status, subtotal, delivery_fee, total, payment_method, payment_status, created_at, rider_name, rider_mobile, rider_vehicle, rider_eta, accepted_by_rider_at, out_for_delivery_at, delivered_at",
           )
           .eq("order_number", decodeURIComponent(orderNumber))
           .maybeSingle();
@@ -238,6 +253,34 @@ const currentStepIndex = useMemo(() => {
     (step) => step.status === order.status,
   );
 }, [order, visibleTrackingSteps]);
+
+  const riderTip = useMemo(() => extractRiderTip(order?.notes), [order?.notes]);
+  const customerNotes = useMemo(() => cleanCustomerNotes(order?.notes), [order?.notes]);
+  const customerTotal = Number(order?.total ?? 0) + riderTip;
+
+  function printReceipt() {
+    window.print();
+  }
+
+  async function shareOrder() {
+    if (!order) return;
+    const shareData = {
+      title: `SYP ON CAFÉ • ${order.order_number}`,
+      text: `Track my SYP ON CAFÉ order ${order.order_number}.`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard?.writeText(window.location.href);
+        alert("Tracking link copied.");
+      }
+    } catch {
+      // The customer may close the native share sheet.
+    }
+  }
 
 if (isLoading) {
   return (
@@ -505,7 +548,7 @@ if (isLoading) {
                     />
                     <DetailRow
                       label="Payment"
-                      value={order.payment_method || "Not specified"}
+                      value={`${order.payment_method || "Not specified"} • ${order.payment_status || "pending"}`}
                     />
                     {order.order_type === "delivery" &&
                       order.address && (
@@ -529,27 +572,50 @@ if (isLoading) {
                       label="Delivery Fee"
                       value={formatCurrency(order.delivery_fee)}
                     />
+                    {riderTip > 0 && (
+                      <PriceRow
+                        label="Rider Tip"
+                        value={formatCurrency(riderTip)}
+                      />
+                    )}
                     <div className="border-t border-white/10 pt-4">
                       <PriceRow
                         label="Total"
-                        value={formatCurrency(order.total)}
+                        value={formatCurrency(customerTotal)}
                         strong
                       />
                     </div>
                   </div>
                 </section>
 
-                {order.notes && (
+                {customerNotes && (
                   <section className="rounded-3xl border border-amber-400/20 bg-amber-400/5 p-6">
                     <p className="text-sm font-black uppercase tracking-wide text-amber-400">
                       Order Notes
                     </p>
                     <p className="mt-3 leading-6 text-neutral-200">
-                      {order.notes}
+                      {customerNotes}
                     </p>
                   </section>
                 )}
               </div>
+            </section>
+
+            <section className="mt-6 flex flex-wrap justify-center gap-3 print:hidden">
+              <button
+                type="button"
+                onClick={printReceipt}
+                className="rounded-full border border-white/15 px-5 py-3 font-bold"
+              >
+                Print / Save Receipt
+              </button>
+              <button
+                type="button"
+                onClick={() => void shareOrder()}
+                className="rounded-full bg-amber-400 px-5 py-3 font-bold text-black"
+              >
+                Share Order
+              </button>
             </section>
 
             <p className="mt-8 text-center text-sm text-neutral-600">

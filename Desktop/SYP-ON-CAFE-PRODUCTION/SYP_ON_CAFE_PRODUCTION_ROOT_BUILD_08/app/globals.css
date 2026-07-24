@@ -24,3 +24,10 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+
+@media print {
+  header, nav, .print\:hidden { display: none !important; }
+  body, main { background: white !important; color: black !important; }
+  section, article, div { box-shadow: none !important; }
+}

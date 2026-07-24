@@ -170,6 +170,7 @@ export default function AdminPage() {
   const [newOrderAlert, setNewOrderAlert] = useState("");
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [currentTime, setCurrentTime] = useState(Date.now());
+  const [paymentUpdatingOrderId, setPaymentUpdatingOrderId] = useState<number | null>(null);
   const [riderDrafts, setRiderDrafts] = useState<
     Record<
       number,
@@ -491,6 +492,12 @@ export default function AdminPage() {
     0,
   );
 
+  const gcashPendingCount = orders.filter(
+    (order) =>
+      order.payment_method === "gcash" &&
+      String(order.payment_status || "pending").toLowerCase() !== "paid",
+  ).length;
+
   function getRiderDraft(order: Order) {
     return (
       riderDrafts[order.id] ?? {
@@ -672,6 +679,38 @@ export default function AdminPage() {
     }
   }
 
+
+  async function updatePaymentStatus(order: Order, paymentStatus: "paid" | "pending") {
+    setPaymentUpdatingOrderId(order.id);
+    setErrorMessage("");
+
+    try {
+      const { error } = await supabase
+        .from("orders")
+        .update({ payment_status: paymentStatus })
+        .eq("id", order.id);
+
+      if (error) throw error;
+
+      setOrders((currentOrders) =>
+        currentOrders.map((currentOrder) =>
+          currentOrder.id === order.id
+            ? { ...currentOrder, payment_status: paymentStatus }
+            : currentOrder,
+        ),
+      );
+    } catch (error) {
+      console.error("Failed to update payment status:", error);
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to update the payment status.",
+      );
+    } finally {
+      setPaymentUpdatingOrderId(null);
+    }
+  }
+
   async function updateOrderStatus(
     orderId: number,
     status: OrderStatus,
@@ -839,7 +878,7 @@ export default function AdminPage() {
       )}
 
       <div className="mx-auto max-w-7xl px-5 py-8">
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5 xl:grid-cols-9">
           <DashboardCard
             label="Orders Today"
             value={ordersToday.length}
@@ -864,6 +903,10 @@ export default function AdminPage() {
           <DashboardCard
             label="Completed"
             value={completedToday.length}
+          />
+          <DashboardCard
+            label="GCash Pending"
+            value={gcashPendingCount}
           />
           <DashboardCard
             label="Sales Today"
@@ -1053,10 +1096,37 @@ export default function AdminPage() {
                           </>
                         )}
 
-                        <p className="mt-3 text-sm capitalize text-neutral-500">
-                          Payment: {order.payment_method} •{" "}
-                          {order.payment_status}
-                        </p>
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <span className={`rounded-full border px-3 py-1 text-xs font-bold uppercase ${
+                            String(order.payment_status || "pending").toLowerCase() === "paid"
+                              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                              : "border-amber-400/30 bg-amber-400/10 text-amber-300"
+                          }`}>
+                            {order.payment_method} • {order.payment_status || "pending"}
+                          </span>
+
+                          {order.payment_method === "gcash" && (
+                            <button
+                              type="button"
+                              disabled={paymentUpdatingOrderId === order.id}
+                              onClick={() =>
+                                void updatePaymentStatus(
+                                  order,
+                                  String(order.payment_status || "pending").toLowerCase() === "paid"
+                                    ? "pending"
+                                    : "paid",
+                                )
+                              }
+                              className="rounded-full border border-sky-400/40 px-3 py-1 text-xs font-bold text-sky-300 disabled:opacity-50"
+                            >
+                              {paymentUpdatingOrderId === order.id
+                                ? "Saving..."
+                                : String(order.payment_status || "pending").toLowerCase() === "paid"
+                                  ? "Mark Unpaid"
+                                  : "Verify GCash"}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
 

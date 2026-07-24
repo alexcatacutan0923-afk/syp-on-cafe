@@ -2,9 +2,21 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { supabase } from "@/lib/supabase";
 import MemberShell from "../components/member/MemberShell";
 import { clearMemberSession, getCurrentMember, MemberProfile, updateCurrentMember } from "@/lib/member-store";
 import "./member.css";
+
+type CustomerOrder = {
+  id: number;
+  order_number: string;
+  status: string;
+  order_type: string;
+  payment_method: string | null;
+  total: number;
+  created_at: string;
+};
 
 const spinRewards = ["Free 16oz Drink", "+1 Bonus Stamp", "10% Off", "Free Small Fries", "Try Again", "+2 Bonus Stamps"];
 
@@ -17,6 +29,8 @@ export default function MemberDashboardPage() {
   const [referralCopied, setReferralCopied] = useState(false);
   const [editing, setEditing] = useState(false);
   const [profileDraft, setProfileDraft] = useState({ name: "", birthday: "", favoriteDrink: "" });
+  const [customerOrders, setCustomerOrders] = useState<CustomerOrder[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
 
   useEffect(() => {
     const current = getCurrentMember();
@@ -25,12 +39,46 @@ export default function MemberDashboardPage() {
     setProfileDraft({ name: current.name, birthday: current.birthday, favoriteDrink: current.favoriteDrink });
   }, [router]);
 
+  useEffect(() => {
+    if (!member?.mobile) return;
+
+    let active = true;
+    setOrdersLoading(true);
+
+    void supabase
+      .from("orders")
+      .select("id, order_number, status, order_type, payment_method, total, created_at")
+      .eq("mobile", member.mobile.replace(/\s+/g, ""))
+      .order("created_at", { ascending: false })
+      .limit(12)
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) {
+          console.error("Unable to load member orders:", error);
+          setCustomerOrders([]);
+        } else {
+          setCustomerOrders((data ?? []).map((order) => ({
+            ...order,
+            total: Number(order.total ?? 0),
+          })) as CustomerOrder[]);
+        }
+        setOrdersLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [member?.mobile]);
+
   const currentMonth = "2026-07";
   const visitedDays = useMemo(() => new Set((member?.visits ?? []).filter(date => date.startsWith(currentMonth)).map(date => Number(date.slice(-2)))), [member]);
   const days = useMemo(() => Array.from({ length: 31 }, (_, i) => i + 1), []);
   const initials = useMemo(() => member?.name.split(" ").filter(Boolean).slice(0, 2).map(part => part[0]).join("").toUpperCase() || "SY", [member]);
   const nextReward = Math.max(0, 10 - (member?.stamps ?? 0));
   const spinLocked = member?.spinAvailableAt ? new Date(member.spinAvailableAt).getTime() > Date.now() : false;
+  const totalSpent = customerOrders
+    .filter((order) => order.status === "completed")
+    .reduce((sum, order) => sum + order.total, 0);
 
   function spin() {
     if (!member || spinning || result || spinLocked) return;
@@ -133,8 +181,29 @@ export default function MemberDashboardPage() {
           </article>
 
           <article id="orders" className="member-card orders-panel">
-            <CardTitle eyebrow="RECENT ORDERS" title="Your Favorites" action={`${member.orders.length} orders`} />
-            {member.orders.length ? member.orders.map(order => <Order key={order.id} name={order.name} detail={order.detail} price={`₱${order.price}`} date={formatDateTime(order.date)} />) : <p className="member-empty">Your completed orders will appear here.</p>}
+            <CardTitle eyebrow="ORDER HISTORY" title="Your SYP Orders" action={`${customerOrders.length} orders`} />
+            <div className="profile-lines" style={{marginBottom: 14}}>
+              <div><span>Total spent</span><b>₱{totalSpent.toLocaleString("en-PH")}</b></div>
+              <div><span>Latest status</span><b>{customerOrders[0]?.status || "No orders yet"}</b></div>
+            </div>
+            {ordersLoading ? (
+              <p className="member-empty">Loading your orders...</p>
+            ) : customerOrders.length ? (
+              customerOrders.map((order) => (
+                <div className="member-order" key={order.id}>
+                  <i>{order.order_type === "delivery" ? "🛵" : "☕"}</i>
+                  <div>
+                    <b>{order.order_number}</b>
+                    <span>{order.order_type} • {order.payment_method || "cash"} • {order.status}</span>
+                    <small>{formatDateTime(order.created_at)}</small>
+                  </div>
+                  <strong>₱{order.total.toLocaleString("en-PH")}</strong>
+                  <Link href={`/track/${encodeURIComponent(order.order_number)}`}>Track</Link>
+                </div>
+              ))
+            ) : (
+              <p className="member-empty">Orders using your registered mobile number will appear here.</p>
+            )}
           </article>
 
           <article id="profile" className="member-card profile-panel">
