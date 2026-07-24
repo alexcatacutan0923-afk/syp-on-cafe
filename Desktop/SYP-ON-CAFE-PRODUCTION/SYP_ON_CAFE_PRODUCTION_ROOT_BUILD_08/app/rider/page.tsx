@@ -46,6 +46,9 @@ type RiderOrder = {
   total: number;
   status: OrderStatus;
   rider_name: string | null;
+  rider_mobile: string | null;
+  rider_vehicle: string | null;
+  rider_eta: string | null;
   rider_status: RiderStatus | null;
   accepted_by_rider_at: string | null;
   out_for_delivery_at: string | null;
@@ -94,6 +97,8 @@ export default function RiderPage() {
   const [activeTab, setActiveTab] =
     useState<Tab>("available");
   const [riderName, setRiderName] = useState("");
+  const [riderMobile, setRiderMobile] = useState("");
+  const [riderVehicle, setRiderVehicle] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [updatingOrderId, setUpdatingOrderId] =
@@ -106,6 +111,9 @@ export default function RiderPage() {
     if (savedName) {
       setRiderName(savedName);
     }
+
+    setRiderMobile(localStorage.getItem("sypRiderMobile") || "");
+    setRiderVehicle(localStorage.getItem("sypRiderVehicle") || "");
   }, []);
 
   const loadOrders = useCallback(async (silent = false) => {
@@ -133,6 +141,9 @@ export default function RiderPage() {
               "total",
               "status",
               "rider_name",
+              "rider_mobile",
+              "rider_vehicle",
+              "rider_eta",
               "rider_status",
               "accepted_by_rider_at",
               "out_for_delivery_at",
@@ -276,6 +287,16 @@ export default function RiderPage() {
     localStorage.setItem("sypRiderName", value);
   }
 
+  function saveRiderMobile(value: string) {
+    setRiderMobile(value);
+    localStorage.setItem("sypRiderMobile", value);
+  }
+
+  function saveRiderVehicle(value: string) {
+    setRiderVehicle(value);
+    localStorage.setItem("sypRiderVehicle", value);
+  }
+
   function requireRiderName() {
     const cleanName = riderName.trim();
 
@@ -302,6 +323,9 @@ export default function RiderPage() {
         .from("orders")
         .update({
           rider_name: cleanName,
+          rider_mobile: riderMobile.trim() || null,
+          rider_vehicle: riderVehicle.trim() || null,
+          rider_eta: "15 minutes",
           rider_status: "accepted",
           accepted_by_rider_at: new Date().toISOString(),
         })
@@ -359,6 +383,38 @@ export default function RiderPage() {
     } finally {
       setUpdatingOrderId(null);
     }
+  }
+
+
+  async function updateEta(order: RiderOrder, eta: string) {
+    setUpdatingOrderId(order.id);
+    setErrorMessage("");
+
+    try {
+      const { error } = await supabase
+        .from("orders")
+        .update({ rider_eta: eta })
+        .eq("id", order.id);
+
+      if (error) throw error;
+      await loadOrders(true);
+    } catch (error) {
+      console.error("Rider ETA update error:", error);
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to update the rider ETA.",
+      );
+    } finally {
+      setUpdatingOrderId(null);
+    }
+  }
+
+  function buildSmsUrl(order: RiderOrder) {
+    const trackingUrl = `${window.location.origin}/track/${encodeURIComponent(order.order_number)}`;
+    const etaText = order.rider_eta ? ` ETA: ${order.rider_eta}.` : "";
+    const message = `SYP ON CAFÉ: Your order ${order.order_number} is on the way.${etaText} Track here: ${trackingUrl}`;
+    return `sms:${order.mobile}?body=${encodeURIComponent(message)}`;
   }
 
   async function markDelivered(order: RiderOrder) {
@@ -465,20 +521,21 @@ export default function RiderPage() {
           </section>
 
           <section className="mt-6 rounded-3xl border border-white/10 bg-neutral-950 p-5">
-            <label className="block">
-              <span className="text-sm font-semibold text-neutral-300">
-                Rider name
-              </span>
-              <input
-                type="text"
-                value={riderName}
-                onChange={(event) =>
-                  saveRiderName(event.target.value)
-                }
-                placeholder="Example: Alex"
-                className="mt-2 w-full rounded-2xl border border-white/10 bg-black px-4 py-3 outline-none transition focus:border-amber-400"
-              />
-            </label>
+            <div className="grid gap-4 md:grid-cols-3">
+              <label className="block">
+                <span className="text-sm font-semibold text-neutral-300">Rider name</span>
+                <input type="text" value={riderName} onChange={(event) => saveRiderName(event.target.value)} placeholder="Example: Alex" className="mt-2 w-full rounded-2xl border border-white/10 bg-black px-4 py-3 outline-none transition focus:border-amber-400" />
+              </label>
+              <label className="block">
+                <span className="text-sm font-semibold text-neutral-300">Mobile number</span>
+                <input type="tel" value={riderMobile} onChange={(event) => saveRiderMobile(event.target.value)} placeholder="09XXXXXXXXX" className="mt-2 w-full rounded-2xl border border-white/10 bg-black px-4 py-3 outline-none transition focus:border-amber-400" />
+              </label>
+              <label className="block">
+                <span className="text-sm font-semibold text-neutral-300">Vehicle / plate</span>
+                <input type="text" value={riderVehicle} onChange={(event) => saveRiderVehicle(event.target.value)} placeholder="Motorcycle • ABC 1234" className="mt-2 w-full rounded-2xl border border-white/10 bg-black px-4 py-3 outline-none transition focus:border-amber-400" />
+              </label>
+            </div>
+            <p className="mt-3 text-xs text-neutral-500">Saved on this device and attached automatically when you accept a delivery.</p>
           </section>
 
           <section className="mt-6 flex flex-wrap gap-2">
@@ -646,18 +703,24 @@ export default function RiderPage() {
 
                     {order.rider_name && (
                       <div className="mt-5 rounded-2xl border border-white/10 p-4 text-sm">
-                        <p>
-                          Rider:{" "}
-                          <span className="font-bold text-amber-400">
-                            {order.rider_name}
-                          </span>
-                        </p>
-                        <p className="mt-2 text-neutral-500">
-                          Accepted:{" "}
-                          {formatDate(
-                            order.accepted_by_rider_at,
-                          )}
-                        </p>
+                        <p>Rider: <span className="font-bold text-amber-400">{order.rider_name}</span></p>
+                        {order.rider_mobile && <p className="mt-2 text-neutral-400">Mobile: {order.rider_mobile}</p>}
+                        {order.rider_vehicle && <p className="mt-1 text-neutral-400">Vehicle: {order.rider_vehicle}</p>}
+                        {order.rider_eta && <p className="mt-1 font-semibold text-emerald-300">ETA: {order.rider_eta}</p>}
+                        <p className="mt-2 text-neutral-500">Accepted: {formatDate(order.accepted_by_rider_at)}</p>
+                      </div>
+                    )}
+
+                    {activeTab === "active" && (
+                      <div className="mt-5 rounded-2xl border border-white/10 p-4">
+                        <p className="text-sm font-bold">Update customer ETA</p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {[10, 15, 20, 30].map((minutes) => (
+                            <button key={minutes} type="button" disabled={isUpdating} onClick={() => void updateEta(order, `${minutes} minutes`)} className="rounded-full border border-white/15 px-4 py-2 text-sm hover:border-amber-400">{minutes} min</button>
+                          ))}
+                          <button type="button" disabled={isUpdating} onClick={() => { const value = window.prompt("Enter ETA, example: 25 minutes or 6:30 PM", order.rider_eta || ""); if (value?.trim()) void updateEta(order, value.trim()); }} className="rounded-full border border-white/15 px-4 py-2 text-sm hover:border-amber-400">Custom</button>
+                        </div>
+                        <a href={buildSmsUrl(order)} className="mt-3 inline-flex rounded-full bg-blue-500/15 px-4 py-2 text-sm font-bold text-blue-300">Send tracking by SMS</a>
                       </div>
                     )}
 
