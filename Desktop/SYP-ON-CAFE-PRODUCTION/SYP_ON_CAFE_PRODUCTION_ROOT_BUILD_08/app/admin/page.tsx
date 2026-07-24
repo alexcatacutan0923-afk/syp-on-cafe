@@ -796,6 +796,13 @@ export default function AdminPage() {
             </button>
 
             <Link
+              href="/admin/community"
+              className="rounded-full border border-amber-400/40 px-5 py-2 text-sm font-semibold text-amber-300"
+            >
+              Reviews & Moments
+            </Link>
+
+            <Link
               href="/menu"
               className="rounded-full bg-amber-400 px-5 py-2 text-sm font-semibold text-black"
             >
