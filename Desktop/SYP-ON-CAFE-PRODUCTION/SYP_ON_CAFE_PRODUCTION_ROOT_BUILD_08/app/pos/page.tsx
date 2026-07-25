@@ -21,6 +21,15 @@ type Product = {
   bestseller?: boolean;
 };
 
+type ProductGroup = {
+  key: string;
+  name: string;
+  category: Product["category"];
+  image: string;
+  bestseller?: boolean;
+  variants: Product[];
+};
+
 type AddOn = { id: string; name: string; price: number };
 type Customization = {
   temperature: "Iced" | "Hot";
@@ -39,8 +48,8 @@ type CartItem = Product & {
 };
 
 const products: Product[] = [
-  { id: "americano-16", name: "Americano", size: "16oz", price: 69, category: "Coffee", image: "/products/iced-americano-syp.webp" },
-  { id: "americano-22", name: "Americano", size: "22oz", price: 79, category: "Coffee", image: "/products/iced-americano-syp.webp" },
+  { id: "americano-16", name: "Americano", size: "16oz", price: 69, category: "Coffee", image: "/products/iced-americano-official.webp" },
+  { id: "americano-22", name: "Americano", size: "22oz", price: 79, category: "Coffee", image: "/products/iced-americano-official.webp" },
   { id: "spanish-16", name: "Spanish Latte", size: "16oz", price: 89, category: "Coffee", image: "/products/spanish-latte.webp", bestseller: true },
   { id: "spanish-22", name: "Spanish Latte", size: "22oz", price: 109, category: "Coffee", image: "/products/spanish-latte.webp", bestseller: true },
   { id: "oreo-16", name: "Oreo Latte", size: "16oz", price: 79, category: "Coffee", image: "/products/oreo-latte-corrected.webp" },
@@ -128,6 +137,30 @@ const products: Product[] = [
 const categories: Category[] = ["All", "Coffee", "Matcha", "Soda", "Milky", "Fries", "Signature", "ADDS"];
 const money = (value: number) => `₱${Math.max(0, value).toLocaleString("en-PH")}`;
 
+const groupedProducts: ProductGroup[] = Array.from(
+  products.reduce((map, product) => {
+    const key = `${product.category}::${product.name}`;
+    const current = map.get(key);
+    if (current) {
+      current.variants.push(product);
+      current.bestseller = current.bestseller || product.bestseller;
+    } else {
+      map.set(key, {
+        key,
+        name: product.name,
+        category: product.category,
+        image: product.image,
+        bestseller: product.bestseller,
+        variants: [product],
+      });
+    }
+    return map;
+  }, new Map<string, ProductGroup>()).values(),
+).map((group) => ({
+  ...group,
+  variants: [...group.variants].sort((a, b) => Number.parseInt(a.size) - Number.parseInt(b.size)),
+}));
+
 export default function PosPage() {
   const [category, setCategory] = useState<Category>("All");
   const [search, setSearch] = useState("");
@@ -149,6 +182,7 @@ export default function PosPage() {
   const [notice, setNotice] = useState("");
   const [lastAdded, setLastAdded] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProductVariants, setSelectedProductVariants] = useState<Product[]>([]);
   const [temperature, setTemperature] = useState<"Iced" | "Hot">("Iced");
   const [sugar, setSugar] = useState<Customization["sugar"]>("100%");
   const [ice, setIce] = useState<Customization["ice"]>("Normal Ice");
@@ -161,9 +195,10 @@ export default function PosPage() {
 
   const filteredProducts = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return products.filter((product) => {
+    return groupedProducts.filter((product) => {
       const categoryMatch = category === "All" || product.category === category;
-      const searchMatch = !q || `${product.name} ${product.size} ${product.category}`.toLowerCase().includes(q);
+      const sizes = product.variants.map((variant) => variant.size).join(" ");
+      const searchMatch = !q || `${product.name} ${sizes} ${product.category}`.toLowerCase().includes(q);
       return categoryMatch && searchMatch;
     });
   }, [category, search]);
@@ -283,9 +318,10 @@ export default function PosPage() {
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
-  const openCustomizer = (product: Product) => {
+  const openCustomizer = (product: Product, variants: Product[] = [product]) => {
     setSelectedProduct(product);
-    setTemperature("Iced");
+    setSelectedProductVariants(variants);
+    setTemperature(product.name.startsWith("Hot ") ? "Hot" : "Iced");
     setSugar("100%");
     setIce("Normal Ice");
     setEspressoShots(product.category === "Coffee" || product.category === "Signature" ? 2 : 0);
@@ -294,7 +330,14 @@ export default function PosPage() {
     setCustomNotes("");
   };
 
-  const closeCustomizer = () => setSelectedProduct(null);
+  const openProductGroup = (group: ProductGroup) => {
+    openCustomizer(group.variants[0], group.variants);
+  };
+
+  const closeCustomizer = () => {
+    setSelectedProduct(null);
+    setSelectedProductVariants([]);
+  };
 
   const toggleAddon = (addon: AddOn) => {
     setSelectedAddons((current) => current.some((item) => item.id === addon.id)
@@ -502,17 +545,24 @@ export default function PosPage() {
             <div className="view-toggle"><button className="active">▦ Grid</button><button>☷ List</button></div>
           </div>
           <div className="product-grid">
-            {filteredProducts.map((product) => (
-              <article className={`product-card ${lastAdded === product.id ? "just-added" : ""}`} key={product.id} onClick={() => openCustomizer(product)}>
-                {product.bestseller && <span className="product-badge">BEST SELLER</span>}
-                <div className="product-image"><img src={product.image} alt={product.name} /></div>
-                <div className="product-info">
-                  <h3>{product.name}</h3>
-                  <p>{product.size}</p>
-                  <div><strong>{money(product.price)}</strong><button aria-label={`Add ${product.name}`} onClick={(event) => { event.stopPropagation(); openCustomizer(product); }}>+</button></div>
-                </div>
-              </article>
-            ))}
+            {filteredProducts.map((product) => {
+              const prices = product.variants.map((variant) => variant.price);
+              const minPrice = Math.min(...prices);
+              const maxPrice = Math.max(...prices);
+              const sizeLabel = product.variants.map((variant) => variant.size).join(" / ");
+              const isRecentlyAdded = product.variants.some((variant) => lastAdded === variant.id);
+              return (
+                <article className={`product-card ${isRecentlyAdded ? "just-added" : ""}`} key={product.key} onClick={() => openProductGroup(product)}>
+                  {product.bestseller && <span className="product-badge">BEST SELLER</span>}
+                  <div className="product-image"><img src={product.image} alt={product.name} /></div>
+                  <div className="product-info">
+                    <h3>{product.name}</h3>
+                    <p>{sizeLabel}</p>
+                    <div><strong>{minPrice === maxPrice ? money(minPrice) : `${money(minPrice)}–${money(maxPrice)}`}</strong><button aria-label={`Choose size for ${product.name}`} onClick={(event) => { event.stopPropagation(); openProductGroup(product); }}>+</button></div>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </section>
 
@@ -636,7 +686,22 @@ export default function PosPage() {
             </header>
 
             <div className="customizer-body">
-              {selectedProduct.category !== "Fries" && selectedProduct.category !== "Soda" && (
+              {selectedProductVariants.length > 1 && (
+                <OptionSection title="Size" subtitle="Choose cup size">
+                  <div className={`choice-grid ${selectedProductVariants.length === 2 ? "two" : "four"}`}>
+                    {selectedProductVariants.map((variant) => (
+                      <ChoiceButton
+                        key={variant.id}
+                        active={selectedProduct.id === variant.id}
+                        onClick={() => setSelectedProduct(variant)}
+                        label={`${variant.size} · ${money(variant.price)}`}
+                      />
+                    ))}
+                  </div>
+                </OptionSection>
+              )}
+
+              {selectedProduct.category !== "Fries" && selectedProduct.category !== "Soda" && !selectedProduct.name.startsWith("Hot ") && (
                 <OptionSection title="Temperature" subtitle="Choose how it will be served">
                   <div className="choice-grid two">{(["Iced", "Hot"] as const).map((value) => <ChoiceButton key={value} active={temperature === value} onClick={() => setTemperature(value)} icon={value === "Iced" ? "❄" : "♨"} label={value} />)}</div>
                 </OptionSection>
@@ -724,8 +789,8 @@ function categoryIcon(name: Category) {
 }
 
 function countCategory(name: Category) {
-  if (name === "All") return products.length;
-  return products.filter((product) => product.category === name).length;
+  if (name === "All") return groupedProducts.length;
+  return groupedProducts.filter((product) => product.category === name).length;
 }
 
 function getBusinessShiftRange(date: Date) {

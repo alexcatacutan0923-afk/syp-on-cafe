@@ -1,5 +1,5 @@
 export const PRODUCT_IMAGE_BY_NAME: Record<string, string> = {
-  "americano": "/products/iced-americano-syp.webp",
+  "americano": "/products/iced-americano-official.webp",
   "spanish latte": "/products/spanish-latte.webp",
   "oreo latte": "/products/oreo-latte.webp",
   "iced milo latte": "/products/iced-milo-latte.webp",
