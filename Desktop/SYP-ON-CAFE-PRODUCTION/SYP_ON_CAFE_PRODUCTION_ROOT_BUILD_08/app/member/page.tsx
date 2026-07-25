@@ -53,19 +53,29 @@ export default function MemberDashboardPage() {
 
     const refreshMember = async (showSpinner = false) => {
       if (showSpinner) setMemberRefreshing(true);
+
       try {
-        const [cloud, visits] = await Promise.all([
+        const [cloudResult, visitsResult] = await Promise.allSettled([
           getCloudMember(member.id),
-          getCloudMemberVisits(member.id),
+          getCloudMemberVisits(member.id, calendarMonth),
         ]);
-        if (!active || !cloud) return;
-        setCloudVisits(visits);
-        const updated = saveCloudMember(cloud);
-        setMember(updated);
-        setProfileDraft({ name: updated.name, birthday: updated.birthday, favoriteDrink: updated.favoriteDrink });
-        setLastSyncedAt(new Date());
-      } catch (error) {
-        console.error("Unable to refresh member dashboard:", error);
+
+        if (!active) return;
+
+        if (visitsResult.status === "fulfilled" && visitsResult.value.length > 0) {
+          setCloudVisits(visitsResult.value);
+        }
+
+        if (cloudResult.status === "fulfilled" && cloudResult.value) {
+          const updated = saveCloudMember(cloudResult.value);
+          setMember(updated);
+          setProfileDraft({
+            name: updated.name,
+            birthday: updated.birthday,
+            favoriteDrink: updated.favoriteDrink,
+          });
+          setLastSyncedAt(new Date());
+        }
       } finally {
         if (active && showSpinner) setMemberRefreshing(false);
       }
@@ -90,7 +100,7 @@ export default function MemberDashboardPage() {
       document.removeEventListener("visibilitychange", onVisibility);
       void supabase.removeChannel(channel);
     };
-  }, [member?.id]);
+  }, [member?.id, calendarMonth]);
 
   useEffect(() => {
     if (!member?.mobile) return;

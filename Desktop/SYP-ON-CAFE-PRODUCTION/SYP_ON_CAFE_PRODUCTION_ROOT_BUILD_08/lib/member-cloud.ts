@@ -99,12 +99,23 @@ export async function addCloudStamp(memberCode: string, count = 1) {
 
 
 export async function getCloudMemberVisits(memberCode: string, month?: string) {
-  const { data, error } = await supabase.rpc("get_loyalty_visits", {
-    p_member_code: memberCode.trim(),
-    p_month: month || null,
-  });
-  if (error) throw error;
-  return (data ?? []).map((row: { visit_date: string }) => row.visit_date);
+  try {
+    const request = await withTimeout(
+      supabase.rpc("get_loyalty_visits", {
+        p_member_code: memberCode.trim(),
+        p_month: month || null,
+      }),
+      "Member visits",
+    );
+
+    // Keep the dashboard usable even when the visits RPC has not yet been
+    // installed or Supabase briefly goes offline. Existing cached visits stay
+    // visible and the next focus/realtime refresh will try again.
+    if (request.error) return [];
+    return (request.data ?? []).map((row: { visit_date: string }) => row.visit_date);
+  } catch {
+    return [];
+  }
 }
 
 export async function claimCloudFreeDrink(memberCode: string, receiptNo: string, cashier = "Alex") {

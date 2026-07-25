@@ -15,7 +15,7 @@ export default function ContactPage() {
     <main className="community-page">
       <header className="community-nav">
         <Link className="site-brand" href="/">
-          <span>SYP</span>
+          <img src="/brand/syp-logo-glow-v2.webp" alt="SYP ON CAFÉ logo" />
           <div><b>SYP ON CAFÉ</b><small>VISIT & CONTACT</small></div>
         </Link>
 
@@ -96,7 +96,7 @@ export default function ContactPage() {
       </section>
 
       <footer className="community-footer">
-        <Link className="site-brand" href="/"><span>SYP</span><div><b>SYP ON CAFÉ</b><small>STREET • ICED • BREWED</small></div></Link>
+        <Link className="site-brand" href="/"><img src="/brand/syp-logo-glow-v2.webp" alt="SYP ON CAFÉ logo" /><div><b>SYP ON CAFÉ</b><small>STREET • ICED • BREWED</small></div></Link>
         <p>Open daily from 5:00 PM to 4:00 AM.</p>
         <nav><Link href="/menu">Menu</Link><Link href="/about">About</Link><Link href="/moments">Moments</Link><Link href="/reviews">Reviews</Link></nav>
       </footer>

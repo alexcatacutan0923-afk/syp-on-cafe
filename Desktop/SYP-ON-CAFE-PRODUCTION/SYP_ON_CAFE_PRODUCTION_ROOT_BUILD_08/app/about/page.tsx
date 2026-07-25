@@ -14,7 +14,7 @@ export default function AboutPage() {
     <main className="community-page">
       <header className="community-nav">
         <Link className="site-brand" href="/">
-          <span>SYP</span>
+          <img src="/brand/syp-logo-glow-v2.webp" alt="SYP ON CAFÉ logo" />
           <div><b>SYP ON CAFÉ</b><small>OUR STORY</small></div>
         </Link>
 
@@ -78,7 +78,7 @@ export default function AboutPage() {
       </section>
 
       <footer className="community-footer">
-        <Link className="site-brand" href="/"><span>SYP</span><div><b>SYP ON CAFÉ</b><small>STREET • ICED • BREWED</small></div></Link>
+        <Link className="site-brand" href="/"><img src="/brand/syp-logo-glow-v2.webp" alt="SYP ON CAFÉ logo" /><div><b>SYP ON CAFÉ</b><small>STREET • ICED • BREWED</small></div></Link>
         <p>Open daily from 5:00 PM to 4:00 AM.</p>
         <nav><Link href="/menu">Menu</Link><Link href="/moments">Moments</Link><Link href="/reviews">Reviews</Link><Link href="/contact">Contact</Link></nav>
       </footer>
