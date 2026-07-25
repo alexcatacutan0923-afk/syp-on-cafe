@@ -106,16 +106,12 @@ export default function HomePage() {
           <img src="/brand/syp-logo-glow-v2.webp" alt="SYP ON CAFÉ logo" />
           <div><b>SYP ON CAFÉ</b><small>STREET • ICED • BREWED</small></div>
         </Link>
-        <nav className="desktop-main-nav" aria-label="Main navigation">
-          <Link href="/menu">Menu</Link>
-          <Link href="/reviews">Reviews</Link>
-          <Link href="/moments">Coffee Moments</Link>
-          <Link href="/about">About</Link>
-          <Link href="/contact">Visit</Link>
+        <nav aria-label="Main navigation">
+          <Link href="/menu">Menu</Link><Link href="/reviews">Reviews</Link><Link href="/moments">Coffee Moments</Link><Link href="/about">About</Link><Link href="/contact">Visit</Link>
         </nav>
-        <div className="header-actions">
+        <div className="site-header-actions">
           <Link href="/member-login" className="header-login-button">Login</Link>
-          <Link href="/member-register" className="header-register-button">Create Account</Link>
+          <Link href="/member-register" className="header-create-button">Create Account</Link>
           <Link href="/menu" className="gold-button">Order Now</Link>
         </div>
       </header>
