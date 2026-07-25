@@ -70,28 +70,21 @@ export default function HomePage() {
 
   const openVideoFullscreen = () => {
     const video = cafeVideo.current;
-    if (!video) return;
-    if (video.requestFullscreen) void video.requestFullscreen();
+    if (video?.requestFullscreen) void video.requestFullscreen();
   };
 
   useEffect(() => {
     const hero = heroSection.current;
     if (!hero || typeof IntersectionObserver === "undefined") return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => setVideoMini(!entry.isIntersecting),
-      { threshold: 0.18 },
-    );
-
+    const observer = new IntersectionObserver(([entry]) => setVideoMini(!entry.isIntersecting), { threshold: 0.18 });
     observer.observe(hero);
     return () => observer.disconnect();
   }, []);
 
   const shown = useMemo(() => category === "All" ? drinks : drinks.filter((drink) => drink.category === category), [category]);
 
-
   const renderCafeVideo = (mini: boolean) => (
-    <div className={`hero-video-stage${mini ? " is-mini" : ""}`}>
+    <div className={mini ? "hero-video-stage is-mini" : "hero-video-stage"}>
       <video ref={cafeVideo} src="/videos/syp-cafe-background.mp4" autoPlay muted={videoMuted} loop playsInline poster="/brand/syp-logo-glow-v2.webp" />
       <div className="hero-video-overlay" />
       <div className="hero-video-controls">
@@ -99,21 +92,36 @@ export default function HomePage() {
         <button type="button" onClick={openVideoFullscreen}>⛶ Full size</button>
       </div>
       <div className="hero-video-brand">
-        <img src="/brand/syp-logo-glow-v2.webp" alt="        {!videoMini && renderCafeVideo(false)}ion}>
-        <div className={`hero-video-stage${videoMini ? " is-mini" : ""}`}>
-          <video ref={cafeVideo} src="/videos/syp-cafe-background.mp4" autoPlay muted loop playsInline poster="/brand/syp-logo-glow-v2.webp" />
-          <div className="hero-video-overlay" />
-          <div className="hero-video-controls">
-            <button type="button" onClick={toggleVideoSound}>{videoMuted ? "🔇 Sound" : "🔊 Sound"}</button>
-            <button type="button" onClick={openVideoFullscreen}>⛶ Full size</button>
-          </div>
-          <div className="hero-video-brand">
-            <img src="/brand/syp-logo-glow-v2.webp" alt="SYP ON CAFÉ logo" />
-            <span><b>SYP ON CAFÉ</b><small>Street • Iced • Brewed</small></span>
-          </div>
-          {videoMini && <button className="mini-video-return" type="button" onClick={() => heroSection.current?.scrollIntoView({ behavior: "smooth" })}>Return to hero</button>}
-        </div>
+        <img src="/brand/syp-logo-glow-v2.webp" alt="SYP ON CAFÉ logo" />
+        <span><b>SYP ON CAFÉ</b><small>Street • Iced • Brewed</small></span>
+      </div>
+      {mini && <button className="mini-video-return" type="button" onClick={() => heroSection.current?.scrollIntoView({ behavior: "smooth" })}>Return to hero</button>}
+    </div>
+  );
 
+  return (
+    <main>
+      <header className="site-header">
+        <Link href="/" className="site-brand" aria-label="SYP ON CAFÉ home">
+          <img src="/brand/syp-logo-glow-v2.webp" alt="SYP ON CAFÉ logo" />
+          <div><b>SYP ON CAFÉ</b><small>STREET • ICED • BREWED</small></div>
+        </Link>
+        <nav className="desktop-main-nav" aria-label="Main navigation">
+          <Link href="/menu">Menu</Link>
+          <Link href="/reviews">Reviews</Link>
+          <Link href="/moments">Coffee Moments</Link>
+          <Link href="/about">About</Link>
+          <Link href="/contact">Visit</Link>
+        </nav>
+        <div className="header-actions">
+          <Link href="/member-login" className="header-login-button">Login</Link>
+          <Link href="/member-register" className="header-register-button">Create Account</Link>
+          <Link href="/menu" className="gold-button">Order Now</Link>
+        </div>
+      </header>
+
+      <section ref={heroSection} className="hero-section cinematic-hero">
+        {!videoMini && renderCafeVideo(false)}
         <div className="hero-copy cinematic-copy">
           <span className="hero-kicker">OPEN DAILY • 5PM–4AM</span>
           <h1>Your late-night coffee, now closer.</h1>
@@ -121,7 +129,6 @@ export default function HomePage() {
           <div className="hero-actions"><Link className="gold-button" href="/menu">Explore the Menu</Link><Link className="ghost-button" href="/member-register">Join SYP Rewards</Link></div>
           <div className="hero-proof"><div><b>4.9</b><span>Average rating</span></div><div><b>11</b><span>Featured drinks</span></div><div><b>10</b><span>Stamps = reward</span></div></div>
         </div>
-
         <div className="hero-featured-chip">
           <img src="/featured/biscoff-matcha.webp" alt="Biscoff Matcha featured drink" />
           <div><small>FEATURED DRINK</small><b>Biscoff Matcha</b><span>Starts at ₱119</span></div>
@@ -129,30 +136,38 @@ export default function HomePage() {
         </div>
       </section>
 
+      {videoMini && renderCafeVideo(true)}
+
       <section className="site-section featured-album-section">
-        <div className="section-heading"><div><small>FEATURED DRINK PICTURE ALBUM</small><h2>Swipe left or right to explore.</h2></div><div className="rail-actions"><button type="button" onClick={() => moveRail(featuredRail, -1)} aria-label="Scroll featured drinks left">←</button><button type="button" onClick={() => moveRail(featuredRail, 1)} aria-label="Scroll featured drinks right">→</button><Link href="/menu">View full menu</Link></div></div>
+        <div className="section-heading">
+          <div><small>FEATURED DRINK PICTURE ALBUM</small><h2>Swipe left or right to explore.</h2></div>
+          <div className="rail-actions"><button type="button" onClick={() => moveRail(featuredRail, -1)} aria-label="Scroll featured drinks left">←</button><button type="button" onClick={() => moveRail(featuredRail, 1)} aria-label="Scroll featured drinks right">→</button><Link href="/menu">View full menu</Link></div>
+        </div>
         <div className="category-pills">{categories.map((item) => <button key={item} type="button" onClick={() => setCategory(item)} className={category === item ? "active" : ""}>{item}</button>)}</div>
-        <div className="featured-photo-grid horizontal-rail" ref={featuredRail}>{shown.map((drink) => <article className="photo-drink-card" key={drink.name}>
-          <button type="button" className="photo-button" onClick={() => setActiveDrink(drink)} aria-label={`View ${drink.name} poster`}>
-            <img src={drink.poster} alt={`${drink.name} promotional poster`} loading="lazy" />
-            {drink.tag && <span>{drink.tag}</span>}
-          </button>
-          <div><small>{drink.category} Collection</small><h3>{drink.name}</h3><p>{drink.note}</p><div className="drink-meta"><strong>{drink.price}</strong><span>★ {drink.rating} <em>({drink.reviews})</em></span></div><Link href="/menu">Preview & order</Link></div>
-        </article>)}</div>
+        <div className="featured-photo-grid horizontal-rail" ref={featuredRail}>
+          {shown.map((drink) => (
+            <article className="photo-drink-card" key={drink.name}>
+              <button type="button" className="photo-button" onClick={() => setActiveDrink(drink)} aria-label={`View ${drink.name} poster`}>
+                <img src={drink.poster} alt={`${drink.name} promotional poster`} loading="lazy" />
+                {drink.tag && <span>{drink.tag}</span>}
+              </button>
+              <div><small>{drink.category} Collection</small><h3>{drink.name}</h3><p>{drink.note}</p><div className="drink-meta"><strong>{drink.price}</strong><span>★ {drink.rating} <em>({drink.reviews})</em></span></div><Link href="/menu">Preview & order</Link></div>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="site-section community-showcase">
         <div className="community-feed">
-          <div className="section-heading"><div><small>RECENT KASYP MOMENTS</small><h2>Real customers. Real coffee moments.</h2></div><div className="rail-actions"><button type="button" onClick={() => moveRail(communityRail, -1)} aria-label="Scroll customer photos left">←</button><button type="button" onClick={() => moveRail(communityRail, 1)} aria-label="Scroll customer photos right">→</button><Link href="/moments">View album</Link></div></div>
-          <div className="community-album horizontal-rail" ref={communityRail}>{communityMoments.map((moment) => <article key={moment.image}><img src={moment.image} alt={moment.title} loading="lazy" /><div><small>{moment.badge}</small><h3>{moment.title}</h3><p>{moment.caption}</p></div></article>)}</div>
+          <div className="section-heading">
+            <div><small>RECENT KASYP MOMENTS</small><h2>Real customers. Real coffee moments.</h2></div>
+            <div className="rail-actions"><button type="button" onClick={() => moveRail(communityRail, -1)} aria-label="Scroll customer photos left">←</button><button type="button" onClick={() => moveRail(communityRail, 1)} aria-label="Scroll customer photos right">→</button><Link href="/moments">View album</Link></div>
+          </div>
+          <div className="community-album horizontal-rail" ref={communityRail}>
+            {communityMoments.map((moment) => <article key={moment.image}><img src={moment.image} alt={moment.title} loading="lazy" /><div><small>{moment.badge}</small><h3>{moment.title}</h3><p>{moment.caption}</p></div></article>)}
+          </div>
         </div>
-        <aside className="community-promo-card">
-          <img src="/brand/syp-logo-clean-v2.webp" alt="SYP ON CAFÉ official logo" />
-          <small>YOUR KASYP COMMUNITY</small>
-          <h3>Real coffee. Real customers. Real moments.</h3>
-          <p>Share your favorite SYP moment and be part of the next customer album.</p>
-          <Link href="/moments">View all moments →</Link>
-        </aside>
+        <aside className="community-promo-card"><img src="/brand/syp-logo-clean-v2.webp" alt="SYP ON CAFÉ official logo" /><small>YOUR KASYP COMMUNITY</small><h3>Real coffee. Real customers. Real moments.</h3><p>Share your favorite SYP moment and be part of the next customer album.</p><Link href="/moments">View all moments →</Link></aside>
       </section>
 
       <section className="site-section loyalty-spotlight-section">
@@ -165,10 +180,7 @@ export default function HomePage() {
         <div className="membership-card"><div><span><b>SYP ON CAFÉ</b><small>DIGITAL MEMBER</small></span><i>JD</i></div><h3>JUAN DELA CRUZ</h3><p>SYP0021 • TRUSTED MEMBER</p><section>{Array.from({ length: 10 }, (_, i) => <span className={i < 6 ? "filled" : ""} key={i}>{i < 6 ? "★" : i + 1}</span>)}</section><footer><b>6 / 10 STAMPS</b><span>4 more to a free drink</span></footer></div>
       </section>
 
-      <section className="site-section real-review-cta">
-        <div><small>REAL CUSTOMER RATINGS ONLY</small><h2>No demo reviews. Every rating comes from a real completed SYP order.</h2><p>Customers can submit one verified rating after their order is completed. Approved ratings appear on the Reviews page.</p></div>
-        <Link className="gold-button" href="/reviews">View Real Reviews</Link>
-      </section>
+      <section className="site-section real-review-cta"><div><small>REAL CUSTOMER RATINGS ONLY</small><h2>No demo reviews. Every rating comes from a real completed SYP order.</h2><p>Customers can submit one verified rating after their order is completed. Approved ratings appear on the Reviews page.</p></div><Link className="gold-button" href="/reviews">View Real Reviews</Link></section>
 
       <section className="site-section visit-section"><div><small>DELIVERY & PICKUP</small><h2>Order your favorites in a few taps.</h2><p>Browse the live menu, customize your drink, and continue to checkout.</p><div className="hero-actions"><Link className="gold-button" href="/menu">Start an Order</Link><Link className="ghost-button" href="/contact">Visit the Café</Link></div></div><div className="visit-details"><article><span>01</span><b>Choose your drink</b><small>Actual photos, sizes, and add-ons.</small></article><article><span>02</span><b>Review your cart</b><small>See the complete total before checkout.</small></article><article><span>03</span><b>Track your order</b><small>Follow preparation and delivery status.</small></article></div></section>
 

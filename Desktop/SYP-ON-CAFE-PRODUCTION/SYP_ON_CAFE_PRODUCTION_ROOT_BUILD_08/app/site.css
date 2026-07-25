@@ -131,3 +131,118 @@
   .hero-video-stage.is-mini .hero-video-controls{display:flex!important}
   .hero-video-stage.is-mini .hero-video-controls button{font-size:8px!important;padding:6px 8px!important}
 }
+
+/* BUILD 32 — Header navigation and member access */
+.site-header {
+  display: grid;
+  grid-template-columns: minmax(220px, auto) 1fr auto;
+  align-items: center;
+  gap: 28px;
+  min-height: 86px;
+  padding: 14px clamp(22px, 4vw, 64px);
+}
+
+.desktop-main-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(22px, 3vw, 38px);
+  white-space: nowrap;
+}
+
+.desktop-main-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  white-space: nowrap;
+}
+
+.header-login-button,
+.header-register-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.header-login-button {
+  border: 1px solid rgba(231, 174, 58, 0.55);
+  color: #f2b842;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.header-register-button {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.header-login-button:hover,
+.header-register-button:hover {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 1020px) {
+  .site-header {
+    grid-template-columns: 1fr auto;
+  }
+
+  .desktop-main-nav {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .desktop-main-nav::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .site-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px 16px;
+  }
+
+  .site-header > .site-brand {
+    flex: 1 1 auto;
+  }
+
+  .header-actions {
+    order: 2;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 0.8fr 1.15fr 1fr;
+    gap: 8px;
+  }
+
+  .header-actions a {
+    min-height: 44px;
+    padding-inline: 10px;
+    font-size: 0.88rem;
+  }
+
+  .desktop-main-nav {
+    order: 3;
+    width: 100%;
+    gap: 22px;
+  }
+}
