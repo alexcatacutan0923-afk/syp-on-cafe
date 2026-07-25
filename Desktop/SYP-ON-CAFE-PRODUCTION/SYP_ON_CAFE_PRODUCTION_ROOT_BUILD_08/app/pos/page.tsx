@@ -1318,7 +1318,7 @@ function buildReceiptHtml(payload: ReceiptPayload) {
   <section class="meta">
     <span>Order</span><strong>${receiptNo}</strong>
     <span>Date</span><strong>${escapeReceiptText(dateText)}</strong>
-    <span>Cashier</span><strong>${escapeReceiptText(cashierName.trim() || "Alex")}</strong>
+    <span>Cashier</span><strong>Alex</strong>
     <span>Payment</span><strong>${payment}</strong>
   </section>
   ${customerSection}
