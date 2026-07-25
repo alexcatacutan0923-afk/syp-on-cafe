@@ -89,18 +89,17 @@ export default function HomePage() {
 
   const shown = useMemo(() => category === "All" ? drinks : drinks.filter((drink) => drink.category === category), [category]);
 
-  return (
-    <main className="site-shell">
-      <header className="site-nav">
-        <Link className="site-brand" href="/">
-          <img src="/brand/syp-logo-glow-v2.webp" alt="SYP ON CAFÉ logo" />
-          <div><b>SYP ON CAFÉ</b><small>STREET • ICED • BREWED</small></div>
-        </Link>
-        <nav><Link href="/menu">Menu</Link><Link href="/reviews">Reviews</Link><Link href="/moments">Coffee Moments</Link><Link href="/about">About</Link><Link href="/contact">Visit</Link></nav>
-        <Link className="site-order" href="/menu">Order Now</Link>
-      </header>
 
-      <section className="site-hero cinematic-hero" ref={heroSection}>
+  const renderCafeVideo = (mini: boolean) => (
+    <div className={`hero-video-stage${mini ? " is-mini" : ""}`}>
+      <video ref={cafeVideo} src="/videos/syp-cafe-background.mp4" autoPlay muted={videoMuted} loop playsInline poster="/brand/syp-logo-glow-v2.webp" />
+      <div className="hero-video-overlay" />
+      <div className="hero-video-controls">
+        <button type="button" onClick={toggleVideoSound}>{videoMuted ? "🔇 Sound" : "🔊 Sound"}</button>
+        <button type="button" onClick={openVideoFullscreen}>⛶ Full size</button>
+      </div>
+      <div className="hero-video-brand">
+        <img src="/brand/syp-logo-glow-v2.webp" alt="        {!videoMini && renderCafeVideo(false)}ion}>
         <div className={`hero-video-stage${videoMini ? " is-mini" : ""}`}>
           <video ref={cafeVideo} src="/videos/syp-cafe-background.mp4" autoPlay muted loop playsInline poster="/brand/syp-logo-glow-v2.webp" />
           <div className="hero-video-overlay" />

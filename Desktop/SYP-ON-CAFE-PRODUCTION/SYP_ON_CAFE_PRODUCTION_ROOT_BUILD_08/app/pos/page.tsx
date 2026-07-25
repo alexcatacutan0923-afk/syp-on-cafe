@@ -39,8 +39,8 @@ type CartItem = Product & {
 };
 
 const products: Product[] = [
-  { id: "americano-16", name: "Americano", size: "16oz", price: 69, category: "Coffee", image: "/products/americano.webp" },
-  { id: "americano-22", name: "Americano", size: "22oz", price: 79, category: "Coffee", image: "/products/americano.webp" },
+  { id: "americano-16", name: "Americano", size: "16oz", price: 69, category: "Coffee", image: "/products/iced-americano-syp.webp" },
+  { id: "americano-22", name: "Americano", size: "22oz", price: 79, category: "Coffee", image: "/products/iced-americano-syp.webp" },
   { id: "spanish-16", name: "Spanish Latte", size: "16oz", price: 89, category: "Coffee", image: "/products/spanish-latte.webp", bestseller: true },
   { id: "spanish-22", name: "Spanish Latte", size: "22oz", price: 109, category: "Coffee", image: "/products/spanish-latte.webp", bestseller: true },
   { id: "oreo-16", name: "Oreo Latte", size: "16oz", price: 79, category: "Coffee", image: "/products/oreo-latte-corrected.webp" },
