@@ -81,6 +81,16 @@ export async function loginCloudMember(identity: string, pin: string) {
   return ((data ?? [])[0] ?? null) as CloudMember | null;
 }
 
+
+export async function getCloudMember(memberCode: string) {
+  const request = await withTimeout(
+    supabase.from("loyalty_members").select("*").eq("member_code", memberCode.trim()).maybeSingle(),
+    "Member refresh",
+  );
+  if (request.error) throw request.error;
+  return (request.data ?? null) as CloudMember | null;
+}
+
 export async function addCloudStamp(memberCode: string, count = 1) {
   const { data, error } = await supabase.rpc("add_loyalty_stamp", { p_member_code: memberCode, p_count: count });
   if (error) throw error;

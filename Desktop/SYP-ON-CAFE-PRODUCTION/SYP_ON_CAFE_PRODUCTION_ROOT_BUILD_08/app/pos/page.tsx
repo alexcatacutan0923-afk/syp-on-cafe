@@ -349,8 +349,12 @@ export default function PosPage() {
     }
     const quote = chooseReceiptQuote(completedAt);
     const seasonalTheme = getSeasonalReceiptTheme(completedAt);
-    const qrTarget = process.env.NEXT_PUBLIC_RECEIPT_QR_URL?.trim()
-      || `${window.location.origin}/member-register?source=receipt&receipt=${encodeURIComponent(receiptNo)}`;
+    const stampWasAdded = Boolean(
+      addStamp && selectedMember && cart.some((item) => item.category !== "Soda" && item.category !== "ADDS")
+    );
+    const qrTarget = memberForReceipt
+      ? `${window.location.origin}/member-login?identity=${encodeURIComponent(memberForReceipt.member_code)}&source=receipt&receipt=${encodeURIComponent(receiptNo)}`
+      : `${window.location.origin}/member-register?source=receipt&receipt=${encodeURIComponent(receiptNo)}`;
 
     if (autoPrint) {
       const printWindow = window.open("", "_blank", "width=420,height=780");
@@ -373,6 +377,8 @@ export default function PosPage() {
           quote,
           seasonalTheme,
           qrTarget,
+          member: memberForReceipt,
+          stampWasAdded,
         }));
         printWindow.document.close();
       } else {
@@ -716,6 +722,8 @@ type ReceiptPayload = {
   quote: { id: number; text: string; category: string };
   seasonalTheme: { key: string; title: string; message: string } | null;
   qrTarget: string;
+  member: CloudMember | null;
+  stampWasAdded: boolean;
 };
 
 function createReceiptNumber(date: Date) {
@@ -741,7 +749,7 @@ function escapeReceiptText(value: string) {
 function buildReceiptHtml(payload: ReceiptPayload) {
   const {
     receiptNo, completedAt, cart, subtotal, discount, total, payment, cash, change,
-    customerQuery, addStamp, orderNote, receiptStyle, quote, seasonalTheme, qrTarget,
+    customerQuery, addStamp, orderNote, receiptStyle, quote, seasonalTheme, qrTarget, member, stampWasAdded,
   } = payload;
   const isEco = receiptStyle === "eco";
   const isPremium = receiptStyle === "premium";
@@ -764,8 +772,14 @@ function buildReceiptHtml(payload: ReceiptPayload) {
     return `<div class="item-row"><div class="item-copy"><strong>${item.qty}x ${escapeReceiptText(item.name)}</strong>${!isEco && customization ? `<small>${escapeReceiptText(customization)}</small>` : ""}${!isEco && addons ? `<small>${escapeReceiptText(addons)}</small>` : ""}${!isEco && note ? `<small>${escapeReceiptText(note)}</small>` : ""}</div><strong>${money(item.unitPrice * item.qty)}</strong></div>`;
   }).join("");
 
-  const customerSection = customerQuery.trim() && !isEco ? `<div class="compact-line"><span>Customer</span><strong>${escapeReceiptText(customerQuery.trim())}</strong></div>` : "";
-  const loyaltySection = addStamp && !isEco ? `<section class="loyalty"><strong>KaSYP Loyalty</strong><span>Eligible purchase: +1 stamp</span><small>Scan below to register, view stamps, and claim rewards.</small></section>` : "";
+  const customerSection = member
+    ? `<div class="compact-line"><span>Member</span><strong>${escapeReceiptText(member.name)} · ${escapeReceiptText(member.member_code)}</strong></div>`
+    : customerQuery.trim() && !isEco
+      ? `<div class="compact-line"><span>Customer</span><strong>${escapeReceiptText(customerQuery.trim())}</strong></div>`
+      : "";
+  const loyaltySection = member
+    ? `<section class="loyalty"><strong>KaSYP Loyalty</strong><span>${stampWasAdded ? "✓ +1 STAMP ADDED" : "Member purchase recorded"}</span><b>${Number(member.stamps || 0)} / 10 STAMPS</b><small>${Number(member.stamps || 0) >= 10 ? "FREE DRINK READY — show this receipt at the counter." : `${Math.max(0, 10 - Number(member.stamps || 0))} stamp(s) before your free drink.`}</small></section>`
+    : `<section class="loyalty"><strong>Join KaSYP Rewards</strong><span>No member account selected</span><small>Scan below to create your free account and start collecting stamps.</small></section>`;
   const seasonalSection = seasonalTheme && isPremium ? `<section class="seasonal"><strong>${escapeReceiptText(seasonalTheme.title)}</strong><span>${escapeReceiptText(seasonalTheme.message)}</span></section>` : "";
   const orderNoteSection = orderNote.trim() && !isEco ? `<section class="order-note"><strong>Order note:</strong> ${escapeReceiptText(orderNote.trim())}</section>` : "";
 
@@ -797,7 +811,8 @@ function buildReceiptHtml(payload: ReceiptPayload) {
   .seasonal strong, .seasonal span { display: block; }
   .seasonal strong { letter-spacing: .7px; }
   .loyalty { text-align: center; margin: 6px 0; }
-  .loyalty strong, .loyalty span, .loyalty small { display: block; }
+  .loyalty strong, .loyalty span, .loyalty b, .loyalty small { display: block; }
+  .loyalty b { font-size: 16px; margin: 3px 0; }
   .order-note { font-size: 9.5px; margin: 5px 0; }
   .qr-wrap { text-align: center; margin-top: 5px; page-break-inside: avoid; }
   .qr-wrap img { width: 38mm; height: 38mm; display: block; margin: 2px auto; image-rendering: pixelated; }
@@ -838,9 +853,9 @@ function buildReceiptHtml(payload: ReceiptPayload) {
   ${loyaltySection}
   <div class="rule"></div>
   <section class="qr-wrap">
-    <div class="qr-title">SCAN TO JOIN KASYP REWARDS</div>
-    <img src="${qrImage}" alt="QR code to join KaSYP Rewards" />
-    <div class="qr-copy">Website · Menu · Loyalty · Rewards</div>
+    <div class="qr-title">${member ? "SCAN YOUR KASYP ACCOUNT" : "SCAN TO CREATE KASYP ACCOUNT"}</div>
+    <img src="${qrImage}" alt="${member ? "QR code for member account" : "QR code to create KaSYP account"}" />
+    <div class="qr-copy">${member ? `${escapeReceiptText(member.member_code)} · View updated stamps and rewards` : "New customer · Register and start earning stamps"}</div>
     <div class="site">syponcafe.shop</div>
   </section>
   <div class="rule"></div>

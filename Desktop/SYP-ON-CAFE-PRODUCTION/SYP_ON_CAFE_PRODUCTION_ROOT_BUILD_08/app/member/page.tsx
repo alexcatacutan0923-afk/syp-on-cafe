@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import MemberShell from "../components/member/MemberShell";
-import { clearMemberSession, getCurrentMember, MemberProfile, updateCurrentMember } from "@/lib/member-store";
+import { clearMemberSession, getCurrentMember, MemberProfile, saveCloudMember, updateCurrentMember } from "@/lib/member-store";
+import { getCloudMember } from "@/lib/member-cloud";
 import "./member.css";
 
 type CustomerOrder = {
@@ -31,6 +32,8 @@ export default function MemberDashboardPage() {
   const [profileDraft, setProfileDraft] = useState({ name: "", birthday: "", favoriteDrink: "" });
   const [customerOrders, setCustomerOrders] = useState<CustomerOrder[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+  const [memberRefreshing, setMemberRefreshing] = useState(false);
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
 
   useEffect(() => {
     const current = getCurrentMember();
@@ -38,6 +41,47 @@ export default function MemberDashboardPage() {
     setMember(current);
     setProfileDraft({ name: current.name, birthday: current.birthday, favoriteDrink: current.favoriteDrink });
   }, [router]);
+
+  useEffect(() => {
+    if (!member?.id) return;
+    let active = true;
+
+    const refreshMember = async (showSpinner = false) => {
+      if (showSpinner) setMemberRefreshing(true);
+      try {
+        const cloud = await getCloudMember(member.id);
+        if (!active || !cloud) return;
+        const updated = saveCloudMember(cloud);
+        setMember(updated);
+        setProfileDraft({ name: updated.name, birthday: updated.birthday, favoriteDrink: updated.favoriteDrink });
+        setLastSyncedAt(new Date());
+      } catch (error) {
+        console.error("Unable to refresh member dashboard:", error);
+      } finally {
+        if (active && showSpinner) setMemberRefreshing(false);
+      }
+    };
+
+    void refreshMember(true);
+    const interval = window.setInterval(() => void refreshMember(false), 10000);
+    const onFocus = () => void refreshMember(false);
+    const onVisibility = () => { if (document.visibilityState === "visible") void refreshMember(false); };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+
+    const channel = supabase
+      .channel(`member-live-${member.id}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "loyalty_members", filter: `member_code=eq.${member.id}` }, () => void refreshMember(false))
+      .subscribe();
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
+      void supabase.removeChannel(channel);
+    };
+  }, [member?.id]);
 
   useEffect(() => {
     if (!member?.mobile) return;
@@ -122,7 +166,7 @@ export default function MemberDashboardPage() {
       <main className="member-content">
         <section className="member-welcome">
           <div><small>GOOD EVENING, KASYP!</small><h2>Your coffee story keeps getting better.</h2><p>{nextReward === 0 ? "Your free drink reward is ready." : `You are ${nextReward} stamps away from your next free drink.`}</p></div>
-          <div className="member-status"><span>ACTIVE MEMBER</span><b>Since {formatMonthYear(member.joinedAt)}</b></div>
+          <div className="member-status"><span>{memberRefreshing ? "SYNCING..." : "LIVE MEMBER"}</span><b>{lastSyncedAt ? `Updated ${lastSyncedAt.toLocaleTimeString("en-PH", { hour: "numeric", minute: "2-digit" })}` : `Since ${formatMonthYear(member.joinedAt)}`}</b></div>
         </section>
 
         <section className="member-stats">
@@ -140,7 +184,7 @@ export default function MemberDashboardPage() {
               <div className="stamp-grid">{Array.from({ length: 10 }, (_, i) => <span key={i} className={i < member.stamps ? "filled" : ""}>{i < member.stamps ? "★" : i + 1}</span>)}</div>
               <div className="digital-card-foot"><span>{member.name.toUpperCase()}</span><b>{member.stamps} OF 10 STAMPS</b></div>
             </div>
-            <p className="card-note">Present your member ID at checkout. One eligible drink earns one stamp.</p>
+            <p className="card-note">Present your QR or member ID at checkout. Your stamps refresh automatically after the cashier completes the sale.</p>
           </article>
 
           <article id="visits" className="member-card visits-panel">
