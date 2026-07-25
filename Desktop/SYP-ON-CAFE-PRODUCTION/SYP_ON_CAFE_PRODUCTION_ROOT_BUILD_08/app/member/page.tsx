@@ -6,7 +6,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import MemberShell from "../components/member/MemberShell";
 import { clearMemberSession, getCurrentMember, MemberProfile, saveCloudMember, updateCurrentMember } from "@/lib/member-store";
-import { getCloudMember, getCloudMemberVisits } from "@/lib/member-cloud";
+import { changeCloudMemberPin, getCloudMember, getCloudMemberVisits } from "@/lib/member-cloud";
 import "./member.css";
 
 type CustomerOrder = {
@@ -36,6 +36,9 @@ export default function MemberDashboardPage() {
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
   const [cloudVisits, setCloudVisits] = useState<string[]>([]);
   const [calendarMonth, setCalendarMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const [pinDraft, setPinDraft] = useState({ current: "", next: "", confirm: "" });
+  const [pinStatus, setPinStatus] = useState("");
+  const [pinSaving, setPinSaving] = useState(false);
 
   useEffect(() => {
     const current = getCurrentMember();
@@ -173,6 +176,24 @@ export default function MemberDashboardPage() {
     setEditing(false);
   }
 
+  async function changePin() {
+    if (!member) return;
+    setPinStatus("");
+    if (!/^\d{4,6}$/.test(pinDraft.current) || !/^\d{4,6}$/.test(pinDraft.next)) { setPinStatus("PIN must be 4 to 6 digits."); return; }
+    if (pinDraft.next !== pinDraft.confirm) { setPinStatus("New PIN confirmation does not match."); return; }
+    if (pinDraft.current === pinDraft.next) { setPinStatus("Choose a different new PIN."); return; }
+    setPinSaving(true);
+    try {
+      await changeCloudMemberPin(member.id, pinDraft.current, pinDraft.next);
+      const updated = updateCurrentMember(current => ({ ...current, pin: pinDraft.next }));
+      if (updated) setMember(updated);
+      setPinDraft({ current: "", next: "", confirm: "" });
+      setPinStatus("PIN changed successfully.");
+    } catch (error) {
+      setPinStatus(error instanceof Error ? error.message : "Unable to change PIN.");
+    } finally { setPinSaving(false); }
+  }
+
   if (!member) return <main className="member-loading">Loading your membership...</main>;
 
   return (
@@ -284,6 +305,16 @@ export default function MemberDashboardPage() {
                 <button className="member-edit-btn" onClick={() => setEditing(true)}>Edit profile</button>
               </>
             )}
+            <div className="change-pin-panel">
+              <div><small>ACCOUNT SECURITY</small><h3>Change Member PIN</h3><p>Old imported accounts use the temporary PIN <b>1234</b>. Change it after your first login.</p></div>
+              <div className="pin-change-grid">
+                <label>Current PIN<input type="password" inputMode="numeric" value={pinDraft.current} onChange={event => setPinDraft(current => ({...current,current:event.target.value.replace(/\D/g,"").slice(0,6)}))} placeholder="1234" /></label>
+                <label>New PIN<input type="password" inputMode="numeric" value={pinDraft.next} onChange={event => setPinDraft(current => ({...current,next:event.target.value.replace(/\D/g,"").slice(0,6)}))} placeholder="4–6 digits" /></label>
+                <label>Confirm new PIN<input type="password" inputMode="numeric" value={pinDraft.confirm} onChange={event => setPinDraft(current => ({...current,confirm:event.target.value.replace(/\D/g,"").slice(0,6)}))} placeholder="Repeat PIN" /></label>
+              </div>
+              {pinStatus && <p className={`pin-change-status ${pinStatus.includes("successfully") ? "success" : ""}`}>{pinStatus}</p>}
+              <button className="member-primary compact" onClick={changePin} disabled={pinSaving}>{pinSaving ? "Saving..." : "Change PIN"}</button>
+            </div>
             <div className="profile-lines"><div><span>Community</span><b><a href="/reviews" style={{color:"#e8b94f"}}>Reviews</a> · <a href="/moments" style={{color:"#e8b94f"}}>Coffee Moments</a></b></div></div>
             <button className="logout-btn" onClick={() => { clearMemberSession(); router.push("/member-login"); }}>Sign out of member portal</button>
           </article>

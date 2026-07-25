@@ -57,6 +57,7 @@ export default function MemberLoginPage() {
         <small className="gold-label">SYP DIGITAL MEMBERSHIP</small>
         <h1>Welcome back, KaSyp!</h1>
         <p>{searchParams.get("identity") ? "Your QR code opened this account. Enter your PIN to continue." : "Check your loyalty stamps, rewards, visits, and café moments."}</p>
+        <div className="member-auth-notice">Old imported members: use temporary PIN <b>1234</b>, then change it inside Profile.</div>
         <form onSubmit={submit}>
           <label>Mobile number or Member ID<input value={identity} onChange={e => setIdentity(e.target.value)} placeholder="09XX XXX XXXX or SYP0001" /></label>
           <label>Member PIN<div className="pin-wrap"><input value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, "").slice(0, 6))} type={showPin ? "text" : "password"} inputMode="numeric" placeholder="••••" /><button type="button" onClick={() => setShowPin(v => !v)}>{showPin ? "Hide" : "Show"}</button></div></label>

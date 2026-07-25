@@ -36,6 +36,15 @@ const reviews = [
   { name: "Mika", stars: 5, drink: "Biscoff Matcha", text: "Creamy matcha, malinaw ang Biscoff flavor at sulit ang size.", date: "Loyalty member" },
 ];
 
+const communityMoments = [
+  { image: "/community/IMG_3227.webp", title: "Free Drink Reward Claimed", caption: "A KaSYP member celebrates a loyalty reward with her favorite SYP drink." },
+  { image: "/community/IMG_3228.webp", title: "Coffee and Fries Combo", caption: "Freshly prepared drinks and SYP fries—perfect for sharing during tambay nights." },
+  { image: "/community/IMG_3229.webp", title: "Fresh Coffee Beans", caption: "Quality coffee beans prepared for every bold and satisfying cup." },
+  { image: "/community/IMG_3230.webp", title: "Fries and Board Games", caption: "Snack, play, and stay longer with SYP fries and café board games." },
+  { image: "/community/IMG_3231.webp", title: "Late-Night Café Tambayan", caption: "A cozy café corner ready for late-night coffee, conversations, and good memories." },
+  { image: "/community/IMG_3232.webp", title: "Games for Every KaSYP", caption: "Chess, cards, and classic games available while enjoying your drinks." },
+];
+
 export default function HomePage() {
   const [category, setCategory] = useState("All");
   const [activeDrink, setActiveDrink] = useState<FeaturedDrink | null>(null);
@@ -60,8 +69,8 @@ export default function HomePage() {
         </div>
         <div className="hero-product-photo">
           <span className="preview-tag">MOST LOVED</span>
-          <img src="/featured/spanish-latte.webp" alt="Spanish Latte featured drink" />
-          <div><small>COFFEE COLLECTION</small><h2>Spanish Latte</h2><p>Bold espresso meets sweet, creamy condensed milk.</p><strong>Starts at ₱89</strong></div>
+          <img src="/featured/biscoff-matcha.webp" alt="Biscoff Matcha featured drink" />
+          <div><small>MATCHA COLLECTION</small><h2>Biscoff Matcha</h2><p>Smooth premium matcha layered with creamy Biscoff sweetness.</p><strong>Starts at ₱119</strong></div>
         </div>
       </section>
 
@@ -77,8 +86,20 @@ export default function HomePage() {
         </article>)}</div>
       </section>
 
+      <section className="site-section community-showcase">
+        <div className="community-feed">
+          <div className="section-heading"><div><small>RECENT KASYP MOMENTS</small><h2>Real customers. Real coffee moments.</h2></div><Link href="/moments">View album →</Link></div>
+          <div className="community-album">{communityMoments.map((moment) => <article key={moment.image}><img src={moment.image} alt={moment.title} loading="lazy" /><div><small>SYP ON CAFÉ COMMUNITY</small><h3>{moment.title}</h3><p>{moment.caption}</p></div></article>)}</div>
+        </div>
+        <aside className="sticky-cafe-video">
+          <div className="video-brand"><span>SYP</span><div><b>SYP ON CAFÉ</b><small>STREET • ICED • BREWED</small></div></div>
+          <video src="/videos/syp-cafe-moments.mp4" autoPlay muted loop playsInline controls poster="/community/IMG_3231.webp" />
+          <div><small>INSIDE SYP ON CAFÉ</small><h3>Your late-night coffee tambayan.</h3><p>See the café atmosphere while browsing our latest customer moments.</p><a href="https://syponcafe.shop">syponcafe.shop</a></div>
+        </aside>
+      </section>
+
       <section className="site-section member-banner">
-        <div><small>SYP DIGITAL MEMBERSHIP</small><h2>Every visit becomes part of your coffee story.</h2><p>Track stamps, café visits, birthday rewards, referrals, favorite drinks, and exclusive prizes.</p><Link className="gold-button" href="/member-register">Create Free Membership</Link></div>
+        <div className="member-banner-copy"><small>SYP DIGITAL MEMBERSHIP</small><h2>Every visit becomes part of your coffee story.</h2><p>Track stamps, café visits, birthday rewards, referrals, favorite drinks, and exclusive prizes.</p><div className="redeem-proof"><img src="/community/IMG_3227.webp" alt="KaSYP member holding her free loyalty drink" loading="lazy" /><span><b>Loyalty Free Drink Redeemed</b><small>Complete 10 stamps and enjoy your reward.</small></span></div><Link className="gold-button" href="/member-register">Create Free Membership</Link></div>
         <div className="membership-card"><div><span><b>SYP ON CAFÉ</b><small>DIGITAL MEMBER</small></span><i>JD</i></div><h3>JUAN DELA CRUZ</h3><p>SYP0021 • TRUSTED MEMBER</p><section>{Array.from({ length: 10 }, (_, i) => <span className={i < 6 ? "filled" : ""} key={i}>{i < 6 ? "★" : i + 1}</span>)}</section><footer><b>6 / 10 STAMPS</b><span>4 more to a free drink</span></footer></div>
       </section>
 

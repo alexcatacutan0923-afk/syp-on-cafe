@@ -1,12 +1,12 @@
 export const PRODUCT_IMAGE_BY_NAME: Record<string, string> = {
-  "americano": "/products/spanish-latte.webp",
+  "americano": "/products/americano.webp",
   "spanish latte": "/products/spanish-latte.webp",
-  "oreo latte": "/products/oreo-latte.webp",
+  "oreo latte": "/products/oreo-latte-corrected.webp",
   "iced milo latte": "/products/iced-milo-latte.webp",
   "milo latte": "/products/iced-milo-latte.webp",
   "vanilla latte": "/products/roasted-almond-latte.webp",
   "french vanilla latte": "/products/french-vanilla-latte.webp",
-  "roasted almond latte": "/products/roasted-almond-latte.webp",
+  "roasted almond latte": "/products/roasted-almond-latte-corrected.webp",
   "biscoff latte": "/products/biscoff-latte.webp",
   "salted caramel": "/products/caramel-macchiato-alt.webp",
   "salted caramel latte": "/products/caramel-macchiato-alt.webp",
@@ -53,7 +53,9 @@ export function normalizeProductName(name: string) {
 }
 
 export function getProductImage(name: string, category?: string, databaseImage?: string | null) {
+  const isHot = /^hot\s+/i.test(name.trim());
   const normalized = normalizeProductName(name);
+  if (isHot) return "/products/hot-cup-black.webp";
   return (
     PRODUCT_IMAGE_BY_NAME[normalized] ||
     (databaseImage?.startsWith("/products/") ? databaseImage : "") ||

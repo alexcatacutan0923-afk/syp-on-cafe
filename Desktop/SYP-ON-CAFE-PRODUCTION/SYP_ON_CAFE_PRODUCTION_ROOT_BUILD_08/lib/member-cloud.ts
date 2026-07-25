@@ -116,3 +116,13 @@ export async function claimCloudFreeDrink(memberCode: string, receiptNo: string,
   if (error) throw error;
   return data as CloudMember;
 }
+
+export async function changeCloudMemberPin(memberCode: string, currentPin: string, newPin: string) {
+  const { data, error } = await supabase.rpc("change_loyalty_member_pin", {
+    p_member_code: memberCode.trim(),
+    p_current_pin: currentPin,
+    p_new_pin: newPin,
+  });
+  if (error) throw error;
+  return Boolean(data);
+}
