@@ -30,19 +30,20 @@ const drinks: FeaturedDrink[] = [
   { name: "SYP Choco Boom", category: "Signature", price: "₱99", rating: "4.9", reviews: 99, image: "/products/syp-choco-boom.webp", poster: "/featured/syp-choco-boom.webp", note: "Rich chocolate and coffee in one addictive blend.", tag: "SIGNATURE" },
 ];
 
-const reviews = [
-  { name: "Angeline", stars: 5, drink: "Spanish Latte", text: "Smooth, hindi sobrang tamis at bagay sa late-night tambay.", date: "Verified visit" },
-  { name: "Keith", stars: 5, drink: "SYP White Rush", text: "Creamy at premium ang lasa. Ito na ang favorite ko.", date: "Verified order" },
-  { name: "Mika", stars: 5, drink: "Biscoff Matcha", text: "Creamy matcha, malinaw ang Biscoff flavor at sulit ang size.", date: "Loyalty member" },
+const communityMoments = [
+  { image: "/community-v2/barkada-board-games.webp", title: "Barkada Game Night", caption: "Coffee, board games, and late-night kwentuhan with the KaSYP barkada.", badge: "BARKADA MOMENT" },
+  { image: "/community-v2/cafe-barkada-selfie.webp", title: "Tropang SYP", caption: "A real café hangout shared by friends who keep coming back for good drinks and good vibes.", badge: "KASYP FAMILY" },
+  { image: "/community-v2/barkada-tambay-collage.webp", title: "Coffee Tastes Better Together", caption: "Group drinks, mirror shots, and memories made at the café.", badge: "BARKADA FAVORITE" },
+  { image: "/community-v2/coffee-fries-barkada.webp", title: "Coffee, Fries, and Tambay", caption: "A simple night made better with drinks, fries, games, and friends.", badge: "CAFE NIGHT" },
+  { image: "/community-v2/mirror-selfie-regular.webp", title: "Mandatory Mirror Selfie", caption: "A regular KaSYP tradition—one mirror selfie before heading home.", badge: "MIRROR MOMENT" },
+  { image: "/community-v2/coffee-buddy-night.webp", title: "Coffee Buddy Night", caption: "Two cups, one late-night story, and another SYP memory.", badge: "LATE-NIGHT KASYP" },
 ];
 
-const communityMoments = [
-  { image: "/community/IMG_3227.webp", title: "Free Drink Reward Claimed", caption: "A KaSYP member celebrates a loyalty reward with her favorite SYP drink." },
-  { image: "/community/IMG_3228.webp", title: "Coffee and Fries Combo", caption: "Freshly prepared drinks and SYP fries—perfect for sharing during tambay nights." },
-  { image: "/community/IMG_3229.webp", title: "Fresh Coffee Beans", caption: "Quality coffee beans prepared for every bold and satisfying cup." },
-  { image: "/community/IMG_3230.webp", title: "Fries and Board Games", caption: "Snack, play, and stay longer with SYP fries and café board games." },
-  { image: "/community/IMG_3231.webp", title: "Late-Night Café Tambayan", caption: "A cozy café corner ready for late-night coffee, conversations, and good memories." },
-  { image: "/community/IMG_3232.webp", title: "Games for Every KaSYP", caption: "Chess, cards, and classic games available while enjoying your drinks." },
+const loyaltyHighlights = [
+  { image: "/community-v2/most-loyal-customer.webp", title: "Loyalty Legend", subtitle: "Always supporting, always sharing", copy: "A true KaSYP regular who keeps choosing SYP ON CAFÉ and proudly shares the journey." },
+  { image: "/community-v2/loyalty-card-queen.webp", title: "Story Star", subtitle: "Caught posting again", copy: "One of our most active supporters—always tagging, posting, and spreading the SYP coffee love." },
+  { image: "/community-v2/new-loyalty-card.webp", title: "New Card, Same Favorite Shop", subtitle: "Another loyalty journey begins", copy: "A fresh card for a loyal customer who keeps coming back, one stamp at a time." },
+  { image: "/community-v2/free-drink-supporter.webp", title: "Reward Winner", subtitle: "Free coffee unlocked", copy: "Ten stamps completed and another well-deserved SYP reward claimed." },
 ];
 
 export default function HomePage() {
@@ -52,7 +53,6 @@ export default function HomePage() {
   const [videoMini, setVideoMini] = useState(false);
   const featuredRail = useRef<HTMLDivElement | null>(null);
   const communityRail = useRef<HTMLDivElement | null>(null);
-  const reviewRail = useRef<HTMLDivElement | null>(null);
   const cafeVideo = useRef<HTMLVideoElement | null>(null);
   const heroSection = useRef<HTMLElement | null>(null);
   const categories = ["All", "Coffee", "Matcha", "Milky", "Signature"];
@@ -93,7 +93,7 @@ export default function HomePage() {
     <main className="site-shell">
       <header className="site-nav">
         <Link className="site-brand" href="/">
-          <img src="/brand/syp-logo-glow.png" alt="SYP ON CAFÉ logo" />
+          <img src="/brand/syp-logo-glow-v2.webp" alt="SYP ON CAFÉ logo" />
           <div><b>SYP ON CAFÉ</b><small>STREET • ICED • BREWED</small></div>
         </Link>
         <nav><Link href="/menu">Menu</Link><Link href="/reviews">Reviews</Link><Link href="/moments">Coffee Moments</Link><Link href="/about">About</Link><Link href="/contact">Visit</Link></nav>
@@ -102,14 +102,14 @@ export default function HomePage() {
 
       <section className="site-hero cinematic-hero" ref={heroSection}>
         <div className={`hero-video-stage${videoMini ? " is-mini" : ""}`}>
-          <video ref={cafeVideo} src="/videos/syp-cafe-background.mp4" autoPlay muted loop playsInline poster="/brand/syp-logo-glow.png" />
+          <video ref={cafeVideo} src="/videos/syp-cafe-background.mp4" autoPlay muted loop playsInline poster="/brand/syp-logo-glow-v2.webp" />
           <div className="hero-video-overlay" />
           <div className="hero-video-controls">
             <button type="button" onClick={toggleVideoSound}>{videoMuted ? "🔇 Sound" : "🔊 Sound"}</button>
             <button type="button" onClick={openVideoFullscreen}>⛶ Full size</button>
           </div>
           <div className="hero-video-brand">
-            <img src="/brand/syp-logo-glow.png" alt="SYP ON CAFÉ logo" />
+            <img src="/brand/syp-logo-glow-v2.webp" alt="SYP ON CAFÉ logo" />
             <span><b>SYP ON CAFÉ</b><small>Street • Iced • Brewed</small></span>
           </div>
           {videoMini && <button className="mini-video-return" type="button" onClick={() => heroSection.current?.scrollIntoView({ behavior: "smooth" })}>Return to hero</button>}
@@ -145,10 +145,10 @@ export default function HomePage() {
       <section className="site-section community-showcase">
         <div className="community-feed">
           <div className="section-heading"><div><small>RECENT KASYP MOMENTS</small><h2>Real customers. Real coffee moments.</h2></div><div className="rail-actions"><button type="button" onClick={() => moveRail(communityRail, -1)} aria-label="Scroll customer photos left">←</button><button type="button" onClick={() => moveRail(communityRail, 1)} aria-label="Scroll customer photos right">→</button><Link href="/moments">View album</Link></div></div>
-          <div className="community-album horizontal-rail" ref={communityRail}>{communityMoments.map((moment) => <article key={moment.image}><img src={moment.image} alt={moment.title} loading="lazy" /><div><small>SYP ON CAFÉ COMMUNITY</small><h3>{moment.title}</h3><p>{moment.caption}</p></div></article>)}</div>
+          <div className="community-album horizontal-rail" ref={communityRail}>{communityMoments.map((moment) => <article key={moment.image}><img src={moment.image} alt={moment.title} loading="lazy" /><div><small>{moment.badge}</small><h3>{moment.title}</h3><p>{moment.caption}</p></div></article>)}</div>
         </div>
         <aside className="community-promo-card">
-          <img src="/brand/syp-logo-clean.jpg" alt="SYP ON CAFÉ official logo" />
+          <img src="/brand/syp-logo-clean-v2.webp" alt="SYP ON CAFÉ official logo" />
           <small>YOUR KASYP COMMUNITY</small>
           <h3>Real coffee. Real customers. Real moments.</h3>
           <p>Share your favorite SYP moment and be part of the next customer album.</p>
@@ -156,19 +156,24 @@ export default function HomePage() {
         </aside>
       </section>
 
+      <section className="site-section loyalty-spotlight-section">
+        <div className="section-heading"><div><small>KASYP HALL OF FAME</small><h2>Celebrating our most loyal and active supporters.</h2></div><Link href="/moments">View community wall</Link></div>
+        <div className="loyalty-spotlight-grid">{loyaltyHighlights.map((item) => <article key={item.image}><img src={item.image} alt={item.title} loading="lazy" /><div><span>{item.subtitle}</span><h3>{item.title}</h3><p>{item.copy}</p></div></article>)}</div>
+      </section>
+
       <section className="site-section member-banner">
         <div className="member-banner-copy"><small>SYP DIGITAL MEMBERSHIP</small><h2>Every visit becomes part of your coffee story.</h2><p>Track stamps, café visits, birthday rewards, referrals, favorite drinks, and exclusive prizes.</p><div className="redeem-proof"><img src="/community/IMG_3227.webp" alt="KaSYP member holding her free loyalty drink" loading="lazy" /><span><b>Loyalty Free Drink Redeemed</b><small>Complete 10 stamps and enjoy your reward.</small></span></div><Link className="gold-button" href="/member-register">Create Free Membership</Link></div>
         <div className="membership-card"><div><span><b>SYP ON CAFÉ</b><small>DIGITAL MEMBER</small></span><i>JD</i></div><h3>JUAN DELA CRUZ</h3><p>SYP0021 • TRUSTED MEMBER</p><section>{Array.from({ length: 10 }, (_, i) => <span className={i < 6 ? "filled" : ""} key={i}>{i < 6 ? "★" : i + 1}</span>)}</section><footer><b>6 / 10 STAMPS</b><span>4 more to a free drink</span></footer></div>
       </section>
 
-      <section className="site-section review-section">
-        <div className="section-heading"><div><small>REAL SYP EXPERIENCES</small><h2>Loved by our KaSYP community</h2></div><div className="rail-actions"><button type="button" onClick={() => moveRail(reviewRail, -1)} aria-label="Scroll reviews left">←</button><button type="button" onClick={() => moveRail(reviewRail, 1)} aria-label="Scroll reviews right">→</button><Link href="/reviews">See all reviews</Link></div></div>
-        <div className="review-grid horizontal-rail" ref={reviewRail}>{reviews.map((review) => <article key={review.name}><div><span>{review.name.slice(0, 1)}</span><div><b>{review.name}</b><small>{review.date}</small></div><em>{"★".repeat(review.stars)}</em></div><p>“{review.text}”</p><footer>Ordered: <b>{review.drink}</b></footer></article>)}</div>
+      <section className="site-section real-review-cta">
+        <div><small>REAL CUSTOMER RATINGS ONLY</small><h2>No demo reviews. Every rating comes from a real completed SYP order.</h2><p>Customers can submit one verified rating after their order is completed. Approved ratings appear on the Reviews page.</p></div>
+        <Link className="gold-button" href="/reviews">View Real Reviews</Link>
       </section>
 
       <section className="site-section visit-section"><div><small>DELIVERY & PICKUP</small><h2>Order your favorites in a few taps.</h2><p>Browse the live menu, customize your drink, and continue to checkout.</p><div className="hero-actions"><Link className="gold-button" href="/menu">Start an Order</Link><Link className="ghost-button" href="/contact">Visit the Café</Link></div></div><div className="visit-details"><article><span>01</span><b>Choose your drink</b><small>Actual photos, sizes, and add-ons.</small></article><article><span>02</span><b>Review your cart</b><small>See the complete total before checkout.</small></article><article><span>03</span><b>Track your order</b><small>Follow preparation and delivery status.</small></article></div></section>
 
-      <footer className="site-footer"><div className="site-brand"><img src="/brand/syp-logo-glow.png" alt="SYP ON CAFÉ logo" /><div><b>SYP ON CAFÉ</b><small>APOLLO, ORANI, BATAAN</small></div></div><p>Besides 7-Eleven & in front of Mangan Tamu • Open daily 5PM–4AM</p><nav><Link href="/menu">Menu</Link><Link href="/about">About</Link><Link href="/contact">Visit</Link><Link href="/member-login">Member portal</Link></nav></footer>
+      <footer className="site-footer"><div className="site-brand"><img src="/brand/syp-logo-glow-v2.webp" alt="SYP ON CAFÉ logo" /><div><b>SYP ON CAFÉ</b><small>APOLLO, ORANI, BATAAN</small></div></div><p>Besides 7-Eleven & in front of Mangan Tamu • Open daily 5PM–4AM</p><nav><Link href="/menu">Menu</Link><Link href="/about">About</Link><Link href="/contact">Visit</Link><Link href="/member-login">Member portal</Link></nav></footer>
 
       <nav className="mobile-quick-bar" aria-label="Quick actions"><Link href="/menu">Order</Link><Link href="/menu">Menu</Link><Link href="/member-login">Rewards</Link></nav>
 

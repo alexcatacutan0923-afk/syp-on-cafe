@@ -1,83 +1,72 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import { isSupabaseConfigured, supabase } from "@/lib/supabase";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "../../lib/supabase";
 import "../site.css";
-import "./reviews.css";
 
-type Review = {
-  id: number;
-  name: string;
-  drink: string;
-  stars: number;
-  review_text: string;
-  badge: string | null;
+type ReviewRow = {
+  id: string;
+  customer_name: string;
+  rating: number;
+  comment: string;
+  product_name: string | null;
   created_at: string;
-  owner_reply: string | null;
+  is_approved: boolean;
 };
 
-const drinks = ["Spanish Latte", "Hot Salted Caramel", "Biscoff Matcha", "SYP Choco Boom", "Milo Dino", "Americano", "Oreo Latte"];
-
 export default function ReviewsPage() {
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [filter, setFilter] = useState("All");
+  const [reviews, setReviews] = useState<ReviewRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ name: "", drink: drinks[0], stars: 5, text: "", orderNumber: "" });
 
-  async function loadReviews() {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("community_reviews")
-      .select("id,name,drink,stars,review_text,badge,created_at,owner_reply")
-      .eq("status", "approved")
-      .order("created_at", { ascending: false });
-    if (!error) setReviews((data ?? []) as Review[]);
-    setLoading(false);
-  }
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      const { data } = await supabase
+        .from("customer_reviews")
+        .select("id, customer_name, rating, comment, product_name, created_at, is_approved")
+        .eq("is_approved", true)
+        .order("created_at", { ascending: false });
+      if (active) {
+        setReviews((data ?? []) as ReviewRow[]);
+        setLoading(false);
+      }
+    };
+    void load();
+    return () => { active = false; };
+  }, []);
 
-  useEffect(() => { void loadReviews(); }, []);
+  const average = useMemo(() => {
+    if (!reviews.length) return "—";
+    return (reviews.reduce((sum, item) => sum + item.rating, 0) / reviews.length).toFixed(1);
+  }, [reviews]);
 
-  const shown = useMemo(() => filter === "All" ? reviews : reviews.filter((r) => String(r.stars) === filter), [filter, reviews]);
-  const average = reviews.length ? (reviews.reduce((sum, review) => sum + review.stars, 0) / reviews.length).toFixed(1) : "0.0";
+  return (
+    <main className="site-shell subpage-shell">
+      <header className="site-nav">
+        <Link className="site-brand" href="/"><img src="/brand/syp-logo-glow-v2.webp" alt="SYP ON CAFÉ logo" /><div><b>SYP ON CAFÉ</b><small>RATINGS & REVIEWS</small></div></Link>
+        <nav><Link href="/menu">Menu</Link><Link href="/moments">Coffee Moments</Link><Link href="/member-login">Rewards</Link></nav>
+        <Link className="site-order" href="/menu">Order Now</Link>
+      </header>
 
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    if (!form.name.trim() || form.text.trim().length < 8) {
-      setMessage("Please enter your name and a review with at least 8 characters.");
-      return;
-    }
-    if (!isSupabaseConfigured) {
-      setMessage("Reviews are temporarily unavailable.");
-      return;
-    }
-    setSubmitting(true);
-    setMessage("");
-    const { error } = await supabase.from("community_reviews").insert({
-      name: form.name.trim(),
-      drink: form.drink,
-      stars: form.stars,
-      review_text: form.text.trim(),
-      order_number: form.orderNumber.trim() || null,
-      status: "pending",
-    });
-    setSubmitting(false);
-    if (error) {
-      setMessage(error.message.includes("community_reviews") ? "Setup required: run the Build 09 Supabase SQL file." : error.message);
-      return;
-    }
-    setForm((current) => ({ ...current, name: "", text: "", orderNumber: "" }));
-    setMessage("Thank you! Your review was submitted for admin approval.");
-  }
+      <section className="subpage-hero">
+        <small>VERIFIED CUSTOMER FEEDBACK</small>
+        <h1>Real orders. Real ratings.</h1>
+        <p>Demo reviews have been removed. Only approved ratings connected to completed SYP ON CAFÉ orders appear here.</p>
+        <div className="review-summary"><div><b>{average}</b><span>Average rating</span></div><div><b>{reviews.length}</b><span>Verified reviews</span></div></div>
+      </section>
 
-  return <main className="community-page">
-    <header className="community-nav"><Link className="site-brand" href="/"><span>SYP</span><div><b>SYP ON CAFÉ</b><small>RATINGS & REVIEWS</small></div></Link><nav><Link href="/">Home</Link><Link href="/menu">Menu</Link><Link href="/moments">Coffee Moments</Link></nav><Link className="gold-button" href="/member-login">Member Login</Link></header>
-    <section className="community-hero"><small>REAL SYP EXPERIENCES</small><h1>Reviews from our KaSYP community.</h1><p>Only admin-approved customer reviews appear here.</p><div className="rating-summary"><b>{average}</b><span><em>★★★★★</em><small>{reviews.length} approved reviews</small></span></div></section>
-    <section className="community-layout"><div>
-      <div className="review-toolbar"><div><h2>Latest reviews</h2><p>Verified orders can receive a badge after admin review.</p></div><select aria-label="Filter reviews" value={filter} onChange={(event) => setFilter(event.target.value)}><option>All</option><option value="5">5 stars</option><option value="4">4 stars</option><option value="3">3 stars</option></select></div>
-      {loading ? <div className="community-empty">Loading reviews…</div> : shown.length === 0 ? <div className="community-empty">No approved reviews yet. Be the first to submit one.</div> : <div className="all-reviews">{shown.map((review) => <article key={review.id}><header><i>{review.name[0]?.toUpperCase()}</i><div><b>{review.name}</b><span>{review.badge || "Customer review"} • {new Date(review.created_at).toLocaleDateString("en-PH", { month: "short", day: "numeric" })}</span></div><em>{"★".repeat(review.stars)}{"☆".repeat(5 - review.stars)}</em></header><p>“{review.review_text}”</p>{review.owner_reply && <div className="owner-reply"><b>SYP ON CAFÉ replied</b><span>{review.owner_reply}</span></div>}<footer>Ordered: <b>{review.drink}</b></footer></article>)}</div>}
-    </div><aside className="review-form-card"><small>SHARE YOUR EXPERIENCE</small><h2>Rate your SYP moment</h2><p>Your review will appear after admin approval.</p><form onSubmit={submit}><label>Name<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="Your name" maxLength={60}/></label><label>Order number (optional)<input value={form.orderNumber} onChange={(event) => setForm({ ...form, orderNumber: event.target.value })} placeholder="SYP-…" maxLength={40}/></label><label>Drink<select value={form.drink} onChange={(event) => setForm({ ...form, drink: event.target.value })}>{drinks.map((drink) => <option key={drink}>{drink}</option>)}</select></label><label>Rating<select value={form.stars} onChange={(event) => setForm({ ...form, stars: Number(event.target.value) })}><option value="5">★★★★★</option><option value="4">★★★★☆</option><option value="3">★★★☆☆</option><option value="2">★★☆☆☆</option><option value="1">★☆☆☆☆</option></select></label><label>Review<textarea value={form.text} onChange={(event) => setForm({ ...form, text: event.target.value })} placeholder="Tell us what you loved…" rows={5} maxLength={500}/></label><button className="gold-button" disabled={submitting}>{submitting ? "Submitting…" : "Submit Review"}</button>{message && <div className="submit-note">{message}</div>}</form></aside></section>
-  </main>;
+      <section className="site-section">
+        {loading ? <p className="empty-state">Loading real customer reviews…</p> : reviews.length ? (
+          <div className="real-review-grid">{reviews.map((review) => <article key={review.id}>
+            <header><span>{review.customer_name.slice(0, 1).toUpperCase()}</span><div><b>{review.customer_name}</b><small>Verified completed order</small></div><em>{"★".repeat(Math.max(1, Math.min(5, review.rating)))}</em></header>
+            <p>“{review.comment}”</p>
+            <footer>{review.product_name ? <>Ordered: <b>{review.product_name}</b></> : "SYP ON CAFÉ customer"}<time>{new Date(review.created_at).toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "numeric" })}</time></footer>
+          </article>)}</div>
+        ) : (
+          <div className="empty-review-panel"><img src="/brand/syp-logo-clean-v2.webp" alt="SYP ON CAFÉ logo" /><small>REVIEWS START HERE</small><h2>No published ratings yet.</h2><p>After a completed order, customers can submit a verified rating. The first approved rating will automatically appear here.</p><Link className="gold-button" href="/menu">Place an Order</Link></div>
+        )}
+      </section>
+    </main>
+  );
 }
