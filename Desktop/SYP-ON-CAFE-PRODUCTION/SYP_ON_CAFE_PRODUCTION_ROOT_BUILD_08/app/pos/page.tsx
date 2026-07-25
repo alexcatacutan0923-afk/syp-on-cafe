@@ -12,6 +12,53 @@ type ReceiptStyle = "eco" | "classic" | "premium";
 type DiscountReason = "None" | "Loyalty Reward" | "Promo" | "Senior/PWD" | "Manager Adjustment" | "Other";
 type ShiftStats = { sales: number; orders: number; members: number; freeDrinks: number; loading: boolean; error: string };
 
+type LiveOrderItem = { name: string; size: string; qty: number; unitPrice: number; image: string; details: string };
+type LiveOrderSnapshot = {
+  mode: "cart" | "thank-you";
+  queueNo?: string;
+  receiptNo?: string;
+  items: LiveOrderItem[];
+  subtotal: number;
+  discount: number;
+  total: number;
+  customerName?: string;
+  updatedAt: string;
+};
+type KitchenOrder = LiveOrderSnapshot & {
+  id: string;
+  queueNo: string;
+  receiptNo: string;
+  status: "new" | "preparing" | "ready" | "served";
+  createdAt: string;
+  note?: string;
+};
+
+const LIVE_ORDER_KEY = "syp-live-order-v1";
+const KITCHEN_ORDERS_KEY = "syp-kitchen-orders-v1";
+const DISPLAY_CHANNEL = "syp-cafe-live-v1";
+
+function publishCafeEvent(type: string, payload: unknown) {
+  if (typeof window === "undefined") return;
+  try {
+    const channel = new BroadcastChannel(DISPLAY_CHANNEL);
+    channel.postMessage({ type, payload });
+    channel.close();
+  } catch {
+    // localStorage remains the cross-tab fallback.
+  }
+}
+
+function makeQueueNumber(date: Date) {
+  const shiftStart = new Date(date);
+  if (date.getHours() < 4) shiftStart.setDate(shiftStart.getDate() - 1);
+  shiftStart.setHours(17, 0, 0, 0);
+  const key = `syp-queue-${shiftStart.toISOString().slice(0, 10)}`;
+  const next = Math.max(1, Number(window.localStorage.getItem(key) || "0") + 1);
+  window.localStorage.setItem(key, String(next));
+  return `A-${String(next).padStart(3, "0")}`;
+}
+
+
 type Product = {
   id: string;
   name: string;
@@ -205,6 +252,29 @@ export default function PosPage() {
   const total = Math.max(0, subtotal - discount - loyaltyRewardDiscount);
   const change = payment === "Cash" ? Math.max(0, cash - total) : 0;
   const checkoutReady = cart.length > 0 && (payment !== "Cash" || cash >= total);
+
+  useEffect(() => {
+    const snapshot: LiveOrderSnapshot = {
+      mode: "cart",
+      items: cart.map((item) => ({
+        name: item.name,
+        size: item.size,
+        qty: item.qty,
+        unitPrice: item.unitPrice,
+        image: item.image,
+        details: item.category === "Fries"
+          ? String(item.customization.flavor || "")
+          : [item.customization.temperature, `${item.customization.sugar} sugar`, item.customization.ice].filter(Boolean).join(" · "),
+      })),
+      subtotal,
+      discount: discount + loyaltyRewardDiscount,
+      total,
+      customerName: selectedMember?.name || customerQuery.trim() || undefined,
+      updatedAt: new Date().toISOString(),
+    };
+    window.localStorage.setItem(LIVE_ORDER_KEY, JSON.stringify(snapshot));
+    publishCafeEvent("live-order", snapshot);
+  }, [cart, subtotal, discount, loyaltyRewardDiscount, total, selectedMember, customerQuery]);
 
   const applyManualDiscount = (amount: number, reason: DiscountReason = discountReason) => {
     const safeAmount = Math.max(0, Math.min(subtotal, Math.round(amount)));
@@ -403,6 +473,7 @@ export default function PosPage() {
 
     const completedAt = new Date();
     const receiptNo = createReceiptNumber(completedAt);
+    const queueNo = makeQueueNumber(completedAt);
     let memberForReceipt = selectedMember;
     let rewardWasClaimed = false;
 
@@ -476,7 +547,33 @@ export default function PosPage() {
       }
     }
 
-    setNotice(`Sale completed • ${money(total)} • ${receiptNo}${rewardWasClaimed ? " • FREE DRINK CLAIMED" : memberForReceipt && addStamp ? ` • ${memberForReceipt.stamps}/10 stamps` : ""}`);
+    const orderItems: LiveOrderItem[] = cart.map((item) => ({
+      name: item.name,
+      size: item.size,
+      qty: item.qty,
+      unitPrice: item.unitPrice,
+      image: item.image,
+      details: item.category === "Fries"
+        ? String(item.customization.flavor || "")
+        : [item.customization.temperature, `${item.customization.sugar} sugar`, item.customization.ice, item.customization.notes].filter(Boolean).join(" · "),
+    }));
+    const finishedSnapshot: LiveOrderSnapshot = {
+      mode: "thank-you", queueNo, receiptNo, items: orderItems, subtotal,
+      discount: discount + loyaltyRewardDiscount, total,
+      customerName: memberForReceipt?.name || customerQuery.trim() || undefined,
+      updatedAt: completedAt.toISOString(),
+    };
+    const kitchenOrder: KitchenOrder = {
+      ...finishedSnapshot, id: receiptNo, queueNo, receiptNo, status: "new",
+      createdAt: completedAt.toISOString(), note: orderNote.trim() || undefined,
+    };
+    const existingOrders: KitchenOrder[] = JSON.parse(window.localStorage.getItem(KITCHEN_ORDERS_KEY) || "[]");
+    window.localStorage.setItem(KITCHEN_ORDERS_KEY, JSON.stringify([kitchenOrder, ...existingOrders].slice(0, 100)));
+    window.localStorage.setItem(LIVE_ORDER_KEY, JSON.stringify(finishedSnapshot));
+    publishCafeEvent("kitchen-order", kitchenOrder);
+    publishCafeEvent("live-order", finishedSnapshot);
+
+    setNotice(`Queue ${queueNo} • ${money(total)} • ${receiptNo}${rewardWasClaimed ? " • FREE DRINK CLAIMED" : memberForReceipt && addStamp ? ` • ${memberForReceipt.stamps}/10 stamps` : ""}`);
     window.setTimeout(() => void loadShiftStats(), 500);
     window.setTimeout(() => {
       setCart([]);
@@ -518,6 +615,10 @@ export default function PosPage() {
           <Stat label="SHIFT STATUS" value={shiftStats.error ? "OFFLINE" : "LIVE"} trend={shiftStats.error ? "Retrying" : "30s sync"} />
         </div>
 
+        <div className="display-tools">
+          <a href="/customer-display" target="_blank" rel="noreferrer">Customer Display</a>
+          <a href="/kitchen" target="_blank" rel="noreferrer">Kitchen</a>
+        </div>
         <div className="cashier-card">
           <div className="avatar">A</div>
           <div><strong>Alex</strong><span>Cashier</span></div>
