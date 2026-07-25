@@ -119,6 +119,7 @@ export default function PosPage() {
   const [memberResults, setMemberResults] = useState<CloudMember[]>([]);
   const [selectedMember, setSelectedMember] = useState<CloudMember | null>(null);
   const [memberSearching, setMemberSearching] = useState(false);
+  const [memberSearchError, setMemberSearchError] = useState("");
   const [addStamp, setAddStamp] = useState(true);
   const [autoPrint, setAutoPrint] = useState(true);
   const [receiptStyle, setReceiptStyle] = useState<ReceiptStyle>("eco");
@@ -161,11 +162,14 @@ export default function PosPage() {
   const showMemberDirectory = async () => {
     if (selectedMember) return;
     setMemberSearching(true);
+    setMemberSearchError("");
     try {
       setMemberResults(await listCloudMembers(20));
-    } catch {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown member loading error";
       setMemberResults([]);
-      setNotice("Hindi ma-load ang member list. Patakbuhin muna ang Build 21 SQL sa Supabase.");
+      setMemberSearchError(message);
+      setNotice("Hindi ma-load ang members. Patakbuhin ang Build 21.1 SQL sa Supabase, then refresh.");
     } finally {
       setMemberSearching(false);
     }
@@ -181,10 +185,13 @@ export default function PosPage() {
 
     const timer = window.setTimeout(async () => {
       setMemberSearching(true);
+      setMemberSearchError("");
       try {
         setMemberResults(await searchCloudMembers(query));
-      } catch {
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown member search error";
         setMemberResults([]);
+        setMemberSearchError(message);
       } finally {
         setMemberSearching(false);
       }
@@ -514,6 +521,7 @@ export default function PosPage() {
               placeholder="⌕ Click to view clients or type name/mobile/SYP ID..."
             />
             {memberSearching && <small className="member-search-status">Loading members…</small>}
+            {!memberSearching && memberSearchError && <div className="member-search-error"><b>Member loading failed</b><span>{memberSearchError}</span><button type="button" onClick={() => void showMemberDirectory()}>Retry</button></div>}
             {!selectedMember && memberResults.length > 0 && <div className="member-directory-label"><span>{customerQuery.trim() ? "SEARCH RESULTS" : "MEMBER DIRECTORY"}</span><b>{memberResults.length} shown</b></div>}
             {!selectedMember && memberResults.length > 0 && <div className="member-search-results">{memberResults.map((member) => <button type="button" key={member.id} onClick={() => { setSelectedMember(member); setCustomerQuery(member.name); setMemberResults([]); }}><span><strong>{member.name}</strong><small>{member.member_code} · {member.mobile}</small></span><b>{member.stamps}/10</b></button>)}</div>}
             {selectedMember ? <>
