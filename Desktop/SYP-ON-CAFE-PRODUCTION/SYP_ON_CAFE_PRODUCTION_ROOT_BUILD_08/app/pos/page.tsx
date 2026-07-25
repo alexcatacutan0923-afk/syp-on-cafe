@@ -207,6 +207,7 @@ export default function PosPage() {
   const [selectedAddons, setSelectedAddons] = useState<AddOn[]>([]);
   const [customNotes, setCustomNotes] = useState("");
   const [shiftStats, setShiftStats] = useState<ShiftStats>({ sales: 0, orders: 0, members: 0, freeDrinks: 0, loading: true, error: "" });
+  const [cashierName, setCashierName] = useState("Alex");
   const searchRef = useRef<HTMLInputElement>(null);
 
   const filteredProducts = useMemo(() => {
@@ -252,6 +253,16 @@ export default function PosPage() {
   const total = Math.max(0, subtotal - discount - loyaltyRewardDiscount);
   const change = payment === "Cash" ? Math.max(0, cash - total) : 0;
   const checkoutReady = cart.length > 0 && (payment !== "Cash" || cash >= total);
+
+  useEffect(() => {
+    const savedCashier = window.localStorage.getItem("sypCashierName");
+    if (savedCashier?.trim()) setCashierName(savedCashier.trim());
+  }, []);
+
+  const updateCashierName = (value: string) => {
+    setCashierName(value);
+    window.localStorage.setItem("sypCashierName", value.trim() || "Alex");
+  };
 
   useEffect(() => {
     const snapshot: LiveOrderSnapshot = {
@@ -608,23 +619,24 @@ export default function PosPage() {
           <kbd>⌘K</kbd>
         </label>
 
-        <div className="stats-row">
-          <Stat label="SHIFT SALES · 5PM–4AM" value={shiftStats.loading ? "…" : money(shiftStats.sales)} />
-          <Stat label="SHIFT ORDERS" value={shiftStats.loading ? "…" : String(shiftStats.orders)} />
-          <Stat label="MEMBERS SERVED" value={shiftStats.loading ? "…" : String(shiftStats.members)} />
-          <Stat label="SHIFT STATUS" value={shiftStats.error ? "OFFLINE" : "LIVE"} trend={shiftStats.error ? "Retrying" : "30s sync"} />
-        </div>
-
         <div className="display-tools">
           <a href="/customer-display" target="_blank" rel="noreferrer">Customer Display</a>
           <a href="/kitchen" target="_blank" rel="noreferrer">Kitchen</a>
           <a href="/online-order" target="_blank" rel="noreferrer">Online Orders</a>
           <a href="/rider" target="_blank" rel="noreferrer">Rider</a>
         </div>
-        <div className="cashier-card">
-          <div className="avatar">A</div>
-          <div><strong>Alex</strong><span>Cashier</span></div>
-        </div>
+        <label className="cashier-card" title="Edit cashier name">
+          <div className="avatar">{(cashierName.trim()[0] || "A").toUpperCase()}</div>
+          <div className="cashier-copy">
+            <span>Cashier</span>
+            <input
+              value={cashierName}
+              onChange={(event) => updateCashierName(event.target.value)}
+              onBlur={() => { if (!cashierName.trim()) updateCashierName("Alex"); }}
+              aria-label="Cashier name"
+            />
+          </div>
+        </label>
         <div className="clock">
           <strong>{now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}</strong>
           <span>{now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
@@ -1113,7 +1125,7 @@ function buildReceiptHtml(payload: ReceiptPayload) {
   <section class="meta">
     <span>Order</span><strong>${receiptNo}</strong>
     <span>Date</span><strong>${escapeReceiptText(dateText)}</strong>
-    <span>Cashier</span><strong>Alex</strong>
+    <span>Cashier</span><strong>${escapeReceiptText(cashierName.trim() || "Alex")}</strong>
     <span>Payment</span><strong>${payment}</strong>
   </section>
   ${customerSection}

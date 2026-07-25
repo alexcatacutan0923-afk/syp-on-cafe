@@ -66,3 +66,24 @@ linear-gradient(135deg,#070908,#0a0d0b 52%,#070908)}
 /* Build 36 — display launch shortcuts */
 .display-tools{display:flex;gap:6px;align-items:center}.display-tools a{white-space:nowrap;border:1px solid rgba(212,175,55,.35);background:rgba(212,175,55,.08);color:#f4d77f;text-decoration:none;padding:8px 10px;border-radius:10px;font-size:11px;font-weight:800;letter-spacing:.03em}.display-tools a:hover{background:rgba(212,175,55,.18)}
 @media(max-width:1200px){.display-tools{display:none}}
+
+/* Build 37.1 — cleaner header + editable cashier */
+.topbar{
+  grid-template-columns:205px minmax(320px,1fr) auto minmax(155px,190px) 110px;
+  gap:10px;
+}
+.display-tools{display:flex;align-items:center;gap:6px;min-width:0}
+.display-tools a{white-space:nowrap;padding:9px 10px;font-size:9px}
+.cashier-card{min-width:155px;max-width:190px;cursor:text}
+.cashier-copy{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px}
+.cashier-copy span{font-size:7px;color:#969c96;text-transform:uppercase;letter-spacing:.55px}
+.cashier-copy input{width:100%;min-width:0;border:0;border-bottom:1px solid transparent;outline:0;background:transparent;color:#fff;font:800 10px/1.2 inherit;padding:1px 0 3px}
+.cashier-copy input:hover,.cashier-copy input:focus{border-bottom-color:#b47b25}
+@media(max-width:1450px){
+  .topbar{grid-template-columns:190px minmax(270px,1fr) auto minmax(145px,170px)}
+  .clock{display:none}
+  .display-tools a{padding:8px 8px;font-size:8px}
+}
+@media(max-width:1220px){
+  .display-tools a[href="/kitchen"],.display-tools a[href="/rider"]{display:none}
+}
