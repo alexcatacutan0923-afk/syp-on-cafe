@@ -21,8 +21,14 @@ export async function registerCloudMember(input: { name: string; mobile: string;
 }
 
 export async function searchCloudMembers(query: string) {
-  if (!query.trim()) return [] as CloudMember[];
+  if (!query.trim()) return listCloudMembers();
   const { data, error } = await supabase.rpc("search_loyalty_members", { p_query: query.trim() });
+  if (error) throw error;
+  return (data ?? []) as CloudMember[];
+}
+
+export async function listCloudMembers(limit = 20) {
+  const { data, error } = await supabase.rpc("list_loyalty_members", { p_limit: limit });
   if (error) throw error;
   return (data ?? []) as CloudMember[];
 }

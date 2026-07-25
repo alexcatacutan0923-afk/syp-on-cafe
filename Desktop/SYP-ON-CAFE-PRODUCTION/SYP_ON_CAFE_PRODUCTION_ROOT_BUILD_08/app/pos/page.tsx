@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import "./pos.css";
 import { chooseReceiptQuote, getSeasonalReceiptTheme } from "@/lib/receipt-quotes";
 import { supabase } from "@/lib/supabase";
-import { addCloudStamp, CloudMember, searchCloudMembers } from "@/lib/member-cloud";
+import { addCloudStamp, CloudMember, listCloudMembers, searchCloudMembers } from "@/lib/member-cloud";
 
 type Category = "All" | "Coffee" | "Matcha" | "Soda" | "Milky" | "Fries" | "Signature" | "ADDS";
 type Payment = "Cash" | "GCash" | "Maya";
@@ -158,16 +158,27 @@ export default function PosPage() {
   }, []);
 
 
+  const showMemberDirectory = async () => {
+    if (selectedMember) return;
+    setMemberSearching(true);
+    try {
+      setMemberResults(await listCloudMembers(20));
+    } catch {
+      setMemberResults([]);
+      setNotice("Hindi ma-load ang member list. Patakbuhin muna ang Build 21 SQL sa Supabase.");
+    } finally {
+      setMemberSearching(false);
+    }
+  };
+
   useEffect(() => {
     const query = customerQuery.trim();
     if (selectedMember && (query === selectedMember.name || query === selectedMember.member_code || query === selectedMember.mobile)) {
       setMemberResults([]);
       return;
     }
-    if (query.length < 2) {
-      setMemberResults([]);
-      return;
-    }
+    if (!query) return;
+
     const timer = window.setTimeout(async () => {
       setMemberSearching(true);
       try {
@@ -177,7 +188,7 @@ export default function PosPage() {
       } finally {
         setMemberSearching(false);
       }
-    }, 250);
+    }, 180);
     return () => window.clearTimeout(timer);
   }, [customerQuery, selectedMember]);
 
@@ -490,8 +501,20 @@ export default function PosPage() {
         <aside className="checkout-panel">
           <div className="checkout-card customer-box">
             <h3>CUSTOMER</h3>
-            <input value={customerQuery} onChange={(event) => { setCustomerQuery(event.target.value); setSelectedMember(null); }} placeholder="⌕ Search name, mobile or SYP ID..." />
-            {memberSearching && <small className="member-search-status">Searching members…</small>}
+            <input
+              value={customerQuery}
+              onFocus={() => { if (!customerQuery.trim() && !selectedMember) void showMemberDirectory(); }}
+              onClick={() => { if (!customerQuery.trim() && !selectedMember && memberResults.length === 0) void showMemberDirectory(); }}
+              onChange={(event) => {
+                const value = event.target.value;
+                setCustomerQuery(value);
+                setSelectedMember(null);
+                if (!value.trim()) void showMemberDirectory();
+              }}
+              placeholder="⌕ Click to view clients or type name/mobile/SYP ID..."
+            />
+            {memberSearching && <small className="member-search-status">Loading members…</small>}
+            {!selectedMember && memberResults.length > 0 && <div className="member-directory-label"><span>{customerQuery.trim() ? "SEARCH RESULTS" : "MEMBER DIRECTORY"}</span><b>{memberResults.length} shown</b></div>}
             {!selectedMember && memberResults.length > 0 && <div className="member-search-results">{memberResults.map((member) => <button type="button" key={member.id} onClick={() => { setSelectedMember(member); setCustomerQuery(member.name); setMemberResults([]); }}><span><strong>{member.name}</strong><small>{member.member_code} · {member.mobile}</small></span><b>{member.stamps}/10</b></button>)}</div>}
             {selectedMember ? <>
               <div className="customer-preview"><div className="avatar small">{selectedMember.name.split(" ").filter(Boolean).slice(0,2).map((part) => part[0]).join("").toUpperCase()}</div><div><strong>{selectedMember.name}</strong><span>{selectedMember.member_code}</span></div><b>{selectedMember.stamps} / 10</b></div>
