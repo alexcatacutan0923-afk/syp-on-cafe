@@ -618,6 +618,8 @@ export default function PosPage() {
         <div className="display-tools">
           <a href="/customer-display" target="_blank" rel="noreferrer">Customer Display</a>
           <a href="/kitchen" target="_blank" rel="noreferrer">Kitchen</a>
+          <a href="/online-order" target="_blank" rel="noreferrer">Online Orders</a>
+          <a href="/rider" target="_blank" rel="noreferrer">Rider</a>
         </div>
         <div className="cashier-card">
           <div className="avatar">A</div>
