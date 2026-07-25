@@ -19,7 +19,7 @@ type CustomerOrder = {
   created_at: string;
 };
 
-const spinRewards = ["Free 16oz Drink", "+1 Bonus Stamp", "10% Off", "Free Small Fries", "Try Again", "+2 Bonus Stamps"];
+const spinRewards = ["Try Again", "Try Again", "Try Again", "Try Again", "Try Again", "Try Again"];
 
 export default function MemberDashboardPage() {
   const router = useRouter();
@@ -152,23 +152,13 @@ export default function MemberDashboardPage() {
     .reduce((sum, order) => sum + order.total, 0);
 
   function spin() {
-    if (!member || spinning || result || spinLocked) return;
+    if (!member || spinning || result) return;
     setSpinning(true);
-    const index = Math.floor(Math.random() * spinRewards.length);
-    const reward = spinRewards[index];
-    setRotation(previous => previous + 1440 + (360 - index * 60 - 30));
-    setTimeout(() => {
-      const updated = updateCurrentMember(current => {
-        let stamps = current.stamps;
-        if (reward === "+1 Bonus Stamp") stamps += 1;
-        if (reward === "+2 Bonus Stamps") stamps += 2;
-        const rewardEntry = reward === "Try Again" ? current.rewards : [{ id: `spin-${Date.now()}`, title: reward, description: "Won from the SYP member wheel", status: "available" as const }, ...current.rewards];
-        return { ...current, stamps: Math.min(10, stamps), rewards: rewardEntry, spinAvailableAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), notifications: [{ id: crypto.randomUUID(), title: "Spin result", message: `You won: ${reward}`, date: new Date().toISOString(), read: false }, ...current.notifications] };
-      });
-      setMember(updated);
-      setResult(reward);
+    setRotation((current) => current + 1800 + Math.floor(Math.random() * 360));
+    window.setTimeout(() => {
+      setResult("Sorry! Please try again next time.");
       setSpinning(false);
-    }, 3200);
+    }, 2200);
   }
 
   function claimReward(id: string) {
@@ -245,15 +235,15 @@ export default function MemberDashboardPage() {
           </article>
 
           <article id="wheel" className="member-card wheel-panel">
-            <CardTitle eyebrow="MEMBER EXCLUSIVE" title="Spin the SYP Wheel" action={spinLocked ? "Come back tomorrow" : result ? "Completed" : "1 spin ready"} />
+            <CardTitle eyebrow="COMING SOON" title="KaSYP Lucky Spin" action={result ? "Try again next time" : "Preview mode"} />
             <div className="wheel-zone">
               <div className="wheel-pointer">▼</div>
               <div className="reward-wheel" style={{ transform: `rotate(${rotation}deg)` }}>
                 {spinRewards.map((reward, i) => <span key={reward} style={{ transform: `rotate(${i * 60 + 30}deg) translateY(-74px) rotate(-${i * 60 + 30}deg)` }}>{reward.replace("Free ", "").replace("Bonus ", "")}</span>)}
               </div>
-              <button onClick={spin} disabled={spinning || !!result || spinLocked}>{spinning ? "..." : spinLocked ? "LOCKED" : "SPIN"}</button>
+              <button onClick={spin} disabled={spinning || !!result}>{spinning ? "..." : "SPIN"}</button>
             </div>
-            {result ? <div className="wheel-result"><small>YOU WON</small><b>{result}</b><span>Saved automatically to your reward wallet.</span></div> : <p className="card-note">One spin every 24 hours in this build. Rewards stay saved on this browser.</p>}
+            {result ? <div className="wheel-result"><small>KASYP LUCKY SPIN</small><b>{result}</b><span>Free rewards will launch soon. No prize was saved.</span></div> : <p className="card-note">Preview mode only. Free prizes and claims are temporarily disabled until the official launch.</p>}
           </article>
 
           <article className="member-card rewards-panel">

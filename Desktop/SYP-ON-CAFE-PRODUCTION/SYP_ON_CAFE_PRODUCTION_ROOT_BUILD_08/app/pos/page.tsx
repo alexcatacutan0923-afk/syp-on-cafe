@@ -9,6 +9,7 @@ import { addCloudStamp, claimCloudFreeDrink, CloudMember, listCloudMembers, sear
 type Category = "All" | "Coffee" | "Matcha" | "Soda" | "Milky" | "Fries" | "Signature" | "ADDS";
 type Payment = "Cash" | "GCash" | "Maya";
 type ReceiptStyle = "eco" | "classic" | "premium";
+type DiscountReason = "None" | "Loyalty Reward" | "Promo" | "Senior/PWD" | "Manager Adjustment" | "Other";
 type ShiftStats = { sales: number; orders: number; members: number; freeDrinks: number; loading: boolean; error: string };
 
 type Product = {
@@ -19,15 +20,6 @@ type Product = {
   category: Exclude<Category, "All">;
   image: string;
   bestseller?: boolean;
-};
-
-type ProductGroup = {
-  key: string;
-  name: string;
-  category: Product["category"];
-  image: string;
-  bestseller?: boolean;
-  variants: Product[];
 };
 
 type AddOn = { id: string; name: string; price: number };
@@ -137,30 +129,6 @@ const products: Product[] = [
 const categories: Category[] = ["All", "Coffee", "Matcha", "Soda", "Milky", "Fries", "Signature", "ADDS"];
 const money = (value: number) => `₱${Math.max(0, value).toLocaleString("en-PH")}`;
 
-const groupedProducts: ProductGroup[] = Array.from(
-  products.reduce((map, product) => {
-    const key = `${product.category}::${product.name}`;
-    const current = map.get(key);
-    if (current) {
-      current.variants.push(product);
-      current.bestseller = current.bestseller || product.bestseller;
-    } else {
-      map.set(key, {
-        key,
-        name: product.name,
-        category: product.category,
-        image: product.image,
-        bestseller: product.bestseller,
-        variants: [product],
-      });
-    }
-    return map;
-  }, new Map<string, ProductGroup>()).values(),
-).map((group) => ({
-  ...group,
-  variants: [...group.variants].sort((a, b) => Number.parseInt(a.size) - Number.parseInt(b.size)),
-}));
-
 export default function PosPage() {
   const [category, setCategory] = useState<Category>("All");
   const [search, setSearch] = useState("");
@@ -168,6 +136,8 @@ export default function PosPage() {
   const [payment, setPayment] = useState<Payment>("Cash");
   const [cash, setCash] = useState(0);
   const [discount, setDiscount] = useState(0);
+  const [discountReason, setDiscountReason] = useState<DiscountReason>("None");
+  const [customDiscount, setCustomDiscount] = useState("");
   const [customerQuery, setCustomerQuery] = useState("");
   const [memberResults, setMemberResults] = useState<CloudMember[]>([]);
   const [selectedMember, setSelectedMember] = useState<CloudMember | null>(null);
@@ -182,7 +152,6 @@ export default function PosPage() {
   const [notice, setNotice] = useState("");
   const [lastAdded, setLastAdded] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [selectedProductVariants, setSelectedProductVariants] = useState<Product[]>([]);
   const [temperature, setTemperature] = useState<"Iced" | "Hot">("Iced");
   const [sugar, setSugar] = useState<Customization["sugar"]>("100%");
   const [ice, setIce] = useState<Customization["ice"]>("Normal Ice");
@@ -195,21 +164,57 @@ export default function PosPage() {
 
   const filteredProducts = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return groupedProducts.filter((product) => {
+    return products.filter((product) => {
       const categoryMatch = category === "All" || product.category === category;
-      const sizes = product.variants.map((variant) => variant.size).join(" ");
-      const searchMatch = !q || `${product.name} ${sizes} ${product.category}`.toLowerCase().includes(q);
+      const searchMatch = !q || `${product.name} ${product.size} ${product.category}`.toLowerCase().includes(q);
       return categoryMatch && searchMatch;
     });
   }, [category, search]);
 
+  const groupedProducts = useMemo(() => {
+    const groups = new Map<string, Product[]>();
+
+    for (const product of filteredProducts) {
+      const key = `${product.category}::${product.name}`;
+      const variants = groups.get(key) ?? [];
+      variants.push(product);
+      groups.set(key, variants);
+    }
+
+    return Array.from(groups.values()).map((variants) =>
+      variants.sort((a, b) => Number.parseInt(a.size, 10) - Number.parseInt(b.size, 10)),
+    );
+  }, [filteredProducts]);
+
+  const selectedVariants = useMemo(
+    () =>
+      selectedProduct
+        ? products.filter(
+            (product) =>
+              product.name === selectedProduct.name &&
+              product.category === selectedProduct.category,
+          )
+        : [],
+    [selectedProduct],
+  );
+
   const itemCount = cart.reduce((sum, item) => sum + item.qty, 0);
   const subtotal = cart.reduce((sum, item) => sum + item.unitPrice * item.qty, 0);
-  const eligibleRewardLine = cart.find((item) => !["Soda", "Fries", "ADDS"].includes(item.category));
+  const eligibleRewardLine = cart.find((item) => item.size === "16oz" && !["Soda", "Fries", "ADDS"].includes(item.category));
   const loyaltyRewardDiscount = redeemFreeDrink && selectedMember && selectedMember.stamps >= 10 && eligibleRewardLine ? eligibleRewardLine.unitPrice : 0;
   const total = Math.max(0, subtotal - discount - loyaltyRewardDiscount);
   const change = payment === "Cash" ? Math.max(0, cash - total) : 0;
   const checkoutReady = cart.length > 0 && (payment !== "Cash" || cash >= total);
+
+  const applyManualDiscount = (amount: number, reason: DiscountReason = discountReason) => {
+    const safeAmount = Math.max(0, Math.min(subtotal, Math.round(amount)));
+    setDiscount(safeAmount);
+    setDiscountReason(safeAmount > 0 ? (reason === "None" ? "Manager Adjustment" : reason) : "None");
+  };
+
+  const applyPercentDiscount = (percent: number) => {
+    applyManualDiscount(subtotal * (percent / 100));
+  };
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 1000);
@@ -312,15 +317,16 @@ export default function PosPage() {
         setCart([]);
         setCash(0);
         setDiscount(0);
+        setDiscountReason("None");
+        setCustomDiscount("");
       }
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, []);
 
-  const openCustomizer = (product: Product, variants: Product[] = [product]) => {
+  const openCustomizer = (product: Product) => {
     setSelectedProduct(product);
-    setSelectedProductVariants(variants);
     setTemperature(product.name.startsWith("Hot ") ? "Hot" : "Iced");
     setSugar("100%");
     setIce("Normal Ice");
@@ -330,14 +336,7 @@ export default function PosPage() {
     setCustomNotes("");
   };
 
-  const openProductGroup = (group: ProductGroup) => {
-    openCustomizer(group.variants[0], group.variants);
-  };
-
-  const closeCustomizer = () => {
-    setSelectedProduct(null);
-    setSelectedProductVariants([]);
-  };
+  const closeCustomizer = () => setSelectedProduct(null);
 
   const toggleAddon = (addon: AddOn) => {
     setSelectedAddons((current) => current.some((item) => item.id === addon.id)
@@ -392,6 +391,8 @@ export default function PosPage() {
     setCart([]);
     setCash(0);
     setDiscount(0);
+    setDiscountReason("None");
+    setCustomDiscount("");
     setOrderNote("");
     setNotice("Cart cleared");
     window.setTimeout(() => setNotice(""), 1200);
@@ -407,7 +408,7 @@ export default function PosPage() {
 
     if (redeemFreeDrink && selectedMember) {
       if (!eligibleRewardLine || selectedMember.stamps < 10) {
-        setNotice("Free drink claim requires 10 stamps and an eligible drink in the cart");
+        setNotice("Free drink claim requires 10 stamps and one eligible 16oz drink in the cart");
         return;
       }
       try {
@@ -448,6 +449,11 @@ export default function PosPage() {
           cart,
           subtotal,
           discount: discount + loyaltyRewardDiscount,
+          discountReason: rewardWasClaimed
+            ? discount > 0
+              ? `${discountReason} + Free Drink Reward`
+              : "Free Drink Reward"
+            : discountReason,
           total,
           payment,
           cash,
@@ -476,6 +482,8 @@ export default function PosPage() {
       setCart([]);
       setCash(0);
       setDiscount(0);
+      setDiscountReason("None");
+      setCustomDiscount("");
       setOrderNote("");
       setCustomerQuery("");
       setSelectedMember(null);
@@ -541,24 +549,41 @@ export default function PosPage() {
 
         <section className="products-panel">
           <div className="panel-heading">
-            <div><h2>{category === "All" ? "ALL PRODUCTS" : category.toUpperCase()}</h2><p>{filteredProducts.length} products</p></div>
+            <div><h2>{category === "All" ? "ALL PRODUCTS" : category.toUpperCase()}</h2><p>{groupedProducts.length} products</p></div>
             <div className="view-toggle"><button className="active">▦ Grid</button><button>☷ List</button></div>
           </div>
           <div className="product-grid">
-            {filteredProducts.map((product) => {
-              const prices = product.variants.map((variant) => variant.price);
-              const minPrice = Math.min(...prices);
-              const maxPrice = Math.max(...prices);
-              const sizeLabel = product.variants.map((variant) => variant.size).join(" / ");
-              const isRecentlyAdded = product.variants.some((variant) => lastAdded === variant.id);
+            {groupedProducts.map((variants) => {
+              const product = variants[0];
+              const sizeText = variants.map((variant) => variant.size).join(" / ");
+              const priceText =
+                variants.length > 1
+                  ? `${money(Math.min(...variants.map((variant) => variant.price)))}–${money(Math.max(...variants.map((variant) => variant.price)))}`
+                  : money(product.price);
+
               return (
-                <article className={`product-card ${isRecentlyAdded ? "just-added" : ""}`} key={product.key} onClick={() => openProductGroup(product)}>
-                  {product.bestseller && <span className="product-badge">BEST SELLER</span>}
+                <article
+                  className={`product-card ${variants.some((variant) => lastAdded === variant.id) ? "just-added" : ""}`}
+                  key={`${product.category}-${product.name}`}
+                  onClick={() => openCustomizer(product)}
+                >
+                  {variants.some((variant) => variant.bestseller) && <span className="product-badge">BEST SELLER</span>}
                   <div className="product-image"><img src={product.image} alt={product.name} /></div>
                   <div className="product-info">
                     <h3>{product.name}</h3>
-                    <p>{sizeLabel}</p>
-                    <div><strong>{minPrice === maxPrice ? money(minPrice) : `${money(minPrice)}–${money(maxPrice)}`}</strong><button aria-label={`Choose size for ${product.name}`} onClick={(event) => { event.stopPropagation(); openProductGroup(product); }}>+</button></div>
+                    <p>{sizeText}</p>
+                    <div>
+                      <strong>{priceText}</strong>
+                      <button
+                        aria-label={`Choose size for ${product.name}`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          openCustomizer(product);
+                        }}
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
                 </article>
               );
@@ -598,7 +623,26 @@ export default function PosPage() {
           <div className="cart-summary">
             <input value={orderNote} onChange={(event) => setOrderNote(event.target.value)} placeholder="Add order note (optional)..." />
             <div><span>Subtotal</span><strong>{money(subtotal)}</strong></div>
-            <div className="discount-row"><span>Discount</span><div><button onClick={() => setDiscount(Math.min(subtotal, discount + 10))}>+₱10</button><button onClick={() => setDiscount(0)}>Clear</button><strong>- {money(discount)}</strong></div></div>
+            <div className="manual-discount-panel">
+              <div className="manual-discount-heading"><span>MANUAL DISCOUNT</span><strong>- {money(discount)}</strong></div>
+              <div className="discount-quick-buttons">
+                {[5, 10, 20, 50].map((amount) => <button type="button" key={amount} onClick={() => applyManualDiscount(amount)}>₱{amount}</button>)}
+                {[5, 10, 15, 20].map((percent) => <button type="button" key={`${percent}%`} onClick={() => applyPercentDiscount(percent)}>{percent}%</button>)}
+              </div>
+              <div className="discount-custom-row">
+                <input inputMode="decimal" value={customDiscount} onChange={(event) => setCustomDiscount(event.target.value.replace(/[^0-9.]/g, ""))} placeholder="Custom ₱" />
+                <button type="button" onClick={() => applyManualDiscount(Number(customDiscount || 0))}>Apply</button>
+                <button type="button" onClick={() => { setDiscount(0); setDiscountReason("None"); setCustomDiscount(""); }}>Clear</button>
+              </div>
+              <select value={discountReason} onChange={(event) => setDiscountReason(event.target.value as DiscountReason)}>
+                <option value="None">Select reason</option>
+                <option value="Loyalty Reward">Loyalty Reward</option>
+                <option value="Promo">Promo</option>
+                <option value="Senior/PWD">Senior/PWD</option>
+                <option value="Manager Adjustment">Manager Adjustment</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
             <div className="grand-total"><span>TOTAL</span><strong>{money(total)}</strong></div>
           </div>
         </section>
@@ -655,9 +699,10 @@ export default function PosPage() {
             <label><input type="checkbox" checked={addStamp} disabled={redeemFreeDrink} onChange={(event) => setAddStamp(event.target.checked)} /> Add loyalty stamp</label>
             <small>No stamp for Soda or ADDS-only orders.</small>
             {selectedMember && selectedMember.stamps >= 10 && (
-              <label className="free-drink-switch"><input type="checkbox" checked={redeemFreeDrink} onChange={(event) => { setRedeemFreeDrink(event.target.checked); if (event.target.checked) setAddStamp(false); }} /> Redeem FREE DRINK (10 stamps)</label>
+              <label className="free-drink-switch"><input type="checkbox" checked={redeemFreeDrink} disabled={!eligibleRewardLine} onChange={(event) => { setRedeemFreeDrink(event.target.checked); if (event.target.checked) setAddStamp(false); }} /> Redeem FREE 16oz DRINK (10 stamps)</label>
             )}
-            {redeemFreeDrink && <small className="reward-discount-note">One eligible drink discount: {money(loyaltyRewardDiscount)}</small>}
+            {selectedMember && selectedMember.stamps >= 10 && !eligibleRewardLine && <small className="reward-discount-note">Add an eligible 16oz Coffee, Matcha, Milky, or Signature drink to redeem.</small>}
+            {redeemFreeDrink && <small className="reward-discount-note">Free 16oz drink discount: {money(loyaltyRewardDiscount)}</small>}
             <label><input type="checkbox" checked={autoPrint} onChange={(event) => setAutoPrint(event.target.checked)} /> Auto-print receipt</label>
             <label className="receipt-style-field">
               <span>Receipt style</span>
@@ -686,10 +731,10 @@ export default function PosPage() {
             </header>
 
             <div className="customizer-body">
-              {selectedProductVariants.length > 1 && (
-                <OptionSection title="Size" subtitle="Choose cup size">
-                  <div className={`choice-grid ${selectedProductVariants.length === 2 ? "two" : "four"}`}>
-                    {selectedProductVariants.map((variant) => (
+              {selectedVariants.length > 1 && (
+                <OptionSection title="Size" subtitle="Choose one size">
+                  <div className="choice-grid two">
+                    {selectedVariants.map((variant) => (
                       <ChoiceButton
                         key={variant.id}
                         active={selectedProduct.id === variant.id}
@@ -701,9 +746,19 @@ export default function PosPage() {
                 </OptionSection>
               )}
 
-              {selectedProduct.category !== "Fries" && selectedProduct.category !== "Soda" && !selectedProduct.name.startsWith("Hot ") && (
-                <OptionSection title="Temperature" subtitle="Choose how it will be served">
-                  <div className="choice-grid two">{(["Iced", "Hot"] as const).map((value) => <ChoiceButton key={value} active={temperature === value} onClick={() => setTemperature(value)} icon={value === "Iced" ? "❄" : "♨"} label={value} />)}</div>
+              {selectedProduct.category !== "Fries" && selectedProduct.category !== "Soda" && (
+                <OptionSection title="Temperature" subtitle="Serving style">
+                  <div className="choice-grid two">
+                    {(selectedProduct.name.startsWith("Hot ") ? (["Hot"] as const) : (["Iced"] as const)).map((value) => (
+                      <ChoiceButton
+                        key={value}
+                        active
+                        onClick={() => setTemperature(value)}
+                        icon={value === "Iced" ? "❄" : "♨"}
+                        label={value}
+                      />
+                    ))}
+                  </div>
                 </OptionSection>
               )}
 
@@ -789,8 +844,13 @@ function categoryIcon(name: Category) {
 }
 
 function countCategory(name: Category) {
-  if (name === "All") return groupedProducts.length;
-  return groupedProducts.filter((product) => product.category === name).length;
+  const matching = name === "All"
+    ? products
+    : products.filter((product) => product.category === name);
+
+  return new Set(
+    matching.map((product) => `${product.category}::${product.name}`),
+  ).size;
 }
 
 function getBusinessShiftRange(date: Date) {
@@ -822,6 +882,7 @@ type ReceiptPayload = {
   cart: CartItem[];
   subtotal: number;
   discount: number;
+  discountReason: string;
   total: number;
   payment: Payment;
   cash: number;
@@ -861,7 +922,7 @@ function escapeReceiptText(value: string) {
 
 function buildReceiptHtml(payload: ReceiptPayload) {
   const {
-    receiptNo, completedAt, cart, subtotal, discount, total, payment, cash, change,
+    receiptNo, completedAt, cart, subtotal, discount, discountReason, total, payment, cash, change,
     customerQuery, addStamp, orderNote, receiptStyle, quote, seasonalTheme, qrTarget, member, stampWasAdded, rewardWasClaimed, rewardDiscount,
   } = payload;
   const isEco = receiptStyle === "eco";
@@ -959,7 +1020,7 @@ function buildReceiptHtml(payload: ReceiptPayload) {
   <div class="rule"></div>
   <section class="summary">
     ${discount > 0 || !isEco ? `<div class="total-row"><span>Subtotal</span><strong>${money(subtotal)}</strong></div>` : ""}
-    ${discount > 0 ? `<div class="total-row"><span>Discount</span><strong>-${money(discount)}</strong></div>` : ""}
+    ${discount > 0 ? `<div class="total-row"><span>Discount${discountReason && discountReason !== "None" ? ` · ${escapeReceiptText(discountReason)}` : ""}</span><strong>-${money(discount)}</strong></div>` : ""}
     <div class="total-row grand"><span>TOTAL</span><strong>${money(total)}</strong></div>
     ${payment === "Cash" ? `<div class="total-row"><span>Cash</span><strong>${money(cash)}</strong></div><div class="total-row"><span>Change</span><strong>${money(change)}</strong></div>` : ""}
   </section>
