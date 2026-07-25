@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createMember, findMember, setMemberSession } from "@/lib/member-store";
+import { findMember, saveCloudMember, setMemberSession } from "@/lib/member-store";
+import { registerCloudMember } from "@/lib/member-cloud";
 import "../member/member.css";
 
 export default function MemberRegisterPage() {
@@ -13,7 +14,7 @@ export default function MemberRegisterPage() {
   const [submitting, setSubmitting] = useState(false);
 
   function update(key: keyof typeof form, value: string) { setForm(v => ({ ...v, [key]: value })); }
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const mobile = form.mobile.replace(/\D/g, "");
     if (!form.name.trim() || mobile.length < 10 || !form.birthday || form.pin.length < 4) {
@@ -25,10 +26,17 @@ export default function MemberRegisterPage() {
       return;
     }
     setSubmitting(true);
-    const member = createMember({ ...form, mobile });
-    localStorage.setItem("sypMemberIdentity", member.mobile);
-    setMemberSession(member.id);
-    setTimeout(() => router.push("/member"), 350);
+    setError("");
+    try {
+      const cloud = await registerCloudMember({ ...form, mobile });
+      const member = saveCloudMember(cloud);
+      localStorage.setItem("sypMemberIdentity", member.mobile);
+      setMemberSession(member.id);
+      router.push("/member");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to create membership. Please try again.");
+      setSubmitting(false);
+    }
   }
 
   return (

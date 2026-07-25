@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { findMember, getMembers, setMemberSession } from "@/lib/member-store";
+import { findMember, getMembers, saveCloudMember, setMemberSession } from "@/lib/member-store";
+import { loginCloudMember } from "@/lib/member-cloud";
 import "../member/member.css";
 
 export default function MemberLoginPage() {
@@ -20,21 +21,29 @@ export default function MemberLoginPage() {
     if (saved) setIdentity(saved);
   }, []);
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!identity.trim() || pin.length < 4) {
       setError("Enter your mobile number or member ID and at least 4 digits.");
       return;
     }
-    const member = findMember(identity, pin);
-    if (!member) {
-      setError("Member account not found or PIN is incorrect. Demo: SYP0021 / 2026");
-      return;
-    }
     setSubmitting(true);
-    localStorage.setItem("sypMemberIdentity", identity.trim());
-    setMemberSession(member.id);
-    setTimeout(() => router.push("/member"), 350);
+    setError("");
+    try {
+      const cloud = await loginCloudMember(identity, pin);
+      const local = cloud ? saveCloudMember(cloud) : findMember(identity, pin);
+      if (!local) {
+        setError("Member account not found or PIN is incorrect.");
+        setSubmitting(false);
+        return;
+      }
+      localStorage.setItem("sypMemberIdentity", identity.trim());
+      setMemberSession(local.id);
+      router.push("/member");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "Unable to sign in. Please try again.");
+      setSubmitting(false);
+    }
   }
 
   return (

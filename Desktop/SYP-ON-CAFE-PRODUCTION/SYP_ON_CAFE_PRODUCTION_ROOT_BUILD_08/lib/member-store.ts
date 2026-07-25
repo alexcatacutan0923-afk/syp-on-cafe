@@ -160,3 +160,31 @@ export function clearMemberSession() {
   localStorage.removeItem(SESSION_KEY);
   localStorage.removeItem("sypMemberDemoSession");
 }
+
+export function saveCloudMember(input: {
+  member_code: string; name: string; mobile: string; birthday: string | null;
+  stamps: number; total_visits: number; favorite_drink: string; joined_at: string;
+}): MemberProfile {
+  const members = getMembers();
+  const existing = members.find((member) => member.id === input.member_code || member.mobile === input.mobile);
+  const base = existing ?? createMember({
+    name: input.name,
+    mobile: input.mobile,
+    birthday: input.birthday ?? new Date().toISOString().slice(0, 10),
+    pin: "cloud",
+  });
+  const updated: MemberProfile = {
+    ...base,
+    id: input.member_code,
+    name: input.name,
+    mobile: input.mobile,
+    birthday: input.birthday ?? base.birthday,
+    stamps: Number(input.stamps ?? 0),
+    totalVisits: Number(input.total_visits ?? 0),
+    favoriteDrink: input.favorite_drink || base.favoriteDrink,
+    joinedAt: input.joined_at ? input.joined_at.slice(0, 10) : base.joinedAt,
+  };
+  const latest = getMembers().filter((member) => member.id !== updated.id && member.mobile !== updated.mobile);
+  saveMembers([...latest, updated]);
+  return updated;
+}

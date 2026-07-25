@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import "./pos.css";
 import { chooseReceiptQuote, getSeasonalReceiptTheme } from "@/lib/receipt-quotes";
 import { supabase } from "@/lib/supabase";
+import { addCloudStamp, CloudMember, searchCloudMembers } from "@/lib/member-cloud";
 
 type Category = "All" | "Coffee" | "Matcha" | "Soda" | "Milky" | "Fries" | "Signature" | "ADDS";
 type Payment = "Cash" | "GCash" | "Maya";
@@ -115,6 +116,9 @@ export default function PosPage() {
   const [cash, setCash] = useState(0);
   const [discount, setDiscount] = useState(0);
   const [customerQuery, setCustomerQuery] = useState("");
+  const [memberResults, setMemberResults] = useState<CloudMember[]>([]);
+  const [selectedMember, setSelectedMember] = useState<CloudMember | null>(null);
+  const [memberSearching, setMemberSearching] = useState(false);
   const [addStamp, setAddStamp] = useState(true);
   const [autoPrint, setAutoPrint] = useState(true);
   const [receiptStyle, setReceiptStyle] = useState<ReceiptStyle>("eco");
@@ -152,6 +156,30 @@ export default function PosPage() {
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
   }, []);
+
+
+  useEffect(() => {
+    const query = customerQuery.trim();
+    if (selectedMember && (query === selectedMember.name || query === selectedMember.member_code || query === selectedMember.mobile)) {
+      setMemberResults([]);
+      return;
+    }
+    if (query.length < 2) {
+      setMemberResults([]);
+      return;
+    }
+    const timer = window.setTimeout(async () => {
+      setMemberSearching(true);
+      try {
+        setMemberResults(await searchCloudMembers(query));
+      } catch {
+        setMemberResults([]);
+      } finally {
+        setMemberSearching(false);
+      }
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [customerQuery, selectedMember]);
 
   const loadShiftStats = async () => {
     const { start, end } = getBusinessShiftRange(new Date());
@@ -285,11 +313,22 @@ export default function PosPage() {
     window.setTimeout(() => setNotice(""), 1200);
   };
 
-  const completeSale = () => {
+  const completeSale = async () => {
     if (!checkoutReady) return;
 
     const completedAt = new Date();
     const receiptNo = createReceiptNumber(completedAt);
+    let memberForReceipt = selectedMember;
+
+    if (addStamp && selectedMember && cart.some((item) => item.category !== "Soda" && item.category !== "ADDS")) {
+      try {
+        memberForReceipt = await addCloudStamp(selectedMember.member_code, 1);
+        setSelectedMember(memberForReceipt);
+      } catch (cause) {
+        setNotice(cause instanceof Error ? `Sale stopped: ${cause.message}` : "Unable to add loyalty stamp");
+        return;
+      }
+    }
     const quote = chooseReceiptQuote(completedAt);
     const seasonalTheme = getSeasonalReceiptTheme(completedAt);
     const qrTarget = process.env.NEXT_PUBLIC_RECEIPT_QR_URL?.trim()
@@ -309,7 +348,7 @@ export default function PosPage() {
           payment,
           cash,
           change,
-          customerQuery,
+          customerQuery: memberForReceipt ? `${memberForReceipt.name} (${memberForReceipt.member_code})` : customerQuery,
           addStamp,
           orderNote,
           receiptStyle,
@@ -323,13 +362,16 @@ export default function PosPage() {
       }
     }
 
-    setNotice(`Sale completed • ${money(total)} • ${receiptNo}`);
+    setNotice(`Sale completed • ${money(total)} • ${receiptNo}${memberForReceipt && addStamp ? ` • ${memberForReceipt.stamps}/10 stamps` : ""}`);
     window.setTimeout(() => void loadShiftStats(), 500);
     window.setTimeout(() => {
       setCart([]);
       setCash(0);
       setDiscount(0);
       setOrderNote("");
+      setCustomerQuery("");
+      setSelectedMember(null);
+      setMemberResults([]);
       setNotice("");
     }, 1800);
   };
@@ -448,9 +490,15 @@ export default function PosPage() {
         <aside className="checkout-panel">
           <div className="checkout-card customer-box">
             <h3>CUSTOMER</h3>
-            <input value={customerQuery} onChange={(event) => setCustomerQuery(event.target.value)} placeholder="⌕ Search name or ID..." />
-            <div className="customer-preview"><div className="avatar small">JD</div><div><strong>Juan Dela Cruz</strong><span>SYP0021</span></div><b>6 / 10</b></div>
-            <div className="stamps">{Array.from({ length: 10 }).map((_, index) => <i key={index} className={index < 6 ? "filled" : ""}>★</i>)}</div><div className="customer-meta"><span><b>43</b> Visits</span><span><b>Spanish Latte</b> Favorite</span><span><b>Jul 28</b> Birthday</span></div>
+            <input value={customerQuery} onChange={(event) => { setCustomerQuery(event.target.value); setSelectedMember(null); }} placeholder="⌕ Search name, mobile or SYP ID..." />
+            {memberSearching && <small className="member-search-status">Searching members…</small>}
+            {!selectedMember && memberResults.length > 0 && <div className="member-search-results">{memberResults.map((member) => <button type="button" key={member.id} onClick={() => { setSelectedMember(member); setCustomerQuery(member.name); setMemberResults([]); }}><span><strong>{member.name}</strong><small>{member.member_code} · {member.mobile}</small></span><b>{member.stamps}/10</b></button>)}</div>}
+            {selectedMember ? <>
+              <div className="customer-preview"><div className="avatar small">{selectedMember.name.split(" ").filter(Boolean).slice(0,2).map((part) => part[0]).join("").toUpperCase()}</div><div><strong>{selectedMember.name}</strong><span>{selectedMember.member_code}</span></div><b>{selectedMember.stamps} / 10</b></div>
+              <div className="stamps">{Array.from({ length: 10 }).map((_, index) => <i key={index} className={index < selectedMember.stamps ? "filled" : ""}>★</i>)}</div>
+              <div className="customer-meta"><span><b>{selectedMember.total_visits}</b> Visits</span><span><b>{selectedMember.favorite_drink || "Not set"}</b> Favorite</span><span><b>{selectedMember.birthday ? new Date(`${selectedMember.birthday}T00:00:00`).toLocaleDateString("en-PH", { month: "short", day: "numeric" }) : "—"}</b> Birthday</span></div>
+              <button type="button" className="clear-member" onClick={() => { setSelectedMember(null); setCustomerQuery(""); }}>Remove member</button>
+            </> : <div className="customer-empty">Search and select a member to add loyalty automatically.</div>}
           </div>
 
           <div className="checkout-card">
