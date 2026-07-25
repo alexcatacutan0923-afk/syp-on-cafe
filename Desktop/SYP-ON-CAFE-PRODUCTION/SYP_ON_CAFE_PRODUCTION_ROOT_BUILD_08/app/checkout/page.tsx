@@ -35,6 +35,10 @@ function formatTemperature(value?: Temperature) {
   return "";
 }
 
+function cleanPublicEnv(value: string | undefined) {
+  return (value || "").trim().replace(/^['"]|['"]$/g, "");
+}
+
 
 export default function CheckoutPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -61,17 +65,14 @@ export default function CheckoutPage() {
     useState<PaymentMethod>("cash");
   const [showGcashQr, setShowGcashQr] = useState(false);
   const [copyNotice, setCopyNotice] = useState("");
+  const [memberCode, setMemberCode] = useState("");
+  const [memberQrTarget, setMemberQrTarget] = useState("");
 
-  const gcashAccountName =
-    process.env.NEXT_PUBLIC_GCASH_ACCOUNT_NAME?.trim() || "SYP ON CAFÉ";
-  const gcashAccountNumber =
-    process.env.NEXT_PUBLIC_GCASH_ACCOUNT_NUMBER?.trim() || "";
-  const gcashPaymentUrl =
-    process.env.NEXT_PUBLIC_GCASH_PAYMENT_URL?.trim() || "https://gcash.com/";
-  const gcashPaymentUrlTemplate =
-    process.env.NEXT_PUBLIC_GCASH_PAYMENT_URL_TEMPLATE?.trim() || "";
-  const gcashQrImageUrl =
-    process.env.NEXT_PUBLIC_GCASH_QR_IMAGE_URL?.trim() || "";
+  const gcashAccountName = cleanPublicEnv(process.env.NEXT_PUBLIC_GCASH_ACCOUNT_NAME) || "SYP ON CAFÉ";
+  const gcashAccountNumber = cleanPublicEnv(process.env.NEXT_PUBLIC_GCASH_ACCOUNT_NUMBER);
+  const gcashPaymentUrl = cleanPublicEnv(process.env.NEXT_PUBLIC_GCASH_PAYMENT_URL) || "https://gcash.com/";
+  const gcashPaymentUrlTemplate = cleanPublicEnv(process.env.NEXT_PUBLIC_GCASH_PAYMENT_URL_TEMPLATE);
+  const gcashQrImageUrl = cleanPublicEnv(process.env.NEXT_PUBLIC_GCASH_QR_IMAGE_URL) || "https://i.ibb.co/XfvgSJPb/IMG-3363.png";
 
   function buildGcashPaymentUrl(amount: number, orderNumber: string) {
     const template = gcashPaymentUrlTemplate || gcashPaymentUrl;
@@ -223,6 +224,34 @@ export default function CheckoutPage() {
         );
       }
 
+      // The order RPC already creates/finds the customer. Ensure every new
+      // online customer also receives a permanent KaSYP member ID.
+      let resolvedMemberCode = "";
+      const { data: customerRow } = await supabase
+        .from("customers")
+        .select("id,customer_code")
+        .eq("mobile", cleanMobile)
+        .order("id", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (customerRow?.id) {
+        resolvedMemberCode = customerRow.customer_code || `SYP${String(customerRow.id).padStart(4, "0")}`;
+        if (!customerRow.customer_code) {
+          const { error: memberUpdateError } = await supabase
+            .from("customers")
+            .update({ customer_code: resolvedMemberCode })
+            .eq("id", customerRow.id);
+          if (memberUpdateError) console.warn("Member ID update failed:", memberUpdateError);
+        }
+      }
+
+      if (resolvedMemberCode) {
+        const target = `${window.location.origin}/member-login?identity=${encodeURIComponent(resolvedMemberCode)}&source=online-order`;
+        setMemberCode(resolvedMemberCode);
+        setMemberQrTarget(target);
+      }
+
       const savedOrder = {
         orderId: createdOrder.order_id,
         orderNumber: createdOrder.order_number,
@@ -314,6 +343,18 @@ export default function CheckoutPage() {
             {submittedOrderNumber}
           </p>
 
+          {memberCode && memberQrTarget && (
+            <div className="mt-7 rounded-3xl border border-amber-400/30 bg-amber-400/10 p-5">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-300">Your KaSYP Member Account</p>
+              <p className="mt-2 text-2xl font-black text-white">{memberCode}</p>
+              <div className="mx-auto mt-4 w-fit rounded-2xl bg-white p-3">
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=5&format=png&data=${encodeURIComponent(memberQrTarget)}`} alt={`Member QR for ${memberCode}`} className="h-44 w-44 object-contain" />
+              </div>
+              <p className="mt-3 text-sm text-neutral-300">Screenshot this QR and member ID. Use it on your next order to collect stamps.</p>
+              <Link href={memberQrTarget} className="mt-4 inline-flex rounded-full bg-amber-400 px-5 py-2.5 font-bold text-black">Open My Member Account</Link>
+            </div>
+          )}
+
           {submittedPaymentMethod === "gcash" && (
             <div className="mt-7 rounded-3xl border border-sky-500/30 bg-sky-500/10 p-5 text-left">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-300">
@@ -378,11 +419,7 @@ export default function CheckoutPage() {
               )}
 
               <p className="mt-3 text-xs text-neutral-400">
-                The exact amount can be prefilled only when
-                NEXT_PUBLIC_GCASH_PAYMENT_URL_TEMPLATE is an approved merchant
-                checkout URL that supports the placeholders {"{amount}"} and
-                {"{orderNumber}"}. Otherwise, the button opens GCash and the
-                customer confirms or enters the amount manually.
+                Always confirm the recipient name and exact amount before sending.
               </p>
             </div>
           )}
@@ -426,8 +463,7 @@ export default function CheckoutPage() {
                   </div>
                 ) : (
                   <div className="mt-5 rounded-3xl border border-dashed border-white/20 p-8 text-center text-sm text-neutral-400">
-                    Add NEXT_PUBLIC_GCASH_QR_IMAGE_URL in Cloudflare to display
-                    your official GCash or QRPH image here.
+                    GCash QR is temporarily unavailable. Please use the account number shown below.
                   </div>
                 )}
 

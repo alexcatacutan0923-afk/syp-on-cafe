@@ -33,6 +33,61 @@ type KitchenOrder = LiveOrderSnapshot & {
   note?: string;
 };
 
+type OnlineOrderRow = {
+  id: number;
+  order_number: string;
+  customer_name: string;
+  mobile: string;
+  order_type: "pickup" | "delivery";
+  payment_method: "cash" | "gcash";
+  payment_status?: string | null;
+  subtotal: number;
+  delivery_fee: number;
+  total: number;
+  notes?: string | null;
+  created_at: string;
+};
+
+type OnlineOrderItemRow = {
+  product_name: string;
+  size?: string | null;
+  price: number;
+  quantity: number;
+  line_total?: number | null;
+  temperature?: string | null;
+};
+
+function playOnlineOrderTone() {
+  try {
+    const AudioContextClass = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const context = new AudioContextClass();
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(880, context.currentTime);
+    oscillator.frequency.setValueAtTime(1180, context.currentTime + 0.16);
+    gain.gain.setValueAtTime(0.16, context.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.48);
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start();
+    oscillator.stop(context.currentTime + 0.48);
+    oscillator.addEventListener("ended", () => void context.close());
+  } catch (error) {
+    console.error("Unable to play online order alert:", error);
+  }
+}
+
+function printOnlineOrderReceipt(order: OnlineOrderRow, items: OnlineOrderItemRow[], cashierName: string) {
+  const popup = window.open("", "_blank", "width=420,height=760");
+  if (!popup) return false;
+  const rows = items.map((item) => `<tr><td>${item.quantity}× ${escapeReceiptText(item.product_name)}<small>${escapeReceiptText([item.temperature, item.size].filter(Boolean).join(" · "))}</small></td><td>₱${Number(item.line_total ?? item.price * item.quantity).toLocaleString("en-PH")}</td></tr>`).join("");
+  popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeReceiptText(order.order_number)}</title><style>@page{size:80mm auto;margin:3mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111;margin:0}.r{width:72mm;margin:auto}.c{text-align:center}.brand{font-size:20px;font-weight:900}.muted{font-size:11px;color:#555}.dash{border-top:1px dashed #333;margin:8px 0}table{width:100%;border-collapse:collapse;font-size:12px}td{padding:4px 0;vertical-align:top}td:last-child{text-align:right;font-weight:700}small{display:block;color:#555;margin-top:2px}.line{display:flex;justify-content:space-between;font-size:12px;margin:4px 0}.total{font-size:18px;font-weight:900}.tag{border:1px solid #111;padding:6px;text-align:center;font-weight:800;margin:8px 0}</style></head><body><main class="r"><div class="c"><div class="brand">SYP ON CAFÉ</div><div class="muted">ONLINE ORDER RECEIPT</div></div><div class="dash"></div><div class="line"><span>Order</span><b>${escapeReceiptText(order.order_number)}</b></div><div class="line"><span>Date</span><b>${new Date(order.created_at).toLocaleString("en-PH")}</b></div><div class="line"><span>Cashier</span><b>${escapeReceiptText(cashierName || "Alex")}</b></div><div class="line"><span>Customer</span><b>${escapeReceiptText(order.customer_name)}</b></div><div class="line"><span>Mobile</span><b>${escapeReceiptText(order.mobile)}</b></div><div class="tag">${order.order_type.toUpperCase()} · ${order.payment_method.toUpperCase()}${order.payment_status ? ` · ${escapeReceiptText(order.payment_status.toUpperCase())}` : ""}</div><div class="dash"></div><table>${rows}</table><div class="dash"></div><div class="line"><span>Subtotal</span><b>₱${Number(order.subtotal || 0).toLocaleString("en-PH")}</b></div><div class="line"><span>Delivery</span><b>₱${Number(order.delivery_fee || 0).toLocaleString("en-PH")}</b></div><div class="line total"><span>TOTAL</span><b>₱${Number(order.total || 0).toLocaleString("en-PH")}</b></div>${order.notes ? `<div class="dash"></div><div class="muted"><b>Notes:</b><br>${escapeReceiptText(order.notes).replaceAll("\n", "<br>")}</div>` : ""}<div class="dash"></div><div class="c muted">Please verify payment before preparing.<br>Thank you, KaSYP!</div></main><script>window.onload=()=>{window.print();setTimeout(()=>window.close(),500)}<\/script></body></html>`);
+  popup.document.close();
+  return true;
+}
+
 const LIVE_ORDER_KEY = "syp-live-order-v1";
 const KITCHEN_ORDERS_KEY = "syp-kitchen-orders-v1";
 const DISPLAY_CHANNEL = "syp-cafe-live-v1";
@@ -208,6 +263,11 @@ export default function PosPage() {
   const [customNotes, setCustomNotes] = useState("");
   const [shiftStats, setShiftStats] = useState<ShiftStats>({ sales: 0, orders: 0, members: 0, freeDrinks: 0, loading: true, error: "" });
   const [cashierName, setCashierName] = useState("Alex");
+  const [pendingOnlineOrders, setPendingOnlineOrders] = useState(0);
+  const [onlineOrderAlert, setOnlineOrderAlert] = useState<string | null>(null);
+  const [onlineSoundEnabled, setOnlineSoundEnabled] = useState(false);
+  const onlineAlertIntervalRef = useRef<number | null>(null);
+  const printedOnlineOrdersRef = useRef<Set<string>>(new Set());
   const searchRef = useRef<HTMLInputElement>(null);
 
   const filteredProducts = useMemo(() => {
@@ -262,6 +322,87 @@ export default function PosPage() {
   const updateCashierName = (value: string) => {
     setCashierName(value);
     window.localStorage.setItem("sypCashierName", value.trim() || "Alex");
+  };
+
+  useEffect(() => {
+    const saved = window.localStorage.getItem("sypOnlineSoundEnabled");
+    setOnlineSoundEnabled(saved === "1");
+    try {
+      const printed = JSON.parse(window.localStorage.getItem("sypPrintedOnlineOrders") || "[]") as string[];
+      printedOnlineOrdersRef.current = new Set(printed.slice(-100));
+    } catch {
+      printedOnlineOrdersRef.current = new Set();
+    }
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    const refreshPendingCount = async () => {
+      const { count, error } = await supabase
+        .from("orders")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending");
+      if (!error && active) setPendingOnlineOrders(count ?? 0);
+    };
+
+    const fetchAndPrintOrder = async (order: OnlineOrderRow) => {
+      if (printedOnlineOrdersRef.current.has(order.order_number)) return;
+      const { data: items, error } = await supabase
+        .from("order_items")
+        .select("product_name,size,price,quantity,line_total,temperature")
+        .eq("order_id", order.id)
+        .order("id", { ascending: true });
+      if (error) {
+        console.error("Unable to load online order items:", error);
+        return;
+      }
+      const printed = printOnlineOrderReceipt(order, (items ?? []) as OnlineOrderItemRow[], cashierName);
+      if (printed) {
+        printedOnlineOrdersRef.current.add(order.order_number);
+        window.localStorage.setItem("sypPrintedOnlineOrders", JSON.stringify(Array.from(printedOnlineOrdersRef.current).slice(-100)));
+      }
+    };
+
+    void refreshPendingCount();
+    const poll = window.setInterval(refreshPendingCount, 20000);
+    const channel = supabase
+      .channel("syp-pos-live-orders")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, (payload) => {
+        const order = payload.new as OnlineOrderRow;
+        setPendingOnlineOrders((value) => value + 1);
+        setOnlineOrderAlert(order.order_number || "NEW ONLINE ORDER");
+        if (onlineSoundEnabled) playOnlineOrderTone();
+        if (onlineAlertIntervalRef.current) window.clearInterval(onlineAlertIntervalRef.current);
+        onlineAlertIntervalRef.current = window.setInterval(() => {
+          if (onlineSoundEnabled) playOnlineOrderTone();
+        }, 6500);
+        window.setTimeout(() => void fetchAndPrintOrder(order), 900);
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders" }, () => void refreshPendingCount())
+      .subscribe();
+
+    return () => {
+      active = false;
+      window.clearInterval(poll);
+      if (onlineAlertIntervalRef.current) window.clearInterval(onlineAlertIntervalRef.current);
+      void supabase.removeChannel(channel);
+    };
+  }, [cashierName, onlineSoundEnabled]);
+
+  const acknowledgeOnlineOrder = () => {
+    setOnlineOrderAlert(null);
+    if (onlineAlertIntervalRef.current) {
+      window.clearInterval(onlineAlertIntervalRef.current);
+      onlineAlertIntervalRef.current = null;
+    }
+  };
+
+  const toggleOnlineSound = () => {
+    const next = !onlineSoundEnabled;
+    setOnlineSoundEnabled(next);
+    window.localStorage.setItem("sypOnlineSoundEnabled", next ? "1" : "0");
+    if (next) playOnlineOrderTone();
   };
 
   useEffect(() => {
@@ -604,6 +745,12 @@ export default function PosPage() {
   return (
     <main className="pos-shell">
       {notice && <div className="pos-toast" role="status">✓ {notice}</div>}
+      {onlineOrderAlert && (
+        <div className="online-order-alert" role="alert">
+          <div><span>NEW ONLINE ORDER</span><strong>{onlineOrderAlert}</strong><small>Receipt sent to printer. Open Live Orders to accept.</small></div>
+          <button onClick={acknowledgeOnlineOrder}>ACKNOWLEDGE</button>
+        </div>
+      )}
       <header className="topbar">
         <div className="brand-block">
           <div className="brand-mark">S</div>
@@ -922,7 +1069,10 @@ export default function PosPage() {
       <footer className="footer-bar">
         <div className="version-card"><strong>SYP ON CAFÉ POS</strong><span>v3.0 Smart Customization</span></div>
         <div className="system-status"><span className="online-dot" /> Online <i /> Kitchen Connected <i /> Printer Ready <i /> Database Connected</div><div className="shortcuts"><kbd>F1</kbd> Coffee <kbd>F2</kbd> Matcha <kbd>F3</kbd> Milky <kbd>F4</kbd> Soda <kbd>ESC</kbd> Clear</div>
-        <button className="online-orders">▣ Online Orders <b>2</b></button>
+        <div className="live-orders-actions">
+          <button className={`sound-toggle ${onlineSoundEnabled ? "active" : ""}`} onClick={toggleOnlineSound} title="Repeat notification sound until acknowledged">{onlineSoundEnabled ? "🔔 Sound On" : "🔕 Sound Off"}</button>
+          <a className="online-orders" href="/admin" target="_blank" rel="noreferrer" onClick={acknowledgeOnlineOrder}>▣ Live Orders <b>{pendingOnlineOrders}</b></a>
+        </div>
       </footer>
     </main>
   );
