@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { getProductImage } from "@/lib/product-images";
 
 type Temperature = "iced" | "hot" | "regular";
 type TemperatureFilter = "all" | "iced" | "hot";
@@ -67,6 +68,11 @@ const categories = [
   { id: "Soda", label: "Soda", icon: "🥤" },
   { id: "Fries", label: "Fries", icon: "🍟" },
 ] as const;
+
+
+function productImage(product: Product) {
+  return getProductImage(product.name, product.category, product.image);
+}
 
 const customizableCategories = new Set([
   "Coffee",
@@ -586,10 +592,12 @@ export default function MenuPage() {
                           </span>
                         )}
 
-                        {product.image ? (
+                        {productImage(product) ? (
                           <img
-                            src={product.image}
+                            src={productImage(product)}
                             alt={product.name}
+                            loading="lazy"
+                            decoding="async"
                             className="h-full w-full object-contain p-5"
                           />
                         ) : (
@@ -670,6 +678,12 @@ export default function MenuPage() {
                 ✕
               </button>
             </div>
+
+            {productImage(selectedProduct) && (
+              <div className="mt-6 overflow-hidden rounded-3xl border border-white/10 bg-white">
+                <img src={productImage(selectedProduct)} alt={selectedProduct.name} loading="lazy" decoding="async" className="h-72 w-full object-contain" />
+              </div>
+            )}
 
             <section className="mt-7">
               <h3 className="font-bold">Choose size</h3>

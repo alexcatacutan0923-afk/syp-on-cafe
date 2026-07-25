@@ -2,9 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import "./pos.css";
+import { chooseReceiptQuote, getSeasonalReceiptTheme } from "@/lib/receipt-quotes";
+import { supabase } from "@/lib/supabase";
 
 type Category = "All" | "Coffee" | "Matcha" | "Soda" | "Milky" | "Fries" | "Signature" | "ADDS";
 type Payment = "Cash" | "GCash" | "Maya";
+type ReceiptStyle = "eco" | "classic" | "premium";
+type ShiftStats = { sales: number; orders: number; members: number; freeDrinks: number; loading: boolean; error: string };
 
 type Product = {
   id: string;
@@ -95,9 +99,9 @@ const products: Product[] = [
   { id: "white-rush-16", name: "SYP White Rush", size: "16oz", price: 99, category: "Signature", image: "/products/syp-white-rush.webp" },
   { id: "white-rush-22", name: "SYP White Rush", size: "22oz", price: 119, category: "Signature", image: "/products/syp-white-rush.webp" },
 
-  { id: "fries-small", name: "SYP Bites", size: "Small", price: 49, category: "Fries", image: "/products/milo-dino.webp" },
-  { id: "fries-medium", name: "SYP Cravings", size: "Medium", price: 79, category: "Fries", image: "/products/milo-dino.webp" },
-  { id: "fries-barkada", name: "SYP Overload", size: "Barkada", price: 119, category: "Fries", image: "/products/milo-dino.webp" },
+  { id: "fries-small", name: "SYP Bites", size: "Small", price: 49, category: "Fries", image: "/products/fries.webp" },
+  { id: "fries-medium", name: "SYP Cravings", size: "Medium", price: 79, category: "Fries", image: "/products/fries.webp" },
+  { id: "fries-barkada", name: "SYP Overload", size: "Barkada", price: 119, category: "Fries", image: "/products/fries.webp" },
 ];
 
 const categories: Category[] = ["All", "Coffee", "Matcha", "Soda", "Milky", "Fries", "Signature", "ADDS"];
@@ -113,6 +117,8 @@ export default function PosPage() {
   const [customerQuery, setCustomerQuery] = useState("");
   const [addStamp, setAddStamp] = useState(true);
   const [autoPrint, setAutoPrint] = useState(true);
+  const [receiptStyle, setReceiptStyle] = useState<ReceiptStyle>("eco");
+  const [orderNote, setOrderNote] = useState("");
   const [now, setNow] = useState(new Date());
   const [notice, setNotice] = useState("");
   const [lastAdded, setLastAdded] = useState<string | null>(null);
@@ -124,6 +130,7 @@ export default function PosPage() {
   const [flavor, setFlavor] = useState("Cheese");
   const [selectedAddons, setSelectedAddons] = useState<AddOn[]>([]);
   const [customNotes, setCustomNotes] = useState("");
+  const [shiftStats, setShiftStats] = useState<ShiftStats>({ sales: 0, orders: 0, members: 0, freeDrinks: 0, loading: true, error: "" });
   const searchRef = useRef<HTMLInputElement>(null);
 
   const filteredProducts = useMemo(() => {
@@ -144,6 +151,40 @@ export default function PosPage() {
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(timer);
+  }, []);
+
+  const loadShiftStats = async () => {
+    const { start, end } = getBusinessShiftRange(new Date());
+    setShiftStats((current) => ({ ...current, loading: true, error: "" }));
+
+    const { data, error } = await supabase
+      .from("orders")
+      .select("id,total,customer_id,status,created_at")
+      .gte("created_at", start.toISOString())
+      .lt("created_at", end.toISOString())
+      .eq("status", "completed");
+
+    if (error) {
+      setShiftStats((current) => ({ ...current, loading: false, error: error.message }));
+      return;
+    }
+
+    const rows = data ?? [];
+    const identifiedMembers = new Set(rows.map((row) => row.customer_id).filter(Boolean));
+    setShiftStats({
+      sales: rows.reduce((sum, row) => sum + Number(row.total || 0), 0),
+      orders: rows.length,
+      members: identifiedMembers.size,
+      freeDrinks: 0,
+      loading: false,
+      error: "",
+    });
+  };
+
+  useEffect(() => {
+    void loadShiftStats();
+    const refresh = window.setInterval(() => void loadShiftStats(), 30000);
+    return () => window.clearInterval(refresh);
   }, []);
 
   useEffect(() => {
@@ -239,19 +280,58 @@ export default function PosPage() {
     setCart([]);
     setCash(0);
     setDiscount(0);
+    setOrderNote("");
     setNotice("Cart cleared");
     window.setTimeout(() => setNotice(""), 1200);
   };
 
   const completeSale = () => {
     if (!checkoutReady) return;
-    setNotice(`Sale completed • ${money(total)}`);
+
+    const completedAt = new Date();
+    const receiptNo = createReceiptNumber(completedAt);
+    const quote = chooseReceiptQuote(completedAt);
+    const seasonalTheme = getSeasonalReceiptTheme(completedAt);
+    const qrTarget = process.env.NEXT_PUBLIC_RECEIPT_QR_URL?.trim()
+      || `${window.location.origin}/member-register?source=receipt&receipt=${encodeURIComponent(receiptNo)}`;
+
+    if (autoPrint) {
+      const printWindow = window.open("", "_blank", "width=420,height=780");
+      if (printWindow) {
+        printWindow.document.open();
+        printWindow.document.write(buildReceiptHtml({
+          receiptNo,
+          completedAt,
+          cart,
+          subtotal,
+          discount,
+          total,
+          payment,
+          cash,
+          change,
+          customerQuery,
+          addStamp,
+          orderNote,
+          receiptStyle,
+          quote,
+          seasonalTheme,
+          qrTarget,
+        }));
+        printWindow.document.close();
+      } else {
+        setNotice("Sale completed, but receipt popup was blocked");
+      }
+    }
+
+    setNotice(`Sale completed • ${money(total)} • ${receiptNo}`);
+    window.setTimeout(() => void loadShiftStats(), 500);
     window.setTimeout(() => {
       setCart([]);
       setCash(0);
       setDiscount(0);
+      setOrderNote("");
       setNotice("");
-    }, 1300);
+    }, 1800);
   };
 
   return (
@@ -273,10 +353,10 @@ export default function PosPage() {
         </label>
 
         <div className="stats-row">
-          <Stat label="TODAY'S SALES" value="₱12,450" trend="+18%" />
-          <Stat label="ORDERS" value="18" />
-          <Stat label="MEMBERS" value="128" />
-          <Stat label="FREE DRINKS" value="5" />
+          <Stat label="SHIFT SALES · 5PM–4AM" value={shiftStats.loading ? "…" : money(shiftStats.sales)} />
+          <Stat label="SHIFT ORDERS" value={shiftStats.loading ? "…" : String(shiftStats.orders)} />
+          <Stat label="MEMBERS SERVED" value={shiftStats.loading ? "…" : String(shiftStats.members)} />
+          <Stat label="SHIFT STATUS" value={shiftStats.error ? "OFFLINE" : "LIVE"} trend={shiftStats.error ? "Retrying" : "30s sync"} />
         </div>
 
         <div className="cashier-card">
@@ -358,7 +438,7 @@ export default function PosPage() {
             ))}
           </div>
           <div className="cart-summary">
-            <input placeholder="Add order note (optional)..." />
+            <input value={orderNote} onChange={(event) => setOrderNote(event.target.value)} placeholder="Add order note (optional)..." />
             <div><span>Subtotal</span><strong>{money(subtotal)}</strong></div>
             <div className="discount-row"><span>Discount</span><div><button onClick={() => setDiscount(Math.min(subtotal, discount + 10))}>+₱10</button><button onClick={() => setDiscount(0)}>Clear</button><strong>- {money(discount)}</strong></div></div>
             <div className="grand-total"><span>TOTAL</span><strong>{money(total)}</strong></div>
@@ -379,15 +459,15 @@ export default function PosPage() {
           </div>
 
           <div className="checkout-card calculator-card">
-            <h3>CASH CALCULATOR</h3>
+            <div className="calculator-title"><h3>CASH CALCULATOR</h3><span>Large controls for ROG Ally</span></div>
             <label>Cash Received</label>
             <div className="cash-display">{money(cash)}</div>
-            <div className="cash-buttons">
+            <div className="cash-buttons cash-buttons-large">
               {[20, 50, 100, 200, 500, 1000].map((amount) => <button key={amount} onClick={() => setCash((value) => value + amount)}>₱{amount}</button>)}
               <button onClick={() => setCash((value) => value + 10)}>+₱10</button>
               <button onClick={() => setCash((value) => value + 5)}>+₱5</button>
-              <button onClick={() => setCash(total)} className="exact">Exact</button>
-              <button onClick={() => setCash(0)} className="danger">Clear</button>
+              <button onClick={() => setCash(total)} className="exact">EXACT</button>
+              <button onClick={() => setCash(0)} className="danger">CLEAR</button>
             </div>
             <h3 className="suggested-title">SUGGESTED AMOUNTS</h3>
             <div className="suggested-grid">{suggestedAmounts(total).map((amount, index) => <button key={`${amount}-${index}`} onClick={() => setCash(amount)}><strong>{money(amount)}</strong><span>{amount === total ? "No change" : `Change: ${money(amount - total)}`}</span></button>)}</div>
@@ -398,6 +478,15 @@ export default function PosPage() {
             <label><input type="checkbox" checked={addStamp} onChange={(event) => setAddStamp(event.target.checked)} /> Add loyalty stamp</label>
             <small>No stamp for Soda or ADDS-only orders.</small>
             <label><input type="checkbox" checked={autoPrint} onChange={(event) => setAutoPrint(event.target.checked)} /> Auto-print receipt</label>
+            <label className="receipt-style-field">
+              <span>Receipt style</span>
+              <select value={receiptStyle} onChange={(event) => setReceiptStyle(event.target.value as ReceiptStyle)}>
+                <option value="eco">Eco · compact + QR</option>
+                <option value="classic">Classic · loyalty details</option>
+                <option value="premium">Premium · seasonal + full details</option>
+              </select>
+            </label>
+            <small>QR to KaSYP registration is always printed in every style.</small>
           </div>
 
           <button className="checkout-button" disabled={!checkoutReady} onClick={completeSale}><span className="lock">▣</span><span>CHECKOUT<small>F5 / ENTER</small></span></button>
@@ -508,8 +597,193 @@ function countCategory(name: Category) {
   return products.filter((product) => product.category === name).length;
 }
 
+function getBusinessShiftRange(date: Date) {
+  const start = new Date(date);
+  const hour = date.getHours();
+
+  if (hour < 4) {
+    start.setDate(start.getDate() - 1);
+  }
+  start.setHours(17, 0, 0, 0);
+
+  const end = new Date(start);
+  end.setDate(end.getDate() + 1);
+  end.setHours(4, 0, 0, 0);
+
+  return { start, end };
+}
+
 function suggestedAmounts(total: number) {
   if (!total) return [0, 0, 0];
   const choices = [total, Math.ceil(total / 50) * 50, Math.ceil(total / 100) * 100, 500, 1000].filter((value) => value >= total);
   return Array.from(new Set(choices)).slice(0, 3);
+}
+
+
+type ReceiptPayload = {
+  receiptNo: string;
+  completedAt: Date;
+  cart: CartItem[];
+  subtotal: number;
+  discount: number;
+  total: number;
+  payment: Payment;
+  cash: number;
+  change: number;
+  customerQuery: string;
+  addStamp: boolean;
+  orderNote: string;
+  receiptStyle: ReceiptStyle;
+  quote: { id: number; text: string; category: string };
+  seasonalTheme: { key: string; title: string; message: string } | null;
+  qrTarget: string;
+};
+
+function createReceiptNumber(date: Date) {
+  const stamp = [
+    String(date.getFullYear()).slice(-2),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("");
+  const sequence = String((date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds()) % 10000).padStart(4, "0");
+  return `SYP-${stamp}-${sequence}`;
+}
+
+function escapeReceiptText(value: string) {
+  return value.replace(/[&<>'"]/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "'": "&#39;",
+    '"': "&quot;",
+  }[char] || char));
+}
+
+function buildReceiptHtml(payload: ReceiptPayload) {
+  const {
+    receiptNo, completedAt, cart, subtotal, discount, total, payment, cash, change,
+    customerQuery, addStamp, orderNote, receiptStyle, quote, seasonalTheme, qrTarget,
+  } = payload;
+  const isEco = receiptStyle === "eco";
+  const isPremium = receiptStyle === "premium";
+  const qrImage = `https://api.qrserver.com/v1/create-qr-code/?size=280x280&margin=6&format=png&data=${encodeURIComponent(qrTarget)}`;
+  const dateText = completedAt.toLocaleString("en-PH", {
+    timeZone: "Asia/Manila",
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const itemRows = cart.map((item) => {
+    const customization = item.category === "Fries"
+      ? item.customization.flavor
+      : [item.size, item.customization.temperature, item.customization.sugar !== "100%" ? `${item.customization.sugar} sugar` : "", item.customization.ice !== "Normal Ice" ? item.customization.ice : ""].filter(Boolean).join(" · ");
+    const addons = item.customization.addons.length ? `+ ${item.customization.addons.map((addon) => addon.name).join(", ")}` : "";
+    const note = item.customization.notes ? `Note: ${item.customization.notes}` : "";
+    return `<div class="item-row"><div class="item-copy"><strong>${item.qty}x ${escapeReceiptText(item.name)}</strong>${!isEco && customization ? `<small>${escapeReceiptText(customization)}</small>` : ""}${!isEco && addons ? `<small>${escapeReceiptText(addons)}</small>` : ""}${!isEco && note ? `<small>${escapeReceiptText(note)}</small>` : ""}</div><strong>${money(item.unitPrice * item.qty)}</strong></div>`;
+  }).join("");
+
+  const customerSection = customerQuery.trim() && !isEco ? `<div class="compact-line"><span>Customer</span><strong>${escapeReceiptText(customerQuery.trim())}</strong></div>` : "";
+  const loyaltySection = addStamp && !isEco ? `<section class="loyalty"><strong>KaSYP Loyalty</strong><span>Eligible purchase: +1 stamp</span><small>Scan below to register, view stamps, and claim rewards.</small></section>` : "";
+  const seasonalSection = seasonalTheme && isPremium ? `<section class="seasonal"><strong>${escapeReceiptText(seasonalTheme.title)}</strong><span>${escapeReceiptText(seasonalTheme.message)}</span></section>` : "";
+  const orderNoteSection = orderNote.trim() && !isEco ? `<section class="order-note"><strong>Order note:</strong> ${escapeReceiptText(orderNote.trim())}</section>` : "";
+
+  return `<!doctype html>
+<html><head><meta charset="utf-8"><title>${receiptNo}</title>
+<style>
+  @page { size: 80mm auto; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #fff; color: #000; }
+  body { width: 80mm; font-family: Arial, Helvetica, sans-serif; font-size: 11.5px; line-height: 1.25; }
+  .receipt { width: 72mm; margin: 0 auto; padding: 3mm 1mm 4mm; }
+  .center { text-align: center; }
+  .brand { font-size: 20px; font-weight: 900; letter-spacing: .7px; margin: 0; }
+  .tagline { font-size: 10px; letter-spacing: 1.1px; margin-top: 1px; }
+  .address { font-size: 9.5px; margin-top: 3px; }
+  .rule { border-top: 1px dashed #000; margin: 6px 0; }
+  .meta { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; font-size: 10px; }
+  .meta strong { text-align: right; }
+  .compact-line, .item-row, .total-row { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+  .compact-line { margin-top: 2px; }
+  .item-row { margin: 4px 0; }
+  .item-copy { min-width: 0; flex: 1; }
+  .item-copy strong, .item-copy small { display: block; }
+  .item-copy small { font-size: 9px; margin-top: 1px; }
+  .summary { margin-top: 4px; }
+  .total-row { margin: 2px 0; }
+  .total-row.grand { font-size: 17px; font-weight: 900; border-top: 1.5px solid #000; border-bottom: 1.5px solid #000; padding: 4px 0; margin: 4px 0; }
+  .seasonal { border: 1px solid #000; text-align: center; padding: 5px; margin: 6px 0; }
+  .seasonal strong, .seasonal span { display: block; }
+  .seasonal strong { letter-spacing: .7px; }
+  .loyalty { text-align: center; margin: 6px 0; }
+  .loyalty strong, .loyalty span, .loyalty small { display: block; }
+  .order-note { font-size: 9.5px; margin: 5px 0; }
+  .qr-wrap { text-align: center; margin-top: 5px; page-break-inside: avoid; }
+  .qr-wrap img { width: 38mm; height: 38mm; display: block; margin: 2px auto; image-rendering: pixelated; }
+  .qr-title { font-size: 13px; font-weight: 900; letter-spacing: .5px; }
+  .qr-copy { font-size: 9.5px; }
+  .site { font-size: 12px; font-weight: 900; margin-top: 2px; }
+  .quote { text-align: center; font-size: 10.5px; font-style: italic; margin: 6px 2px 3px; }
+  .quote-id { text-align: center; font-size: 8.5px; }
+  .disclaimer { text-align: center; font-size: 8.5px; font-weight: 900; letter-spacing: .45px; margin-top: 5px; }
+  .thanks { text-align: center; font-size: 10px; margin-top: 3px; }
+  @media print { body { width: 80mm; } .receipt { break-after: auto; } }
+</style></head>
+<body><main class="receipt">
+  <header class="center">
+    <h1 class="brand">SYP ON CAFÉ</h1>
+    <div class="tagline">STREET · ICED · BREWED</div>
+    <div class="address">Apollo, Orani, Bataan · Open Daily 5PM–4AM</div>
+  </header>
+  ${seasonalSection}
+  <div class="rule"></div>
+  <section class="meta">
+    <span>Order</span><strong>${receiptNo}</strong>
+    <span>Date</span><strong>${escapeReceiptText(dateText)}</strong>
+    <span>Cashier</span><strong>Alex</strong>
+    <span>Payment</span><strong>${payment}</strong>
+  </section>
+  ${customerSection}
+  <div class="rule"></div>
+  <section>${itemRows}</section>
+  ${orderNoteSection}
+  <div class="rule"></div>
+  <section class="summary">
+    ${discount > 0 || !isEco ? `<div class="total-row"><span>Subtotal</span><strong>${money(subtotal)}</strong></div>` : ""}
+    ${discount > 0 ? `<div class="total-row"><span>Discount</span><strong>-${money(discount)}</strong></div>` : ""}
+    <div class="total-row grand"><span>TOTAL</span><strong>${money(total)}</strong></div>
+    ${payment === "Cash" ? `<div class="total-row"><span>Cash</span><strong>${money(cash)}</strong></div><div class="total-row"><span>Change</span><strong>${money(change)}</strong></div>` : ""}
+  </section>
+  ${loyaltySection}
+  <div class="rule"></div>
+  <section class="qr-wrap">
+    <div class="qr-title">SCAN TO JOIN KASYP REWARDS</div>
+    <img src="${qrImage}" alt="QR code to join KaSYP Rewards" />
+    <div class="qr-copy">Website · Menu · Loyalty · Rewards</div>
+    <div class="site">syponcafe.shop</div>
+  </section>
+  <div class="rule"></div>
+  <blockquote class="quote">“${escapeReceiptText(quote.text)}”</blockquote>
+  <div class="quote-id">Quote #${String(quote.id).padStart(4, "0")} · ${escapeReceiptText(quote.category)}</div>
+  <div class="disclaimer">THIS IS NOT AN OFFICIAL RECEIPT</div>
+  <div class="thanks">Order confirmation only · Thank you, KaSYP!</div>
+</main>
+<script>
+  const qr = document.querySelector('.qr-wrap img');
+  let printed = false;
+  const printNow = () => {
+    if (printed) return;
+    printed = true;
+    setTimeout(() => { window.print(); }, 300);
+  };
+  if (qr && !qr.complete) {
+    qr.addEventListener('load', printNow, { once: true });
+    qr.addEventListener('error', printNow, { once: true });
+    setTimeout(printNow, 2500);
+  } else {
+    printNow();
+  }
+</script></body></html>`;
 }

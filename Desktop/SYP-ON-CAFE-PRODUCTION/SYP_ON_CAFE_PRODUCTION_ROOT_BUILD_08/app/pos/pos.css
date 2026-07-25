@@ -50,3 +50,51 @@ linear-gradient(135deg,#070908,#0a0d0b 52%,#070908)}
 .customizer-footer{min-height:76px;border-top:1px solid #313631;background:#0b0e0c;padding:11px 17px;display:flex;align-items:center;justify-content:space-between;gap:18px}.customizer-footer>div{display:flex;flex-direction:column}.customizer-footer span{font-size:8px;color:#919891}.customizer-footer strong{font-size:24px;color:#f3b64a}.customizer-footer button{min-width:230px;height:50px;border:1px solid #d4a044;border-radius:11px;background:linear-gradient(135deg,#efbe5d,#9a6117);color:#fff;font-weight:950;box-shadow:0 12px 30px #d38b1f28;display:flex;align-items:center;justify-content:center;gap:12px}.customizer-footer button span{color:white;font-size:13px}.customizer-footer button small{border:1px solid #ffffff44;border-radius:5px;padding:3px 6px;font-size:7px}
 .smart-cart-item{min-height:84px}.smart-cart-item .cart-main{min-width:0}.smart-cart-item .cart-main span{color:#abb1ab}.smart-cart-item .cart-main small{display:block;max-width:190px;white-space:normal;line-height:1.25}.cart-addons{color:#d6a441!important}.cart-note{color:#8fa7a0!important;font-style:italic}.unit-price{display:block;color:#cdd2cd;font-size:7px;margin-top:3px}
 @media(max-width:900px){.customizer-body{grid-template-columns:1fr}.option-section:last-child{grid-column:auto}.choice-grid.four,.choice-grid.five{grid-template-columns:repeat(2,1fr)}.customizer-footer button{min-width:180px}}
+
+.receipt-style-field {
+  display: grid !important;
+  gap: 6px;
+  align-items: stretch !important;
+}
+.receipt-style-field span {
+  font-weight: 800;
+  color: #eef3ff;
+}
+.receipt-style-field select {
+  width: 100%;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 9px;
+  background: #101827;
+  color: #fff;
+  padding: 9px 10px;
+  font: inherit;
+}
+
+/* ===== BUILD 17 · ROG ALLY POS + 5PM–4AM BUSINESS SHIFT ===== */
+.calculator-title{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:8px}
+.calculator-title h3{margin:0}
+.calculator-title span{font-size:7px;color:#8e968e;white-space:nowrap}
+.calculator-card{padding:13px!important}
+.calculator-card>label{display:block;margin-bottom:6px;font-size:9px!important;color:#b9c0b9!important}
+.calculator-card .cash-display{min-height:66px;display:flex;align-items:center;justify-content:flex-end;padding:10px 14px!important;font-size:30px!important;font-weight:950;letter-spacing:.5px;border-width:2px!important}
+.cash-buttons-large{grid-template-columns:repeat(3,1fr)!important;gap:8px!important}
+.cash-buttons-large button{min-height:50px!important;font-size:13px!important;font-weight:950!important;border-radius:11px!important}
+.cash-buttons-large .exact,.cash-buttons-large .danger{min-height:54px!important;font-size:12px!important}
+.suggested-title{margin-top:13px!important;font-size:9px!important}
+.suggested-grid{gap:8px!important}
+.suggested-grid button{min-height:52px!important;padding:8px!important}
+.suggested-grid button strong{font-size:13px!important}
+.suggested-grid button span{font-size:7px!important}
+.change-row{min-height:58px!important;padding:9px 12px!important}
+.change-row span{font-size:10px!important}
+.change-row strong{font-size:24px!important}
+
+@media (max-width:1280px){
+  .stats-row{gap:5px}
+  .stat{padding:7px 8px!important}
+  .stat span{font-size:6px!important}
+  .stat strong{font-size:12px!important}
+  .checkout-panel{min-width:260px}
+  .calculator-card .cash-display{font-size:27px!important}
+  .cash-buttons-large button{min-height:48px!important}
+}
