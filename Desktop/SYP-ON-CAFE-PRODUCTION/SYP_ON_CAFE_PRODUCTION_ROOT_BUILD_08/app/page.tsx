@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import "./site.css";
 
 type FeaturedDrink = {
@@ -48,36 +48,92 @@ const communityMoments = [
 export default function HomePage() {
   const [category, setCategory] = useState("All");
   const [activeDrink, setActiveDrink] = useState<FeaturedDrink | null>(null);
+  const [videoMuted, setVideoMuted] = useState(true);
+  const [videoMini, setVideoMini] = useState(false);
+  const featuredRail = useRef<HTMLDivElement | null>(null);
+  const communityRail = useRef<HTMLDivElement | null>(null);
+  const reviewRail = useRef<HTMLDivElement | null>(null);
+  const cafeVideo = useRef<HTMLVideoElement | null>(null);
+  const heroSection = useRef<HTMLElement | null>(null);
   const categories = ["All", "Coffee", "Matcha", "Milky", "Signature"];
+
+  const moveRail = (rail: RefObject<HTMLDivElement | null>, direction: number) => {
+    rail.current?.scrollBy({ left: direction * Math.max(280, rail.current.clientWidth * 0.78), behavior: "smooth" });
+  };
+
+  const toggleVideoSound = () => {
+    if (!cafeVideo.current) return;
+    cafeVideo.current.muted = !cafeVideo.current.muted;
+    setVideoMuted(cafeVideo.current.muted);
+    void cafeVideo.current.play();
+  };
+
+  const openVideoFullscreen = () => {
+    const video = cafeVideo.current;
+    if (!video) return;
+    if (video.requestFullscreen) void video.requestFullscreen();
+  };
+
+  useEffect(() => {
+    const hero = heroSection.current;
+    if (!hero || typeof IntersectionObserver === "undefined") return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setVideoMini(!entry.isIntersecting),
+      { threshold: 0.18 },
+    );
+
+    observer.observe(hero);
+    return () => observer.disconnect();
+  }, []);
+
   const shown = useMemo(() => category === "All" ? drinks : drinks.filter((drink) => drink.category === category), [category]);
 
   return (
     <main className="site-shell">
       <header className="site-nav">
-        <Link className="site-brand" href="/"><span>SYP</span><div><b>SYP ON CAFÉ</b><small>STREET • ICED • BREWED</small></div></Link>
+        <Link className="site-brand" href="/">
+          <img src="/brand/syp-logo-glow.png" alt="SYP ON CAFÉ logo" />
+          <div><b>SYP ON CAFÉ</b><small>STREET • ICED • BREWED</small></div>
+        </Link>
         <nav><Link href="/menu">Menu</Link><Link href="/reviews">Reviews</Link><Link href="/moments">Coffee Moments</Link><Link href="/about">About</Link><Link href="/contact">Visit</Link></nav>
         <Link className="site-order" href="/menu">Order Now</Link>
       </header>
 
-      <section className="site-hero visual-hero">
-        <div className="hero-copy">
+      <section className="site-hero cinematic-hero" ref={heroSection}>
+        <div className={`hero-video-stage${videoMini ? " is-mini" : ""}`}>
+          <video ref={cafeVideo} src="/videos/syp-cafe-background.mp4" autoPlay muted loop playsInline poster="/brand/syp-logo-glow.png" />
+          <div className="hero-video-overlay" />
+          <div className="hero-video-controls">
+            <button type="button" onClick={toggleVideoSound}>{videoMuted ? "🔇 Sound" : "🔊 Sound"}</button>
+            <button type="button" onClick={openVideoFullscreen}>⛶ Full size</button>
+          </div>
+          <div className="hero-video-brand">
+            <img src="/brand/syp-logo-glow.png" alt="SYP ON CAFÉ logo" />
+            <span><b>SYP ON CAFÉ</b><small>Street • Iced • Brewed</small></span>
+          </div>
+          {videoMini && <button className="mini-video-return" type="button" onClick={() => heroSection.current?.scrollIntoView({ behavior: "smooth" })}>Return to hero</button>}
+        </div>
+
+        <div className="hero-copy cinematic-copy">
           <span className="hero-kicker">OPEN DAILY • 5PM–4AM</span>
           <h1>Your late-night coffee, now closer.</h1>
           <p>Browse the actual SYP ON CAFÉ menu, discover featured drinks, order online, and collect rewards in one premium café experience.</p>
           <div className="hero-actions"><Link className="gold-button" href="/menu">Explore the Menu</Link><Link className="ghost-button" href="/member-register">Join SYP Rewards</Link></div>
           <div className="hero-proof"><div><b>4.9</b><span>Average rating</span></div><div><b>11</b><span>Featured drinks</span></div><div><b>10</b><span>Stamps = reward</span></div></div>
         </div>
-        <div className="hero-product-photo">
-          <span className="preview-tag">MOST LOVED</span>
+
+        <div className="hero-featured-chip">
           <img src="/featured/biscoff-matcha.webp" alt="Biscoff Matcha featured drink" />
-          <div><small>MATCHA COLLECTION</small><h2>Biscoff Matcha</h2><p>Smooth premium matcha layered with creamy Biscoff sweetness.</p><strong>Starts at ₱119</strong></div>
+          <div><small>FEATURED DRINK</small><b>Biscoff Matcha</b><span>Starts at ₱119</span></div>
+          <Link href="/menu">Order →</Link>
         </div>
       </section>
 
       <section className="site-section featured-album-section">
-        <div className="section-heading"><div><small>FEATURED DRINK PICTURE ALBUM</small><h2>See the drink before you order.</h2></div><Link href="/menu">View full menu →</Link></div>
+        <div className="section-heading"><div><small>FEATURED DRINK PICTURE ALBUM</small><h2>Swipe left or right to explore.</h2></div><div className="rail-actions"><button type="button" onClick={() => moveRail(featuredRail, -1)} aria-label="Scroll featured drinks left">←</button><button type="button" onClick={() => moveRail(featuredRail, 1)} aria-label="Scroll featured drinks right">→</button><Link href="/menu">View full menu</Link></div></div>
         <div className="category-pills">{categories.map((item) => <button key={item} type="button" onClick={() => setCategory(item)} className={category === item ? "active" : ""}>{item}</button>)}</div>
-        <div className="featured-photo-grid">{shown.map((drink) => <article className="photo-drink-card" key={drink.name}>
+        <div className="featured-photo-grid horizontal-rail" ref={featuredRail}>{shown.map((drink) => <article className="photo-drink-card" key={drink.name}>
           <button type="button" className="photo-button" onClick={() => setActiveDrink(drink)} aria-label={`View ${drink.name} poster`}>
             <img src={drink.poster} alt={`${drink.name} promotional poster`} loading="lazy" />
             {drink.tag && <span>{drink.tag}</span>}
@@ -88,13 +144,15 @@ export default function HomePage() {
 
       <section className="site-section community-showcase">
         <div className="community-feed">
-          <div className="section-heading"><div><small>RECENT KASYP MOMENTS</small><h2>Real customers. Real coffee moments.</h2></div><Link href="/moments">View album →</Link></div>
-          <div className="community-album">{communityMoments.map((moment) => <article key={moment.image}><img src={moment.image} alt={moment.title} loading="lazy" /><div><small>SYP ON CAFÉ COMMUNITY</small><h3>{moment.title}</h3><p>{moment.caption}</p></div></article>)}</div>
+          <div className="section-heading"><div><small>RECENT KASYP MOMENTS</small><h2>Real customers. Real coffee moments.</h2></div><div className="rail-actions"><button type="button" onClick={() => moveRail(communityRail, -1)} aria-label="Scroll customer photos left">←</button><button type="button" onClick={() => moveRail(communityRail, 1)} aria-label="Scroll customer photos right">→</button><Link href="/moments">View album</Link></div></div>
+          <div className="community-album horizontal-rail" ref={communityRail}>{communityMoments.map((moment) => <article key={moment.image}><img src={moment.image} alt={moment.title} loading="lazy" /><div><small>SYP ON CAFÉ COMMUNITY</small><h3>{moment.title}</h3><p>{moment.caption}</p></div></article>)}</div>
         </div>
-        <aside className="sticky-cafe-video">
-          <div className="video-brand"><span>SYP</span><div><b>SYP ON CAFÉ</b><small>STREET • ICED • BREWED</small></div></div>
-          <video src="/videos/syp-cafe-moments.mp4" autoPlay muted loop playsInline controls poster="/community/IMG_3231.webp" />
-          <div><small>INSIDE SYP ON CAFÉ</small><h3>Your late-night coffee tambayan.</h3><p>See the café atmosphere while browsing our latest customer moments.</p><a href="https://syponcafe.shop">syponcafe.shop</a></div>
+        <aside className="community-promo-card">
+          <img src="/brand/syp-logo-clean.jpg" alt="SYP ON CAFÉ official logo" />
+          <small>YOUR KASYP COMMUNITY</small>
+          <h3>Real coffee. Real customers. Real moments.</h3>
+          <p>Share your favorite SYP moment and be part of the next customer album.</p>
+          <Link href="/moments">View all moments →</Link>
         </aside>
       </section>
 
@@ -104,13 +162,15 @@ export default function HomePage() {
       </section>
 
       <section className="site-section review-section">
-        <div className="section-heading"><div><small>REAL SYP EXPERIENCES</small><h2>Loved by our KaSYP community</h2></div><Link href="/reviews">See all reviews →</Link></div>
-        <div className="review-grid">{reviews.map((review) => <article key={review.name}><div><span>{review.name.slice(0, 1)}</span><div><b>{review.name}</b><small>{review.date}</small></div><em>{"★".repeat(review.stars)}</em></div><p>“{review.text}”</p><footer>Ordered: <b>{review.drink}</b></footer></article>)}</div>
+        <div className="section-heading"><div><small>REAL SYP EXPERIENCES</small><h2>Loved by our KaSYP community</h2></div><div className="rail-actions"><button type="button" onClick={() => moveRail(reviewRail, -1)} aria-label="Scroll reviews left">←</button><button type="button" onClick={() => moveRail(reviewRail, 1)} aria-label="Scroll reviews right">→</button><Link href="/reviews">See all reviews</Link></div></div>
+        <div className="review-grid horizontal-rail" ref={reviewRail}>{reviews.map((review) => <article key={review.name}><div><span>{review.name.slice(0, 1)}</span><div><b>{review.name}</b><small>{review.date}</small></div><em>{"★".repeat(review.stars)}</em></div><p>“{review.text}”</p><footer>Ordered: <b>{review.drink}</b></footer></article>)}</div>
       </section>
 
       <section className="site-section visit-section"><div><small>DELIVERY & PICKUP</small><h2>Order your favorites in a few taps.</h2><p>Browse the live menu, customize your drink, and continue to checkout.</p><div className="hero-actions"><Link className="gold-button" href="/menu">Start an Order</Link><Link className="ghost-button" href="/contact">Visit the Café</Link></div></div><div className="visit-details"><article><span>01</span><b>Choose your drink</b><small>Actual photos, sizes, and add-ons.</small></article><article><span>02</span><b>Review your cart</b><small>See the complete total before checkout.</small></article><article><span>03</span><b>Track your order</b><small>Follow preparation and delivery status.</small></article></div></section>
 
-      <footer className="site-footer"><div className="site-brand"><span>SYP</span><div><b>SYP ON CAFÉ</b><small>APOLLO, ORANI, BATAAN</small></div></div><p>Besides 7-Eleven & in front of Mangan Tamu • Open daily 5PM–4AM</p><nav><Link href="/menu">Menu</Link><Link href="/about">About</Link><Link href="/contact">Visit</Link><Link href="/member-login">Member portal</Link></nav></footer>
+      <footer className="site-footer"><div className="site-brand"><img src="/brand/syp-logo-glow.png" alt="SYP ON CAFÉ logo" /><div><b>SYP ON CAFÉ</b><small>APOLLO, ORANI, BATAAN</small></div></div><p>Besides 7-Eleven & in front of Mangan Tamu • Open daily 5PM–4AM</p><nav><Link href="/menu">Menu</Link><Link href="/about">About</Link><Link href="/contact">Visit</Link><Link href="/member-login">Member portal</Link></nav></footer>
+
+      <nav className="mobile-quick-bar" aria-label="Quick actions"><Link href="/menu">Order</Link><Link href="/menu">Menu</Link><Link href="/member-login">Rewards</Link></nav>
 
       {activeDrink && <div className="poster-modal" role="dialog" aria-modal="true" aria-label={`${activeDrink.name} poster`} onClick={() => setActiveDrink(null)}><div onClick={(event) => event.stopPropagation()}><button type="button" onClick={() => setActiveDrink(null)} aria-label="Close poster">×</button><img src={activeDrink.poster} alt={`${activeDrink.name} full promotional poster`} /><footer><div><small>{activeDrink.category}</small><h3>{activeDrink.name}</h3></div><Link className="gold-button" href="/menu">Order Now</Link></footer></div></div>}
     </main>
