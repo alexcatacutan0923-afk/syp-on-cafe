@@ -6,7 +6,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import MemberShell from "../components/member/MemberShell";
 import { clearMemberSession, getCurrentMember, MemberProfile, saveCloudMember, updateCurrentMember } from "@/lib/member-store";
-import { getCloudMember } from "@/lib/member-cloud";
+import { getCloudMember, getCloudMemberVisits } from "@/lib/member-cloud";
 import "./member.css";
 
 type CustomerOrder = {
@@ -34,6 +34,8 @@ export default function MemberDashboardPage() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [memberRefreshing, setMemberRefreshing] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
+  const [cloudVisits, setCloudVisits] = useState<string[]>([]);
+  const [calendarMonth, setCalendarMonth] = useState(() => new Date().toISOString().slice(0, 7));
 
   useEffect(() => {
     const current = getCurrentMember();
@@ -49,8 +51,12 @@ export default function MemberDashboardPage() {
     const refreshMember = async (showSpinner = false) => {
       if (showSpinner) setMemberRefreshing(true);
       try {
-        const cloud = await getCloudMember(member.id);
+        const [cloud, visits] = await Promise.all([
+          getCloudMember(member.id),
+          getCloudMemberVisits(member.id),
+        ]);
         if (!active || !cloud) return;
+        setCloudVisits(visits);
         const updated = saveCloudMember(cloud);
         setMember(updated);
         setProfileDraft({ name: updated.name, birthday: updated.birthday, favoriteDrink: updated.favoriteDrink });
@@ -114,9 +120,17 @@ export default function MemberDashboardPage() {
     };
   }, [member?.mobile]);
 
-  const currentMonth = "2026-07";
-  const visitedDays = useMemo(() => new Set((member?.visits ?? []).filter(date => date.startsWith(currentMonth)).map(date => Number(date.slice(-2)))), [member]);
-  const days = useMemo(() => Array.from({ length: 31 }, (_, i) => i + 1), []);
+  const currentMonth = calendarMonth;
+  const visitedDays = useMemo(() => new Set(cloudVisits.filter(date => date.startsWith(currentMonth)).map(date => Number(date.slice(-2)))), [cloudVisits, currentMonth]);
+  const calendarDate = useMemo(() => new Date(`${currentMonth}-01T00:00:00`), [currentMonth]);
+  const daysInMonth = useMemo(() => new Date(calendarDate.getFullYear(), calendarDate.getMonth() + 1, 0).getDate(), [calendarDate]);
+  const firstWeekday = calendarDate.getDay();
+  const calendarCells = useMemo(() => [
+    ...Array.from({ length: firstWeekday }, () => null),
+    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+  ], [firstWeekday, daysInMonth]);
+  const monthTitle = calendarDate.toLocaleDateString("en-PH", { month: "long", year: "numeric" });
+  const todayKey = new Date().toISOString().slice(0, 10);
   const initials = useMemo(() => member?.name.split(" ").filter(Boolean).slice(0, 2).map(part => part[0]).join("").toUpperCase() || "SY", [member]);
   const nextReward = Math.max(0, 10 - (member?.stamps ?? 0));
   const spinLocked = member?.spinAvailableAt ? new Date(member.spinAvailableAt).getTime() > Date.now() : false;
@@ -188,9 +202,14 @@ export default function MemberDashboardPage() {
           </article>
 
           <article id="visits" className="member-card visits-panel">
-            <CardTitle eyebrow="MY CAFÉ JOURNEY" title="July 2026" action={`${visitedDays.size} visits`} />
+            <CardTitle eyebrow="MY CAFÉ JOURNEY" title={monthTitle} action={`${visitedDays.size} visits`} />
+            <div className="calendar-month-nav">
+              <button type="button" onClick={() => setCalendarMonth(previousMonth(calendarMonth))}>‹</button>
+              <span>{monthTitle}</span>
+              <button type="button" onClick={() => setCalendarMonth(nextMonth(calendarMonth))}>›</button>
+            </div>
             <div className="calendar-head">{["S","M","T","W","T","F","S"].map((d,i)=><span key={i}>{d}</span>)}</div>
-            <div className="visit-calendar">{days.map(day => <span key={day} className={visitedDays.has(day) ? "visited" : day === 24 ? "today" : ""}>{day}{visitedDays.has(day) && <i>•</i>}</span>)}</div>
+            <div className="visit-calendar">{calendarCells.map((day, index) => day === null ? <span key={`blank-${index}`} className="calendar-blank" /> : <span key={day} className={`${visitedDays.has(day) ? "visited" : ""} ${`${currentMonth}-${String(day).padStart(2,"0")}` === todayKey ? "today" : ""}`}>{day}{visitedDays.has(day) && <i>•</i>}</span>)}</div>
             <div className="calendar-legend"><span><i className="gold-dot"/> Café visit</span><span><i className="ring-dot"/> Today</span></div>
           </article>
 
@@ -281,3 +300,6 @@ function formatDate(value:string){return new Intl.DateTimeFormat("en-PH",{year:"
 function formatMonthYear(value:string){return new Intl.DateTimeFormat("en-PH",{year:"numeric",month:"long"}).format(new Date(`${value}T00:00:00`))}
 function formatBirthday(value:string){return new Intl.DateTimeFormat("en-PH",{month:"long",day:"numeric"}).format(new Date(`${value}T00:00:00`))}
 function formatDateTime(value:string){return new Intl.DateTimeFormat("en-PH",{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}).format(new Date(value))}
+
+function previousMonth(value:string){const d=new Date(`${value}-01T00:00:00`);d.setMonth(d.getMonth()-1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`}
+function nextMonth(value:string){const d=new Date(`${value}-01T00:00:00`);d.setMonth(d.getMonth()+1);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`}

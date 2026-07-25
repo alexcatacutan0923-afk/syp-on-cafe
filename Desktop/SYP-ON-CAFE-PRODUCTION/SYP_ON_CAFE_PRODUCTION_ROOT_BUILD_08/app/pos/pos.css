@@ -123,3 +123,5 @@ linear-gradient(135deg,#070908,#0a0d0b 52%,#070908)}
   color: white;
   background: rgba(255,255,255,.06);
 }
+
+.free-drink-switch{margin-top:8px!important;padding:10px;border:1px solid #b48129;border-radius:9px;background:#2a1d0b;color:#ffd477!important;font-weight:900}.reward-discount-note{display:block;color:#77df8b!important;font-weight:800;margin:4px 2px 8px}.calendar-month-nav{display:flex;align-items:center;justify-content:space-between;margin:8px 0}.calendar-month-nav button{width:30px;height:30px;border:1px solid #74551d;border-radius:8px;background:#18130a;color:#e7b548}.calendar-month-nav span{font-size:10px;color:#d9ddd9}.calendar-blank{border-color:transparent!important;background:transparent!important}

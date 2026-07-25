@@ -96,3 +96,23 @@ export async function addCloudStamp(memberCode: string, count = 1) {
   if (error) throw error;
   return data as CloudMember;
 }
+
+
+export async function getCloudMemberVisits(memberCode: string, month?: string) {
+  const { data, error } = await supabase.rpc("get_loyalty_visits", {
+    p_member_code: memberCode.trim(),
+    p_month: month || null,
+  });
+  if (error) throw error;
+  return (data ?? []).map((row: { visit_date: string }) => row.visit_date);
+}
+
+export async function claimCloudFreeDrink(memberCode: string, receiptNo: string, cashier = "Alex") {
+  const { data, error } = await supabase.rpc("claim_loyalty_free_drink", {
+    p_member_code: memberCode.trim(),
+    p_receipt_no: receiptNo,
+    p_cashier: cashier,
+  });
+  if (error) throw error;
+  return data as CloudMember;
+}

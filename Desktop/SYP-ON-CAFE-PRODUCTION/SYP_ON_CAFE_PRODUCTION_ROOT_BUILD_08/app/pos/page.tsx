@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import "./pos.css";
 import { chooseReceiptQuote, getSeasonalReceiptTheme } from "@/lib/receipt-quotes";
 import { supabase } from "@/lib/supabase";
-import { addCloudStamp, CloudMember, listCloudMembers, searchCloudMembers } from "@/lib/member-cloud";
+import { addCloudStamp, claimCloudFreeDrink, CloudMember, listCloudMembers, searchCloudMembers } from "@/lib/member-cloud";
 
 type Category = "All" | "Coffee" | "Matcha" | "Soda" | "Milky" | "Fries" | "Signature" | "ADDS";
 type Payment = "Cash" | "GCash" | "Maya";
@@ -121,6 +121,7 @@ export default function PosPage() {
   const [memberSearching, setMemberSearching] = useState(false);
   const [memberSearchError, setMemberSearchError] = useState("");
   const [addStamp, setAddStamp] = useState(true);
+  const [redeemFreeDrink, setRedeemFreeDrink] = useState(false);
   const [autoPrint, setAutoPrint] = useState(true);
   const [receiptStyle, setReceiptStyle] = useState<ReceiptStyle>("eco");
   const [orderNote, setOrderNote] = useState("");
@@ -149,7 +150,9 @@ export default function PosPage() {
 
   const itemCount = cart.reduce((sum, item) => sum + item.qty, 0);
   const subtotal = cart.reduce((sum, item) => sum + item.unitPrice * item.qty, 0);
-  const total = Math.max(0, subtotal - discount);
+  const eligibleRewardLine = cart.find((item) => !["Soda", "Fries", "ADDS"].includes(item.category));
+  const loyaltyRewardDiscount = redeemFreeDrink && selectedMember && selectedMember.stamps >= 10 && eligibleRewardLine ? eligibleRewardLine.unitPrice : 0;
+  const total = Math.max(0, subtotal - discount - loyaltyRewardDiscount);
   const change = payment === "Cash" ? Math.max(0, cash - total) : 0;
   const checkoutReady = cart.length > 0 && (payment !== "Cash" || cash >= total);
 
@@ -337,8 +340,24 @@ export default function PosPage() {
     const completedAt = new Date();
     const receiptNo = createReceiptNumber(completedAt);
     let memberForReceipt = selectedMember;
+    let rewardWasClaimed = false;
 
-    if (addStamp && selectedMember && cart.some((item) => item.category !== "Soda" && item.category !== "ADDS")) {
+    if (redeemFreeDrink && selectedMember) {
+      if (!eligibleRewardLine || selectedMember.stamps < 10) {
+        setNotice("Free drink claim requires 10 stamps and an eligible drink in the cart");
+        return;
+      }
+      try {
+        memberForReceipt = await claimCloudFreeDrink(selectedMember.member_code, receiptNo, "Alex");
+        rewardWasClaimed = true;
+        setSelectedMember(memberForReceipt);
+      } catch (cause) {
+        setNotice(cause instanceof Error ? `Claim stopped: ${cause.message}` : "Unable to claim free drink");
+        return;
+      }
+    }
+
+    if (!rewardWasClaimed && addStamp && selectedMember && cart.some((item) => item.category !== "Soda" && item.category !== "ADDS")) {
       try {
         memberForReceipt = await addCloudStamp(selectedMember.member_code, 1);
         setSelectedMember(memberForReceipt);
@@ -350,7 +369,7 @@ export default function PosPage() {
     const quote = chooseReceiptQuote(completedAt);
     const seasonalTheme = getSeasonalReceiptTheme(completedAt);
     const stampWasAdded = Boolean(
-      addStamp && selectedMember && cart.some((item) => item.category !== "Soda" && item.category !== "ADDS")
+      !rewardWasClaimed && addStamp && selectedMember && cart.some((item) => item.category !== "Soda" && item.category !== "ADDS")
     );
     const qrTarget = memberForReceipt
       ? `${window.location.origin}/member-login?identity=${encodeURIComponent(memberForReceipt.member_code)}&source=receipt&receipt=${encodeURIComponent(receiptNo)}`
@@ -365,7 +384,7 @@ export default function PosPage() {
           completedAt,
           cart,
           subtotal,
-          discount,
+          discount: discount + loyaltyRewardDiscount,
           total,
           payment,
           cash,
@@ -379,6 +398,8 @@ export default function PosPage() {
           qrTarget,
           member: memberForReceipt,
           stampWasAdded,
+          rewardWasClaimed,
+          rewardDiscount: loyaltyRewardDiscount,
         }));
         printWindow.document.close();
       } else {
@@ -386,7 +407,7 @@ export default function PosPage() {
       }
     }
 
-    setNotice(`Sale completed • ${money(total)} • ${receiptNo}${memberForReceipt && addStamp ? ` • ${memberForReceipt.stamps}/10 stamps` : ""}`);
+    setNotice(`Sale completed • ${money(total)} • ${receiptNo}${rewardWasClaimed ? " • FREE DRINK CLAIMED" : memberForReceipt && addStamp ? ` • ${memberForReceipt.stamps}/10 stamps` : ""}`);
     window.setTimeout(() => void loadShiftStats(), 500);
     window.setTimeout(() => {
       setCart([]);
@@ -395,6 +416,7 @@ export default function PosPage() {
       setOrderNote("");
       setCustomerQuery("");
       setSelectedMember(null);
+      setRedeemFreeDrink(false);
       setMemberResults([]);
       setNotice("");
     }, 1800);
@@ -529,12 +551,12 @@ export default function PosPage() {
             {memberSearching && <small className="member-search-status">Loading members…</small>}
             {!memberSearching && memberSearchError && <div className="member-search-error"><b>Member loading failed</b><span>{memberSearchError}</span><button type="button" onClick={() => void showMemberDirectory()}>Retry</button></div>}
             {!selectedMember && memberResults.length > 0 && <div className="member-directory-label"><span>{customerQuery.trim() ? "SEARCH RESULTS" : "MEMBER DIRECTORY"}</span><b>{memberResults.length} shown</b></div>}
-            {!selectedMember && memberResults.length > 0 && <div className="member-search-results">{memberResults.map((member) => <button type="button" key={member.id} onClick={() => { setSelectedMember(member); setCustomerQuery(member.name); setMemberResults([]); }}><span><strong>{member.name}</strong><small>{member.member_code} · {member.mobile}</small></span><b>{member.stamps}/10</b></button>)}</div>}
+            {!selectedMember && memberResults.length > 0 && <div className="member-search-results">{memberResults.map((member) => <button type="button" key={member.id} onClick={() => { setSelectedMember(member); setRedeemFreeDrink(false); setCustomerQuery(member.name); setMemberResults([]); }}><span><strong>{member.name}</strong><small>{member.member_code} · {member.mobile}</small></span><b>{member.stamps}/10</b></button>)}</div>}
             {selectedMember ? <>
               <div className="customer-preview"><div className="avatar small">{selectedMember.name.split(" ").filter(Boolean).slice(0,2).map((part) => part[0]).join("").toUpperCase()}</div><div><strong>{selectedMember.name}</strong><span>{selectedMember.member_code}</span></div><b>{selectedMember.stamps} / 10</b></div>
               <div className="stamps">{Array.from({ length: 10 }).map((_, index) => <i key={index} className={index < selectedMember.stamps ? "filled" : ""}>★</i>)}</div>
               <div className="customer-meta"><span><b>{selectedMember.total_visits}</b> Visits</span><span><b>{selectedMember.favorite_drink || "Not set"}</b> Favorite</span><span><b>{selectedMember.birthday ? new Date(`${selectedMember.birthday}T00:00:00`).toLocaleDateString("en-PH", { month: "short", day: "numeric" }) : "—"}</b> Birthday</span></div>
-              <button type="button" className="clear-member" onClick={() => { setSelectedMember(null); setCustomerQuery(""); }}>Remove member</button>
+              <button type="button" className="clear-member" onClick={() => { setSelectedMember(null); setRedeemFreeDrink(false); setCustomerQuery(""); }}>Remove member</button>
             </> : <div className="customer-empty">Search and select a member to add loyalty automatically.</div>}
           </div>
 
@@ -560,8 +582,12 @@ export default function PosPage() {
           </div>
 
           <div className="checkout-card switches">
-            <label><input type="checkbox" checked={addStamp} onChange={(event) => setAddStamp(event.target.checked)} /> Add loyalty stamp</label>
+            <label><input type="checkbox" checked={addStamp} disabled={redeemFreeDrink} onChange={(event) => setAddStamp(event.target.checked)} /> Add loyalty stamp</label>
             <small>No stamp for Soda or ADDS-only orders.</small>
+            {selectedMember && selectedMember.stamps >= 10 && (
+              <label className="free-drink-switch"><input type="checkbox" checked={redeemFreeDrink} onChange={(event) => { setRedeemFreeDrink(event.target.checked); if (event.target.checked) setAddStamp(false); }} /> Redeem FREE DRINK (10 stamps)</label>
+            )}
+            {redeemFreeDrink && <small className="reward-discount-note">One eligible drink discount: {money(loyaltyRewardDiscount)}</small>}
             <label><input type="checkbox" checked={autoPrint} onChange={(event) => setAutoPrint(event.target.checked)} /> Auto-print receipt</label>
             <label className="receipt-style-field">
               <span>Receipt style</span>
@@ -724,6 +750,8 @@ type ReceiptPayload = {
   qrTarget: string;
   member: CloudMember | null;
   stampWasAdded: boolean;
+  rewardWasClaimed: boolean;
+  rewardDiscount: number;
 };
 
 function createReceiptNumber(date: Date) {
@@ -749,7 +777,7 @@ function escapeReceiptText(value: string) {
 function buildReceiptHtml(payload: ReceiptPayload) {
   const {
     receiptNo, completedAt, cart, subtotal, discount, total, payment, cash, change,
-    customerQuery, addStamp, orderNote, receiptStyle, quote, seasonalTheme, qrTarget, member, stampWasAdded,
+    customerQuery, addStamp, orderNote, receiptStyle, quote, seasonalTheme, qrTarget, member, stampWasAdded, rewardWasClaimed, rewardDiscount,
   } = payload;
   const isEco = receiptStyle === "eco";
   const isPremium = receiptStyle === "premium";
@@ -778,7 +806,7 @@ function buildReceiptHtml(payload: ReceiptPayload) {
       ? `<div class="compact-line"><span>Customer</span><strong>${escapeReceiptText(customerQuery.trim())}</strong></div>`
       : "";
   const loyaltySection = member
-    ? `<section class="loyalty"><strong>KaSYP Loyalty</strong><span>${stampWasAdded ? "✓ +1 STAMP ADDED" : "Member purchase recorded"}</span><b>${Number(member.stamps || 0)} / 10 STAMPS</b><small>${Number(member.stamps || 0) >= 10 ? "FREE DRINK READY — show this receipt at the counter." : `${Math.max(0, 10 - Number(member.stamps || 0))} stamp(s) before your free drink.`}</small></section>`
+    ? `<section class="loyalty"><strong>KaSYP Loyalty</strong><span>${rewardWasClaimed ? `✓ FREE DRINK CLAIMED · -${money(rewardDiscount)}` : stampWasAdded ? "✓ +1 STAMP ADDED" : "Member purchase recorded"}</span><b>${Number(member.stamps || 0)} / 10 STAMPS</b><small>${Number(member.stamps || 0) >= 10 ? "FREE DRINK READY — show this receipt at the counter." : `${Math.max(0, 10 - Number(member.stamps || 0))} stamp(s) before your free drink.`}</small></section>`
     : `<section class="loyalty"><strong>Join KaSYP Rewards</strong><span>No member account selected</span><small>Scan below to create your free account and start collecting stamps.</small></section>`;
   const seasonalSection = seasonalTheme && isPremium ? `<section class="seasonal"><strong>${escapeReceiptText(seasonalTheme.title)}</strong><span>${escapeReceiptText(seasonalTheme.message)}</span></section>` : "";
   const orderNoteSection = orderNote.trim() && !isEco ? `<section class="order-note"><strong>Order note:</strong> ${escapeReceiptText(orderNote.trim())}</section>` : "";
