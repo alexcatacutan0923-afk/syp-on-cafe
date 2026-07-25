@@ -59,6 +59,8 @@ export default function CheckoutPage() {
   const [submittedTotal, setSubmittedTotal] = useState(0);
   const [submittedPaymentMethod, setSubmittedPaymentMethod] =
     useState<PaymentMethod>("cash");
+  const [showGcashQr, setShowGcashQr] = useState(false);
+  const [copyNotice, setCopyNotice] = useState("");
 
   const gcashAccountName =
     process.env.NEXT_PUBLIC_GCASH_ACCOUNT_NAME?.trim() || "SYP ON CAFÉ";
@@ -66,6 +68,29 @@ export default function CheckoutPage() {
     process.env.NEXT_PUBLIC_GCASH_ACCOUNT_NUMBER?.trim() || "";
   const gcashPaymentUrl =
     process.env.NEXT_PUBLIC_GCASH_PAYMENT_URL?.trim() || "https://gcash.com/";
+  const gcashPaymentUrlTemplate =
+    process.env.NEXT_PUBLIC_GCASH_PAYMENT_URL_TEMPLATE?.trim() || "";
+  const gcashQrImageUrl =
+    process.env.NEXT_PUBLIC_GCASH_QR_IMAGE_URL?.trim() || "";
+
+  function buildGcashPaymentUrl(amount: number, orderNumber: string) {
+    const template = gcashPaymentUrlTemplate || gcashPaymentUrl;
+    return template
+      .replaceAll("{amount}", encodeURIComponent(amount.toFixed(2)))
+      .replaceAll("{orderNumber}", encodeURIComponent(orderNumber))
+      .replaceAll("{mobile}", encodeURIComponent(gcashAccountNumber));
+  }
+
+  async function copyPaymentValue(value: string, label: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopyNotice(`${label} copied`);
+      window.setTimeout(() => setCopyNotice(""), 1800);
+    } catch {
+      setCopyNotice(`Unable to copy ${label.toLowerCase()}`);
+      window.setTimeout(() => setCopyNotice(""), 2200);
+    }
+  }
 
   useEffect(() => {
     const savedCart = localStorage.getItem("sypCart");
@@ -300,17 +325,145 @@ export default function CheckoutPage() {
                 {gcashAccountNumber ? ` • ${gcashAccountNumber}` : ""}.
                 Check the recipient and amount inside GCash before confirming.
               </p>
-              <a
-                href={gcashPaymentUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="mt-5 inline-flex w-full items-center justify-center rounded-full bg-sky-500 px-6 py-3 font-bold text-white transition hover:bg-sky-400"
-              >
-                Open GCash • Pay ₱{submittedTotal}
-              </a>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <a
+                  href={buildGcashPaymentUrl(
+                    submittedTotal,
+                    submittedOrderNumber,
+                  )}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center rounded-full bg-sky-500 px-5 py-3 text-center font-bold text-white transition hover:bg-sky-400"
+                >
+                  Open GCash • Pay ₱{submittedTotal}
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setShowGcashQr(true)}
+                  className="inline-flex items-center justify-center rounded-full border border-sky-400/50 px-5 py-3 font-bold text-sky-200 transition hover:border-sky-300 hover:bg-sky-400/10"
+                >
+                  Show QR for another phone
+                </button>
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    copyPaymentValue(
+                      submittedTotal.toFixed(2),
+                      "Amount",
+                    )
+                  }
+                  className="rounded-2xl border border-white/10 px-3 py-2 text-sm font-semibold text-neutral-200 hover:border-white/25"
+                >
+                  Copy ₱{submittedTotal}
+                </button>
+                <button
+                  type="button"
+                  disabled={!gcashAccountNumber}
+                  onClick={() =>
+                    copyPaymentValue(gcashAccountNumber, "GCash number")
+                  }
+                  className="rounded-2xl border border-white/10 px-3 py-2 text-sm font-semibold text-neutral-200 hover:border-white/25 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Copy GCash number
+                </button>
+              </div>
+
+              {copyNotice && (
+                <p className="mt-3 text-center text-xs font-semibold text-emerald-300" aria-live="polite">
+                  {copyNotice}
+                </p>
+              )}
+
               <p className="mt-3 text-xs text-neutral-400">
-                The order stays pending until staff verifies the payment. Automatic prefilled merchant checkout requires an approved GCash for Business payment gateway.
+                The exact amount can be prefilled only when
+                NEXT_PUBLIC_GCASH_PAYMENT_URL_TEMPLATE is an approved merchant
+                checkout URL that supports the placeholders {"{amount}"} and
+                {"{orderNumber}"}. Otherwise, the button opens GCash and the
+                customer confirms or enters the amount manually.
               </p>
+            </div>
+          )}
+
+          {showGcashQr && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-5"
+              role="dialog"
+              aria-modal="true"
+              aria-label="GCash payment QR"
+            >
+              <section className="w-full max-w-md rounded-3xl border border-white/10 bg-neutral-950 p-6 text-left">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-sky-300">
+                      Scan using another phone
+                    </p>
+                    <h2 className="mt-2 text-2xl font-bold">
+                      Pay ₱{submittedTotal}
+                    </h2>
+                    <p className="mt-1 text-sm text-neutral-400">
+                      Order {submittedOrderNumber}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowGcashQr(false)}
+                    className="rounded-full border border-white/15 px-3 py-1.5 text-sm text-neutral-300 hover:border-white/30"
+                  >
+                    Close
+                  </button>
+                </div>
+
+                {gcashQrImageUrl ? (
+                  <div className="mt-5 rounded-3xl bg-white p-4">
+                    <img
+                      src={gcashQrImageUrl}
+                      alt={`GCash QR for ${gcashAccountName}`}
+                      className="mx-auto aspect-square w-full max-w-[320px] object-contain"
+                    />
+                  </div>
+                ) : (
+                  <div className="mt-5 rounded-3xl border border-dashed border-white/20 p-8 text-center text-sm text-neutral-400">
+                    Add NEXT_PUBLIC_GCASH_QR_IMAGE_URL in Cloudflare to display
+                    your official GCash or QRPH image here.
+                  </div>
+                )}
+
+                <div className="mt-5 rounded-2xl bg-white/5 p-4 text-sm text-neutral-300">
+                  <p>Account: <strong>{gcashAccountName}</strong></p>
+                  {gcashAccountNumber && (
+                    <p className="mt-1">Number: <strong>{gcashAccountNumber}</strong></p>
+                  )}
+                  <p className="mt-1">Exact amount: <strong>₱{submittedTotal}</strong></p>
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      copyPaymentValue(
+                        submittedTotal.toFixed(2),
+                        "Amount",
+                      )
+                    }
+                    className="rounded-full bg-sky-500 px-4 py-3 font-bold text-white hover:bg-sky-400"
+                  >
+                    Copy amount
+                  </button>
+                  <button
+                    type="button"
+                    disabled={!gcashAccountNumber}
+                    onClick={() =>
+                      copyPaymentValue(gcashAccountNumber, "GCash number")
+                    }
+                    className="rounded-full border border-white/15 px-4 py-3 font-bold text-white hover:border-white/30 disabled:opacity-40"
+                  >
+                    Copy number
+                  </button>
+                </div>
+              </section>
             </div>
           )}
 

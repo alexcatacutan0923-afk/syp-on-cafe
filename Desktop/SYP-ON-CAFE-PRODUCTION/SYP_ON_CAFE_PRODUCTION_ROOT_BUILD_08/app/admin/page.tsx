@@ -842,6 +842,41 @@ export default function AdminPage() {
             </Link>
 
             <Link
+              href="/admin/inventory"
+              className="rounded-full border border-emerald-400/40 px-5 py-2 text-sm font-semibold text-emerald-300"
+            >
+              Inventory
+            </Link>
+
+            <Link
+              href="/admin/analytics"
+              className="rounded-full border border-sky-400/40 px-5 py-2 text-sm font-semibold text-sky-300"
+            >
+              Analytics
+            </Link>
+
+            <Link
+              href="/admin/business"
+              className="rounded-full border border-violet-400/40 px-5 py-2 text-sm font-semibold text-violet-300"
+            >
+              Smart Assistant
+            </Link>
+
+            <Link
+              href="/admin/crm"
+              className="rounded-full border border-pink-400/40 px-5 py-2 text-sm font-semibold text-pink-300"
+            >
+              Customer CRM
+            </Link>
+
+            <Link
+              href="/admin/promotions"
+              className="rounded-full border border-orange-400/40 px-5 py-2 text-sm font-semibold text-orange-300"
+            >
+              Promotions
+            </Link>
+
+            <Link
               href="/menu"
               className="rounded-full bg-amber-400 px-5 py-2 text-sm font-semibold text-black"
             >
