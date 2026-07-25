@@ -80,10 +80,37 @@ function playOnlineOrderTone() {
 }
 
 function printOnlineOrderReceipt(order: OnlineOrderRow, items: OnlineOrderItemRow[], cashierName: string) {
-  const popup = window.open("", "_blank", "width=420,height=760");
+  const popup = window.open("", "_blank", "width=420,height=900");
   if (!popup) return false;
+
   const rows = items.map((item) => `<tr><td>${item.quantity}× ${escapeReceiptText(item.product_name)}<small>${escapeReceiptText([item.temperature, item.size].filter(Boolean).join(" · "))}</small></td><td>₱${Number(item.line_total ?? item.price * item.quantity).toLocaleString("en-PH")}</td></tr>`).join("");
-  popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeReceiptText(order.order_number)}</title><style>@page{size:80mm auto;margin:3mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111;margin:0}.r{width:72mm;margin:auto}.c{text-align:center}.brand{font-size:20px;font-weight:900}.muted{font-size:11px;color:#555}.dash{border-top:1px dashed #333;margin:8px 0}table{width:100%;border-collapse:collapse;font-size:12px}td{padding:4px 0;vertical-align:top}td:last-child{text-align:right;font-weight:700}small{display:block;color:#555;margin-top:2px}.line{display:flex;justify-content:space-between;font-size:12px;margin:4px 0}.total{font-size:18px;font-weight:900}.tag{border:1px solid #111;padding:6px;text-align:center;font-weight:800;margin:8px 0}</style></head><body><main class="r"><div class="c"><div class="brand">SYP ON CAFÉ</div><div class="muted">ONLINE ORDER RECEIPT</div></div><div class="dash"></div><div class="line"><span>Order</span><b>${escapeReceiptText(order.order_number)}</b></div><div class="line"><span>Date</span><b>${new Date(order.created_at).toLocaleString("en-PH")}</b></div><div class="line"><span>Cashier</span><b>${escapeReceiptText(cashierName || "Alex")}</b></div><div class="line"><span>Customer</span><b>${escapeReceiptText(order.customer_name)}</b></div><div class="line"><span>Mobile</span><b>${escapeReceiptText(order.mobile)}</b></div><div class="tag">${order.order_type.toUpperCase()} · ${order.payment_method.toUpperCase()}${order.payment_status ? ` · ${escapeReceiptText(order.payment_status.toUpperCase())}` : ""}</div><div class="dash"></div><table>${rows}</table><div class="dash"></div><div class="line"><span>Subtotal</span><b>₱${Number(order.subtotal || 0).toLocaleString("en-PH")}</b></div><div class="line"><span>Delivery</span><b>₱${Number(order.delivery_fee || 0).toLocaleString("en-PH")}</b></div><div class="line total"><span>TOTAL</span><b>₱${Number(order.total || 0).toLocaleString("en-PH")}</b></div>${order.notes ? `<div class="dash"></div><div class="muted"><b>Notes:</b><br>${escapeReceiptText(order.notes).replaceAll("\n", "<br>")}</div>` : ""}<div class="dash"></div><div class="c muted">Please verify payment before preparing.<br>Thank you, KaSYP!</div></main><script>window.onload=()=>{window.print();setTimeout(()=>window.close(),500)}<\/script></body></html>`);
+  const preparationCopy = order.order_type === "delivery" ? "RIDER COPY" : "STORE / PREPARATION COPY";
+
+  const receiptCopy = (copyLabel: string, footer: string) => `<main class="r">
+    <div class="c"><div class="brand">SYP ON CAFÉ</div><div class="copy">${copyLabel}</div><div class="muted">ONLINE ORDER RECEIPT</div></div>
+    <div class="dash"></div>
+    <div class="line"><span>Order</span><b>${escapeReceiptText(order.order_number)}</b></div>
+    <div class="line"><span>Date</span><b>${new Date(order.created_at).toLocaleString("en-PH")}</b></div>
+    <div class="line"><span>Cashier</span><b>${escapeReceiptText(cashierName || "Alex")}</b></div>
+    <div class="line"><span>Customer</span><b>${escapeReceiptText(order.customer_name)}</b></div>
+    <div class="line"><span>Mobile</span><b>${escapeReceiptText(order.mobile)}</b></div>
+    <div class="tag">${order.order_type.toUpperCase()} · ${order.payment_method.toUpperCase()}${order.payment_status ? ` · ${escapeReceiptText(order.payment_status.toUpperCase())}` : ""}</div>
+    <div class="dash"></div><table>${rows}</table><div class="dash"></div>
+    <div class="line"><span>Subtotal</span><b>₱${Number(order.subtotal || 0).toLocaleString("en-PH")}</b></div>
+    <div class="line"><span>Delivery</span><b>₱${Number(order.delivery_fee || 0).toLocaleString("en-PH")}</b></div>
+    <div class="line total"><span>TOTAL</span><b>₱${Number(order.total || 0).toLocaleString("en-PH")}</b></div>
+    ${order.notes ? `<div class="dash"></div><div class="notes"><b>Notes:</b><br>${escapeReceiptText(order.notes).replaceAll("\n", "<br>")}</div>` : ""}
+    <div class="dash"></div><div class="c muted">${footer}</div>
+  </main>`;
+
+  popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeReceiptText(order.order_number)}</title><style>
+    @page{size:80mm auto;margin:3mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111;margin:0}.r{width:72mm;margin:0 auto;padding:1mm 0}.c{text-align:center}.brand{font-size:20px;font-weight:900}.copy{display:inline-block;margin:5px 0 2px;padding:4px 9px;border:2px solid #111;font-size:13px;font-weight:900;letter-spacing:.08em}.muted{font-size:11px;color:#555}.dash{border-top:1px dashed #333;margin:8px 0}table{width:100%;border-collapse:collapse;font-size:12px}td{padding:4px 0;vertical-align:top}td:last-child{text-align:right;font-weight:700}small{display:block;color:#555;margin-top:2px}.line{display:flex;justify-content:space-between;gap:8px;font-size:12px;margin:4px 0}.line b{text-align:right}.total{font-size:18px;font-weight:900}.tag{border:1px solid #111;padding:6px;text-align:center;font-weight:800;margin:8px 0}.notes{font-size:11px}.cut{width:72mm;margin:8mm auto;border-top:2px dashed #111;text-align:center;position:relative}.cut span{position:relative;top:-9px;background:#fff;padding:0 6px;font-size:10px;font-weight:800}@media print{.copy-break{break-before:page;page-break-before:always}.cut{display:none}}
+  </style></head><body>
+    ${receiptCopy("CUSTOMER COPY", "Keep this receipt for order claiming.<br>Thank you, KaSYP!")}
+    <div class="cut"><span>✂ CUT HERE</span></div>
+    <div class="copy-break">${receiptCopy(preparationCopy, order.order_type === "delivery" ? "For rider handoff and delivery verification.<br>Please verify payment before release." : "For barista preparation and counter release.<br>Please verify payment before preparing.")}</div>
+    <script>window.onload=()=>{window.print();setTimeout(()=>window.close(),700)}<\/script>
+  </body></html>`);
   popup.document.close();
   return true;
 }
@@ -266,6 +293,7 @@ export default function PosPage() {
   const [pendingOnlineOrders, setPendingOnlineOrders] = useState(0);
   const [onlineOrderAlert, setOnlineOrderAlert] = useState<string | null>(null);
   const [onlineSoundEnabled, setOnlineSoundEnabled] = useState(false);
+  const [liveOrdersOpen, setLiveOrdersOpen] = useState(false);
   const onlineAlertIntervalRef = useRef<number | null>(null);
   const printedOnlineOrdersRef = useRef<Set<string>>(new Set());
   const searchRef = useRef<HTMLInputElement>(null);
@@ -745,6 +773,21 @@ export default function PosPage() {
   return (
     <main className="pos-shell">
       {notice && <div className="pos-toast" role="status">✓ {notice}</div>}
+      {liveOrdersOpen && (
+        <div className="live-orders-overlay" role="dialog" aria-modal="true" aria-label="Live online orders">
+          <section className="live-orders-window">
+            <header>
+              <div><span>ONLINE ORDER CENTER</span><strong>Live Orders</strong><small>Manage orders without leaving the POS.</small></div>
+              <div className="live-orders-window-actions">
+                <button onClick={() => { const frame = document.getElementById("live-orders-frame") as HTMLIFrameElement | null; if (frame) frame.src = frame.src; }}>↻ Refresh</button>
+                <a href="/admin" target="_blank" rel="noreferrer">Open full screen</a>
+                <button className="close-live-orders" onClick={() => setLiveOrdersOpen(false)} aria-label="Close live orders">×</button>
+              </div>
+            </header>
+            <iframe id="live-orders-frame" src="/admin" title="SYP ON CAFÉ Live Orders" />
+          </section>
+        </div>
+      )}
       {onlineOrderAlert && (
         <div className="online-order-alert" role="alert">
           <div><span>NEW ONLINE ORDER</span><strong>{onlineOrderAlert}</strong><small>Receipt sent to printer. Open Live Orders to accept.</small></div>
@@ -1071,7 +1114,7 @@ export default function PosPage() {
         <div className="system-status"><span className="online-dot" /> Online <i /> Kitchen Connected <i /> Printer Ready <i /> Database Connected</div><div className="shortcuts"><kbd>F1</kbd> Coffee <kbd>F2</kbd> Matcha <kbd>F3</kbd> Milky <kbd>F4</kbd> Soda <kbd>ESC</kbd> Clear</div>
         <div className="live-orders-actions">
           <button className={`sound-toggle ${onlineSoundEnabled ? "active" : ""}`} onClick={toggleOnlineSound} title="Repeat notification sound until acknowledged">{onlineSoundEnabled ? "🔔 Sound On" : "🔕 Sound Off"}</button>
-          <a className="online-orders" href="/admin" target="_blank" rel="noreferrer" onClick={acknowledgeOnlineOrder}>▣ Live Orders <b>{pendingOnlineOrders}</b></a>
+          <button className="online-orders" type="button" onClick={() => { acknowledgeOnlineOrder(); setLiveOrdersOpen(true); }}>▣ Live Orders <b>{pendingOnlineOrders}</b></button>
         </div>
       </footer>
     </main>
