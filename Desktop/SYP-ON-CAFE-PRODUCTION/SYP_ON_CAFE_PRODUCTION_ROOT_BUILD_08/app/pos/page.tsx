@@ -89,7 +89,10 @@ function printOnlineOrderReceipt(order: OnlineOrderRow, items: OnlineOrderItemRo
   const receiptCopy = (copyLabel: string, footer: string) => `<main class="r">
     <div class="c"><div class="brand">SYP ON CAFÉ</div><div class="copy">${copyLabel}</div><div class="muted">ONLINE ORDER RECEIPT</div></div>
     <div class="dash"></div>
-    <div class="line"><span>Order</span><b>${escapeReceiptText(order.order_number)}</b></div>
+    <div class="line order-no">
+    <span>ORDER NO.</span>
+    <b>${escapeReceiptText(order.order_number)}</b>
+</div>
     <div class="line"><span>Date</span><b>${new Date(order.created_at).toLocaleString("en-PH")}</b></div>
     <div class="line"><span>Cashier</span><b>${escapeReceiptText(cashierName || "Alex")}</b></div>
     <div class="line"><span>Customer</span><b>${escapeReceiptText(order.customer_name)}</b></div>
@@ -98,13 +101,37 @@ function printOnlineOrderReceipt(order: OnlineOrderRow, items: OnlineOrderItemRo
     <div class="dash"></div><table>${rows}</table><div class="dash"></div>
     <div class="line"><span>Subtotal</span><b>₱${Number(order.subtotal || 0).toLocaleString("en-PH")}</b></div>
     <div class="line"><span>Delivery</span><b>₱${Number(order.delivery_fee || 0).toLocaleString("en-PH")}</b></div>
-    <div class="line total"><span>TOTAL</span><b>₱${Number(order.total || 0).toLocaleString("en-PH")}</b></div>
+    <div class="line total grand-total"><span>TOTAL</span><b>₱${Number(order.total || 0).toLocaleString("en-PH")}</b></div>
     ${order.notes ? `<div class="dash"></div><div class="notes"><b>Notes:</b><br>${escapeReceiptText(order.notes).replaceAll("\n", "<br>")}</div>` : ""}
     <div class="dash"></div><div class="c muted">${footer}</div>
   </main>`;
 
   popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeReceiptText(order.order_number)}</title><style>
-    @page{size:80mm auto;margin:3mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111;margin:0}.r{width:72mm;margin:0 auto;padding:1mm 0}.c{text-align:center}.brand{font-size:20px;font-weight:900}.copy{display:inline-block;margin:5px 0 2px;padding:4px 9px;border:2px solid #111;font-size:13px;font-weight:900;letter-spacing:.08em}.muted{font-size:11px;color:#555}.dash{border-top:1px dashed #333;margin:8px 0}table{width:100%;border-collapse:collapse;font-size:12px}td{padding:4px 0;vertical-align:top}td:last-child{text-align:right;font-weight:700}small{display:block;color:#555;margin-top:2px}.line{display:flex;justify-content:space-between;gap:8px;font-size:12px;margin:4px 0}.line b{text-align:right}.total{font-size:18px;font-weight:900}.tag{border:1px solid #111;padding:6px;text-align:center;font-weight:800;margin:8px 0}.notes{font-size:11px}.cut{width:72mm;margin:8mm auto;border-top:2px dashed #111;text-align:center;position:relative}.cut span{position:relative;top:-9px;background:#fff;padding:0 6px;font-size:10px;font-weight:800}@media print{.copy-break{break-before:page;page-break-before:always}.cut{display:none}}
+    @page{size:80mm auto;margin:3mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111;margin:0}.r{width:72mm;margin:0 auto;padding:1mm 0}.c{text-align:center}.brand{font-size:20px;font-weight:900}.copy{display:inline-block;margin:5px 0 2px;padding:4px 9px;border:2px solid #111;font-size:13px;font-weight:900;letter-spacing:.08em}.muted{font-size:11px;color:#555}.dash{border-top:1px dashed #333;margin:8px 0}table{width:100%;border-collapse:collapse;font-size:12px}td{padding:4px 0;vertical-align:top}td:last-child{text-align:right;font-weight:700}small{display:block;color:#555;margin-top:2px}.line{
+display:flex;
+justify-content:space-between;
+gap:8px;
+font-size:12px;
+margin:4px 0;
+align-items:flex-start;
+}
+
+.order-no{
+margin:8px 0;
+padding:8px;
+border:2px solid #111;
+}
+
+.order-no span{
+font-size:11px;
+font-weight:700;
+letter-spacing:.12em;
+}
+
+.order-no b{
+font-size:22px;
+font-weight:900;
+}.line b{text-align:right}.total{font-size:18px;font-weight:900}.tag{border:1px solid #111;padding:6px;text-align:center;font-weight:800;margin:8px 0}.notes{font-size:11px}.cut{width:72mm;margin:8mm auto;border-top:2px dashed #111;text-align:center;position:relative}.cut span{position:relative;top:-9px;background:#fff;padding:0 6px;font-size:10px;font-weight:800}@media print{.copy-break{break-before:page;page-break-before:always}.cut{display:none}}
   </style></head><body>
     ${receiptCopy("CUSTOMER COPY", "Keep this receipt for order claiming.<br>Thank you, KaSYP!")}
     <div class="cut"><span>✂ CUT HERE</span></div>
@@ -1344,7 +1371,11 @@ function buildReceiptHtml(payload: ReceiptPayload) {
   <blockquote class="quote">“${escapeReceiptText(quote.text)}”</blockquote>
   <div class="quote-id">Quote #${String(quote.id).padStart(4, "0")} · ${escapeReceiptText(quote.category)}</div>
   <div class="disclaimer">THIS IS NOT AN OFFICIAL RECEIPT</div>
-  <div class="thanks">Order confirmation only · Thank you, KaSYP!</div>
+  <div style="text-align:center">
+<b>Thank you, KaSYP! ❤️</b><br>
+Visit us again!<br>
+<b>syponcafe.shop</b>
+</div>
 </main>
 <script>
   const qr = document.querySelector('.qr-wrap img');

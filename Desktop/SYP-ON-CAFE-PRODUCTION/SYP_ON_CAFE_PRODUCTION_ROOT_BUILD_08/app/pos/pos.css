@@ -102,3 +102,14 @@ linear-gradient(135deg,#070908,#0a0d0b 52%,#070908)}
 .live-orders-window-actions{display:flex;align-items:center;gap:7px}.live-orders-window-actions button,.live-orders-window-actions a{height:36px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #3a403a;border-radius:9px;background:#111411;color:#ddd;text-decoration:none;padding:0 12px;font-size:10px;font-weight:800;cursor:pointer}.live-orders-window-actions button:hover,.live-orders-window-actions a:hover{border-color:#a77827;color:#f4c55e}.live-orders-window-actions .close-live-orders{width:38px;padding:0;border-color:#6c2c2b;background:#201010;color:#ff8179;font-size:22px}
 .live-orders-window iframe{width:100%;height:100%;border:0;background:#050605}
 @media(max-width:900px){.live-orders-overlay{padding:7px}.live-orders-window{width:99vw;height:96vh;border-radius:13px}.live-orders-window>header{padding:9px}.live-orders-window>header small,.live-orders-window-actions a{display:none}}
+.grand-total{
+border-top:2px dashed #111;
+padding-top:8px;
+margin-top:8px;
+font-size:22px;
+font-weight:900;
+}
+
+.grand-total b{
+font-size:24px;
+}

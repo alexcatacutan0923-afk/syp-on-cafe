@@ -115,6 +115,325 @@ function formatDate(date: string) {
   }).format(new Date(date));
 }
 
+
+function escapeReceiptText(value: unknown) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function buildOnlineOrderReceiptHtml(
+  order: Order,
+  copyType: "customer" | "rider",
+) {
+  const itemRows = order.items
+    .map((item) => {
+      const temperature =
+        item.temperature === "hot"
+          ? "Hot"
+          : item.temperature === "iced"
+            ? "Iced"
+            : "";
+
+      const details = [temperature, item.size || "Regular"]
+        .filter(Boolean)
+        .join(" · ");
+
+      const addons = item.addons
+        .map(
+          (addon) =>
+            `<small>+ ${escapeReceiptText(addon.addon_name)} (${formatMoney(
+              addon.addon_price,
+            )})</small>`,
+        )
+        .join("");
+
+      return `
+        <tr>
+          <td>
+            <b>${item.quantity}× ${escapeReceiptText(item.product_name)}</b>
+            <small>${escapeReceiptText(details)}</small>
+            ${addons}
+          </td>
+          <td>${formatMoney(item.line_total)}</td>
+        </tr>
+      `;
+    })
+    .join("");
+
+  const paymentLabel =
+    order.payment_method === "cash"
+      ? order.order_type === "delivery"
+        ? "COD"
+        : "CASH"
+      : "GCASH";
+
+  const paymentStatus = String(order.payment_status || "pending").toUpperCase();
+
+  const qrTarget =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/member-register?source=online-receipt&order=${encodeURIComponent(
+          order.order_number,
+        )}`
+      : "";
+
+  const qrImageUrl = qrTarget
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=170x170&margin=0&data=${encodeURIComponent(
+        qrTarget,
+      )}`
+    : "";
+
+  const isCustomer = copyType === "customer";
+  const copyLabel = isCustomer ? "CUSTOMER COPY" : "RIDER COPY";
+
+  return `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>${escapeReceiptText(order.order_number)} ${copyLabel}</title>
+    <style>
+      @page { size: 80mm auto; margin: 3mm; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        color: #111;
+        background: #fff;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+      .receipt {
+        width: 72mm;
+        margin: 0 auto;
+        padding: 1mm 0 3mm;
+      }
+      .center { text-align: center; }
+      .brand { font-size: 21px; font-weight: 900; letter-spacing: .03em; }
+      .tag {
+        display: inline-block;
+        margin: 5px 0 2px;
+        padding: 4px 10px;
+        border: 2px solid #111;
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: .08em;
+      }
+      .muted { color: #555; font-size: 10px; }
+      .order-number {
+        margin: 8px 0;
+        padding: 7px;
+        border: 2px solid #111;
+        text-align: center;
+      }
+      .order-number span {
+        display: block;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: .12em;
+      }
+      .order-number strong {
+        display: block;
+        margin-top: 2px;
+        font-size: 23px;
+        font-weight: 900;
+      }
+      .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 8px;
+        margin: 4px 0;
+        font-size: 12px;
+      }
+      .row b { max-width: 65%; text-align: right; overflow-wrap: anywhere; }
+      .payment {
+        margin: 8px 0;
+        padding: 6px;
+        border: 1.5px solid #111;
+        text-align: center;
+        font-size: 12px;
+        font-weight: 900;
+      }
+      .divider { margin: 8px 0; border-top: 1px dashed #333; }
+      table { width: 100%; border-collapse: collapse; font-size: 12px; }
+      td { padding: 4px 0; vertical-align: top; }
+      td:first-child { padding-right: 8px; }
+      td:last-child { text-align: right; font-weight: 800; white-space: nowrap; }
+      small { display: block; margin-top: 2px; color: #555; font-size: 10px; }
+      .total {
+        margin-top: 7px;
+        padding-top: 7px;
+        border-top: 2px dashed #111;
+        font-size: 19px;
+        font-weight: 900;
+      }
+      .total b { font-size: 22px; }
+      .delivery, .notes { font-size: 11px; line-height: 1.45; }
+      .delivery p, .notes p { margin: 4px 0; overflow-wrap: anywhere; }
+      .qr {
+        margin-top: 10px;
+        text-align: center;
+      }
+      .qr img {
+        width: 34mm;
+        height: 34mm;
+        image-rendering: pixelated;
+      }
+      .qr b { display: block; margin-top: 4px; font-size: 11px; }
+      .qr small { margin-top: 3px; }
+      footer { font-size: 11px; line-height: 1.45; }
+    </style>
+  </head>
+  <body>
+    <main class="receipt">
+      <header class="center">
+        <div class="brand">SYP ON CAFÉ</div>
+        <div class="tag">${copyLabel}</div>
+        <div class="muted">ONLINE ORDER RECEIPT</div>
+      </header>
+
+      <div class="order-number">
+        <span>ORDER NO.</span>
+        <strong>${escapeReceiptText(order.order_number)}</strong>
+      </div>
+
+      <div class="row"><span>Date</span><b>${escapeReceiptText(
+        formatDate(order.created_at),
+      )}</b></div>
+      <div class="row"><span>Customer</span><b>${escapeReceiptText(
+        order.customer_name,
+      )}</b></div>
+      <div class="row"><span>Mobile</span><b>${escapeReceiptText(
+        order.mobile,
+      )}</b></div>
+
+      <div class="payment">
+        ${escapeReceiptText(order.order_type.toUpperCase())}
+        · ${escapeReceiptText(paymentLabel)}
+        · ${escapeReceiptText(paymentStatus)}
+      </div>
+
+      ${
+        !isCustomer && order.order_type === "delivery"
+          ? `
+            <div class="divider"></div>
+            <section class="delivery">
+              <b>DELIVERY DETAILS</b>
+              <p>${escapeReceiptText(order.address || "No address provided")}</p>
+              ${
+                order.landmark
+                  ? `<p><b>Landmark:</b> ${escapeReceiptText(
+                      order.landmark,
+                    )}</p>`
+                  : ""
+              }
+            </section>
+          `
+          : ""
+      }
+
+      <div class="divider"></div>
+      <table>${itemRows}</table>
+      <div class="divider"></div>
+
+      <div class="row"><span>Subtotal</span><b>${formatMoney(
+        order.subtotal,
+      )}</b></div>
+      <div class="row"><span>Delivery fee</span><b>${formatMoney(
+        order.delivery_fee,
+      )}</b></div>
+      <div class="row total"><span>TOTAL</span><b>${formatMoney(
+        order.total,
+      )}</b></div>
+
+      ${
+        order.notes
+          ? `
+            <div class="divider"></div>
+            <section class="notes">
+              <b>CUSTOMER NOTES</b>
+              <p>${escapeReceiptText(order.notes).replaceAll("\n", "<br>")}</p>
+            </section>
+          `
+          : ""
+      }
+
+      ${
+        isCustomer
+          ? `
+            <div class="divider"></div>
+            <section class="qr">
+              <img src="${qrImageUrl}" alt="Register as SYP member QR code" />
+              <b>SCAN TO REGISTER AS A KaSYP MEMBER</b>
+              <small>Earn stamps and unlock your free drink.</small>
+            </section>
+          `
+          : ""
+      }
+
+      <div class="divider"></div>
+      <footer class="center">
+        ${
+          isCustomer
+            ? "<b>Thank you, KaSYP!</b><br>Keep this receipt for claiming or delivery verification.<br>syponcafe.shop"
+            : "<b>RIDER DELIVERY COPY</b><br>Verify customer, address, items, and payment before leaving."
+        }
+      </footer>
+    </main>
+
+    <script>
+      window.addEventListener("load", function () {
+        const images = Array.from(document.images);
+        if (images.length === 0) {
+          window.print();
+          window.setTimeout(function () { window.close(); }, 900);
+          return;
+        }
+
+        Promise.all(
+          images.map(function (image) {
+            if (image.complete) return Promise.resolve();
+            return new Promise(function (resolve) {
+              image.addEventListener("load", resolve, { once: true });
+              image.addEventListener("error", resolve, { once: true });
+            });
+          }),
+        ).then(function () {
+          window.print();
+          window.setTimeout(function () { window.close(); }, 900);
+        });
+      });
+    <\/script>
+  </body>
+</html>`;
+}
+
+function openReceiptPreparationWindow(orderNumber: string) {
+  const printWindow = window.open(
+    "",
+    "_blank",
+    "width=430,height=900,noopener=false",
+  );
+
+  if (!printWindow) return null;
+
+  printWindow.document.open();
+  printWindow.document.write(`<!doctype html>
+    <html>
+      <head><meta charset="utf-8"><title>${escapeReceiptText(
+        orderNumber,
+      )}</title></head>
+      <body style="font-family:Arial,sans-serif;text-align:center;padding:40px">
+        <h3>Preparing receipt...</h3>
+        <p>Please wait while the receipt is being prepared.</p>
+      </body>
+    </html>`);
+  printWindow.document.close();
+
+  return printWindow;
+}
+
 function renderStars(score: number | null | undefined) {
   const safeScore = Math.max(1, Math.min(5, Number(score ?? 3)));
   return "★".repeat(safeScore) + "☆".repeat(5 - safeScore);
@@ -543,6 +862,15 @@ export default function AdminPage() {
       return;
     }
 
+    const printWindow = openReceiptPreparationWindow(order.order_number);
+
+    if (!printWindow) {
+      setErrorMessage(
+        "Receipt popup was blocked. Allow popups for this site, then press Assign Rider again.",
+      );
+      return;
+    }
+
     setUpdatingOrderId(order.id);
     setErrorMessage("");
 
@@ -576,7 +904,29 @@ export default function AdminPage() {
             : currentOrder,
         ),
       );
+
+      if (printWindow && !printWindow.closed) {
+        printWindow.document.open();
+        printWindow.document.write(
+          buildOnlineOrderReceiptHtml(
+            {
+              ...order,
+              rider_name: cleanName,
+              rider_mobile: cleanMobile || null,
+              rider_vehicle: draft.vehicle.trim() || null,
+              rider_eta: draft.eta.trim() || null,
+              accepted_by_rider_at: now,
+            },
+            "customer",
+          ),
+        );
+        printWindow.document.close();
+      }
     } catch (error) {
+      if (printWindow && !printWindow.closed) {
+        printWindow.close();
+      }
+
       console.error("Failed to assign rider:", error);
       setErrorMessage(
         error instanceof Error
@@ -712,31 +1062,58 @@ export default function AdminPage() {
   }
 
   async function updateOrderStatus(
-    orderId: number,
+    order: Order,
     status: OrderStatus,
   ) {
-    setUpdatingOrderId(orderId);
+    const shouldPrintAtReady = status === "ready";
+    const copyType: "customer" | "rider" =
+      order.order_type === "delivery" ? "rider" : "customer";
+
+    const printWindow = shouldPrintAtReady
+      ? openReceiptPreparationWindow(order.order_number)
+      : null;
+
+    if (shouldPrintAtReady && !printWindow) {
+      setErrorMessage(
+        "Receipt popup was blocked. Allow popups for this site, then press Mark Ready again.",
+      );
+      return;
+    }
+
+    setUpdatingOrderId(order.id);
     setErrorMessage("");
 
     try {
       const { error } = await supabase
         .from("orders")
         .update({ status })
-        .eq("id", orderId);
+        .eq("id", order.id);
 
       if (error) throw error;
 
       setOrders((currentOrders) =>
-        currentOrders.map((order) =>
-          order.id === orderId
+        currentOrders.map((currentOrder) =>
+          currentOrder.id === order.id
             ? {
-                ...order,
+                ...currentOrder,
                 status,
               }
-            : order,
+            : currentOrder,
         ),
       );
+
+      if (shouldPrintAtReady && printWindow && !printWindow.closed) {
+        printWindow.document.open();
+        printWindow.document.write(
+          buildOnlineOrderReceiptHtml(order, copyType),
+        );
+        printWindow.document.close();
+      }
     } catch (error) {
+      if (printWindow && !printWindow.closed) {
+        printWindow.close();
+      }
+
       console.error("Failed to update order:", error);
       setErrorMessage(
         error instanceof Error
@@ -1417,7 +1794,7 @@ export default function AdminPage() {
                           disabled={isUpdating}
                           onClick={() =>
                             void updateOrderStatus(
-                              order.id,
+                              order,
                               nextAction.nextStatus,
                             )
                           }
@@ -1444,7 +1821,7 @@ export default function AdminPage() {
 
                             if (confirmed) {
                               void updateOrderStatus(
-                                order.id,
+                                order,
                                 "cancelled",
                               );
                             }
