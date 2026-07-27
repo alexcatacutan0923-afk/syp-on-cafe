@@ -89,10 +89,7 @@ function printOnlineOrderReceipt(order: OnlineOrderRow, items: OnlineOrderItemRo
   const receiptCopy = (copyLabel: string, footer: string) => `<main class="r">
     <div class="c"><div class="brand">SYP ON CAFÉ</div><div class="copy">${copyLabel}</div><div class="muted">ONLINE ORDER RECEIPT</div></div>
     <div class="dash"></div>
-    <div class="line order-no">
-    <span>ORDER NO.</span>
-    <b>${escapeReceiptText(order.order_number)}</b>
-</div>
+    <div class="line"><span>Order</span><b>${escapeReceiptText(order.order_number)}</b></div>
     <div class="line"><span>Date</span><b>${new Date(order.created_at).toLocaleString("en-PH")}</b></div>
     <div class="line"><span>Cashier</span><b>${escapeReceiptText(cashierName || "Alex")}</b></div>
     <div class="line"><span>Customer</span><b>${escapeReceiptText(order.customer_name)}</b></div>
@@ -101,37 +98,13 @@ function printOnlineOrderReceipt(order: OnlineOrderRow, items: OnlineOrderItemRo
     <div class="dash"></div><table>${rows}</table><div class="dash"></div>
     <div class="line"><span>Subtotal</span><b>₱${Number(order.subtotal || 0).toLocaleString("en-PH")}</b></div>
     <div class="line"><span>Delivery</span><b>₱${Number(order.delivery_fee || 0).toLocaleString("en-PH")}</b></div>
-    <div class="line total grand-total"><span>TOTAL</span><b>₱${Number(order.total || 0).toLocaleString("en-PH")}</b></div>
+    <div class="line total"><span>TOTAL</span><b>₱${Number(order.total || 0).toLocaleString("en-PH")}</b></div>
     ${order.notes ? `<div class="dash"></div><div class="notes"><b>Notes:</b><br>${escapeReceiptText(order.notes).replaceAll("\n", "<br>")}</div>` : ""}
     <div class="dash"></div><div class="c muted">${footer}</div>
   </main>`;
 
   popup.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeReceiptText(order.order_number)}</title><style>
-    @page{size:80mm auto;margin:3mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111;margin:0}.r{width:72mm;margin:0 auto;padding:1mm 0}.c{text-align:center}.brand{font-size:20px;font-weight:900}.copy{display:inline-block;margin:5px 0 2px;padding:4px 9px;border:2px solid #111;font-size:13px;font-weight:900;letter-spacing:.08em}.muted{font-size:11px;color:#555}.dash{border-top:1px dashed #333;margin:8px 0}table{width:100%;border-collapse:collapse;font-size:12px}td{padding:4px 0;vertical-align:top}td:last-child{text-align:right;font-weight:700}small{display:block;color:#555;margin-top:2px}.line{
-display:flex;
-justify-content:space-between;
-gap:8px;
-font-size:12px;
-margin:4px 0;
-align-items:flex-start;
-}
-
-.order-no{
-margin:8px 0;
-padding:8px;
-border:2px solid #111;
-}
-
-.order-no span{
-font-size:11px;
-font-weight:700;
-letter-spacing:.12em;
-}
-
-.order-no b{
-font-size:22px;
-font-weight:900;
-}.line b{text-align:right}.total{font-size:18px;font-weight:900}.tag{border:1px solid #111;padding:6px;text-align:center;font-weight:800;margin:8px 0}.notes{font-size:11px}.cut{width:72mm;margin:8mm auto;border-top:2px dashed #111;text-align:center;position:relative}.cut span{position:relative;top:-9px;background:#fff;padding:0 6px;font-size:10px;font-weight:800}@media print{.copy-break{break-before:page;page-break-before:always}.cut{display:none}}
+    @page{size:80mm auto;margin:3mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;color:#111;margin:0}.r{width:72mm;margin:0 auto;padding:1mm 0}.c{text-align:center}.brand{font-size:20px;font-weight:900}.copy{display:inline-block;margin:5px 0 2px;padding:4px 9px;border:2px solid #111;font-size:13px;font-weight:900;letter-spacing:.08em}.muted{font-size:11px;color:#555}.dash{border-top:1px dashed #333;margin:8px 0}table{width:100%;border-collapse:collapse;font-size:12px}td{padding:4px 0;vertical-align:top}td:last-child{text-align:right;font-weight:700}small{display:block;color:#555;margin-top:2px}.line{display:flex;justify-content:space-between;gap:8px;font-size:12px;margin:4px 0}.line b{text-align:right}.total{font-size:18px;font-weight:900}.tag{border:1px solid #111;padding:6px;text-align:center;font-weight:800;margin:8px 0}.notes{font-size:11px}.cut{width:72mm;margin:8mm auto;border-top:2px dashed #111;text-align:center;position:relative}.cut span{position:relative;top:-9px;background:#fff;padding:0 6px;font-size:10px;font-weight:800}@media print{.copy-break{break-before:page;page-break-before:always}.cut{display:none}}
   </style></head><body>
     ${receiptCopy("CUSTOMER COPY", "Keep this receipt for order claiming.<br>Thank you, KaSYP!")}
     <div class="cut"><span>✂ CUT HERE</span></div>
@@ -368,6 +341,28 @@ export default function PosPage() {
   const total = Math.max(0, subtotal - discount - loyaltyRewardDiscount);
   const change = payment === "Cash" ? Math.max(0, cash - total) : 0;
   const checkoutReady = cart.length > 0 && (payment !== "Cash" || cash >= total);
+
+  function appendCashDigit(digit: number) {
+    if (payment !== "Cash") return;
+    setCash((value) => {
+      const current = Math.max(0, Math.floor(value));
+      const next = Number(`${current}${digit}`);
+      return Number.isFinite(next) ? Math.min(next, 999999) : current;
+    });
+  }
+
+  function appendCashDoubleZero() {
+    if (payment !== "Cash") return;
+    setCash((value) => {
+      const current = Math.max(0, Math.floor(value));
+      return current === 0 ? 0 : Math.min(current * 100, 999999);
+    });
+  }
+
+  function removeCashDigit() {
+    if (payment !== "Cash") return;
+    setCash((value) => Math.floor(Math.max(0, value) / 10));
+  }
 
   useEffect(() => {
     const savedCashier = window.localStorage.getItem("sypCashierName");
@@ -980,7 +975,7 @@ export default function PosPage() {
         </section>
 
         <aside className="checkout-panel">
-          <div className="checkout-card customer-box">
+          <div className="checkout-card customer-box safe421-loyalty-card">
             <h3>CUSTOMER</h3>
             <input
               value={customerQuery}
@@ -1006,25 +1001,124 @@ export default function PosPage() {
             </> : <div className="customer-empty">Search and select a member to add loyalty automatically.</div>}
           </div>
 
-          <div className="checkout-card">
+          <div className="checkout-card safe421-payment-card">
             <h3>PAYMENT METHOD</h3>
             <div className="payment-tabs">{(["Cash", "GCash", "Maya"] as const).map((method) => <button key={method} className={payment === method ? "active" : ""} onClick={() => { setPayment(method); if (method !== "Cash") setCash(total); }}>{method}</button>)}</div>
           </div>
 
-          <div className="checkout-card calculator-card">
-            <div className="calculator-title"><h3>CASH CALCULATOR</h3><span>Large controls for ROG Ally</span></div>
-            <label>Cash Received</label>
-            <div className="cash-display">{money(cash)}</div>
-            <div className="cash-buttons cash-buttons-large">
-              {[20, 50, 100, 200, 500, 1000].map((amount) => <button key={amount} onClick={() => setCash((value) => value + amount)}>₱{amount}</button>)}
-              <button onClick={() => setCash((value) => value + 10)}>+₱10</button>
-              <button onClick={() => setCash((value) => value + 5)}>+₱5</button>
-              <button onClick={() => setCash(total)} className="exact">EXACT</button>
-              <button onClick={() => setCash(0)} className="danger">CLEAR</button>
+          <div className="checkout-card calculator-card safe421-calculator-card">
+            <div className="calculator-title">
+              <h3>CASH CALCULATOR</h3>
+              <span>Touchscreen keypad</span>
             </div>
+
+            <label>Cash Received</label>
+            <div className="cash-display safe421-cash-display">{money(cash)}</div>
+
+            <div className="safe421-keypad">
+              {[7, 8, 9, 4, 5, 6, 1, 2, 3].map((digit) => (
+                <button
+                  type="button"
+                  key={digit}
+                  onClick={() => appendCashDigit(digit)}
+                  disabled={payment !== "Cash"}
+                >
+                  {digit}
+                </button>
+              ))}
+              <button
+                type="button"
+                className="safe421-backspace"
+                onClick={removeCashDigit}
+                disabled={payment !== "Cash"}
+              >
+                ⌫
+              </button>
+              <button
+                type="button"
+                onClick={() => appendCashDigit(0)}
+                disabled={payment !== "Cash"}
+              >
+                0
+              </button>
+              <button
+                type="button"
+                onClick={appendCashDoubleZero}
+                disabled={payment !== "Cash"}
+              >
+                00
+              </button>
+            </div>
+
+            <div className="cash-buttons cash-buttons-large safe421-quick-cash">
+              {[20, 50, 100, 200, 500, 1000].map((amount) => (
+                <button
+                  type="button"
+                  key={amount}
+                  onClick={() => setCash((value) => value + amount)}
+                  disabled={payment !== "Cash"}
+                >
+                  ₱{amount}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setCash((value) => value + 10)}
+                disabled={payment !== "Cash"}
+              >
+                +₱10
+              </button>
+              <button
+                type="button"
+                onClick={() => setCash((value) => value + 5)}
+                disabled={payment !== "Cash"}
+              >
+                +₱5
+              </button>
+            </div>
+
+            <div className="safe421-actions">
+              <button
+                type="button"
+                onClick={() => setCash(total)}
+                className="exact"
+                disabled={payment !== "Cash"}
+              >
+                EXACT
+              </button>
+              <button
+                type="button"
+                onClick={() => setCash(0)}
+                className="danger"
+                disabled={payment !== "Cash"}
+              >
+                CLEAR
+              </button>
+            </div>
+
+            <div className="change-row safe421-change-row">
+              <span>Change</span>
+              <strong>{money(change)}</strong>
+            </div>
+
             <h3 className="suggested-title">SUGGESTED AMOUNTS</h3>
-            <div className="suggested-grid">{suggestedAmounts(total).map((amount, index) => <button key={`${amount}-${index}`} onClick={() => setCash(amount)}><strong>{money(amount)}</strong><span>{amount === total ? "No change" : `Change: ${money(amount - total)}`}</span></button>)}</div>
-            <div className="change-row"><span>Change</span><strong>{money(change)}</strong></div>
+            <div className="suggested-grid safe421-suggested-grid">
+              {suggestedAmounts(total).map((amount, index) => (
+                <button
+                  type="button"
+                  key={`${amount}-${index}`}
+                  onClick={() => setCash(amount)}
+                  disabled={payment !== "Cash"}
+                >
+                  <strong>{money(amount)}</strong>
+                  <span>
+                    {amount === total
+                      ? "No change"
+                      : `Change: ${money(amount - total)}`}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="checkout-card switches">
@@ -1371,11 +1465,7 @@ function buildReceiptHtml(payload: ReceiptPayload) {
   <blockquote class="quote">“${escapeReceiptText(quote.text)}”</blockquote>
   <div class="quote-id">Quote #${String(quote.id).padStart(4, "0")} · ${escapeReceiptText(quote.category)}</div>
   <div class="disclaimer">THIS IS NOT AN OFFICIAL RECEIPT</div>
-  <div style="text-align:center">
-<b>Thank you, KaSYP! ❤️</b><br>
-Visit us again!<br>
-<b>syponcafe.shop</b>
-</div>
+  <div class="thanks">Order confirmation only · Thank you, KaSYP!</div>
 </main>
 <script>
   const qr = document.querySelector('.qr-wrap img');

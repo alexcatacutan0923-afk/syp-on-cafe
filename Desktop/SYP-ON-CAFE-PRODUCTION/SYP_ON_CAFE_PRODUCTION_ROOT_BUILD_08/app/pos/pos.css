@@ -52,64 +52,388 @@ linear-gradient(135deg,#070908,#0a0d0b 52%,#070908)}
 @media(max-width:900px){.customizer-body{grid-template-columns:1fr}.option-section:last-child{grid-column:auto}.choice-grid.four,.choice-grid.five{grid-template-columns:repeat(2,1fr)}.customizer-footer button{min-width:180px}}
 
 
-/* Build 35 manual discount panel */
-.manual-discount-panel { display: grid; gap: 8px; padding: 10px; border: 1px solid rgba(212,167,77,.24); border-radius: 12px; background: rgba(212,167,77,.06); }
-.manual-discount-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.manual-discount-heading span { font-size: 11px; letter-spacing: .08em; font-weight: 800; }
-.manual-discount-heading strong { color: #f1c86c; }
-.discount-quick-buttons { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 6px; }
-.discount-quick-buttons button, .discount-custom-row button { min-height: 34px; border-radius: 8px; border: 1px solid rgba(212,167,77,.28); background: #17130d; color: #fff; font-weight: 800; cursor: pointer; }
-.discount-custom-row { display: grid; grid-template-columns: minmax(0,1fr) auto auto; gap: 6px; }
-.discount-custom-row input, .manual-discount-panel select { width: 100%; min-width: 0; border-radius: 8px; border: 1px solid rgba(255,255,255,.12); background: #0d0d0d; color: #fff; padding: 9px 10px; }
-@media (max-width: 900px) { .discount-quick-buttons { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+/* =========================================================
+   SYP POS — MANUAL DISCOUNT LAYOUT FIX
+   Paste this at the VERY BOTTOM of app/pos/pos.css
+   ========================================================= */
 
-/* Build 36 — display launch shortcuts */
-.display-tools{display:flex;gap:6px;align-items:center}.display-tools a{white-space:nowrap;border:1px solid rgba(212,175,55,.35);background:rgba(212,175,55,.08);color:#f4d77f;text-decoration:none;padding:8px 10px;border-radius:10px;font-size:11px;font-weight:800;letter-spacing:.03em}.display-tools a:hover{background:rgba(212,175,55,.18)}
-@media(max-width:1200px){.display-tools{display:none}}
-
-/* Build 37.1 — cleaner header + editable cashier */
-.topbar{
-  grid-template-columns:205px minmax(320px,1fr) auto minmax(155px,190px) 110px;
-  gap:10px;
-}
-.display-tools{display:flex;align-items:center;gap:6px;min-width:0}
-.display-tools a{white-space:nowrap;padding:9px 10px;font-size:9px}
-.cashier-card{min-width:155px;max-width:190px;cursor:text}
-.cashier-copy{min-width:0;flex:1;display:flex;flex-direction:column;gap:2px}
-.cashier-copy span{font-size:7px;color:#969c96;text-transform:uppercase;letter-spacing:.55px}
-.cashier-copy input{width:100%;min-width:0;border:0;border-bottom:1px solid transparent;outline:0;background:transparent;color:#fff;font:800 10px/1.2 inherit;padding:1px 0 3px}
-.cashier-copy input:hover,.cashier-copy input:focus{border-bottom-color:#b47b25}
-@media(max-width:1450px){
-  .topbar{grid-template-columns:190px minmax(270px,1fr) auto minmax(145px,170px)}
-  .clock{display:none}
-  .display-tools a{padding:8px 8px;font-size:8px}
-}
-@media(max-width:1220px){
-  .display-tools a[href="/kitchen"],.display-tools a[href="/rider"]{display:none}
+.cart-summary .manual-discount-panel {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  width: 100%;
+  padding: 16px;
+  margin-top: 10px;
+  border: 1px solid rgba(212, 169, 75, 0.28);
+  border-radius: 18px;
+  background: linear-gradient(
+    145deg,
+    rgba(31, 27, 20, 0.92),
+    rgba(17, 17, 17, 0.96)
+  );
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
-
-/* Build 38 · Live online orders */
-.online-order-alert{position:fixed;z-index:1200;right:18px;bottom:78px;width:min(390px,calc(100vw - 28px));display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;border:1px solid #ffbd21;border-radius:16px;background:#151005;box-shadow:0 18px 60px #000c;color:#fff;animation:onlineOrderPulse 1.25s ease-in-out infinite alternate}.online-order-alert div{display:grid;gap:3px}.online-order-alert span{font-size:10px;letter-spacing:.18em;color:#ffbd21;font-weight:900}.online-order-alert strong{font-size:17px}.online-order-alert small{color:#b9b9b9}.online-order-alert button{border:1px solid #ffbd21;border-radius:10px;background:#ffbd21;color:#111;padding:10px 12px;font-weight:900;cursor:pointer}.live-orders-actions{display:flex;align-items:center;gap:8px}.sound-toggle{height:38px;border:1px solid #343434;border-radius:999px;background:#111;color:#aaa;padding:0 13px;font-weight:800;cursor:pointer;white-space:nowrap}.sound-toggle.active{border-color:#2f9e44;color:#71df88;background:#0c1a10}.footer-bar .online-orders{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}.online-orders b{min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px}.online-orders b:not(:empty){background:#ffbd21;color:#111}@keyframes onlineOrderPulse{from{box-shadow:0 16px 44px #000b,0 0 0 0 #ffbd2144}to{box-shadow:0 16px 44px #000b,0 0 0 7px #ffbd2100}}@media(max-width:1180px){.sound-toggle{font-size:0;width:40px;padding:0}.sound-toggle::first-letter{font-size:16px}.system-status{display:none}}
-
-/* Build 38.1 · floating Live Orders center */
-.footer-bar .online-orders{border:1px solid #8a641f;background:linear-gradient(180deg,#231a0c,#120e08);color:#f4d77f;border-radius:999px;padding:0 14px;height:38px;font-weight:900;cursor:pointer;gap:8px;white-space:nowrap}
-.footer-bar .online-orders:hover{border-color:#e3ad43;background:#2d200c}
-.live-orders-overlay{position:fixed;inset:0;z-index:1500;display:grid;place-items:center;padding:22px;background:#000a;backdrop-filter:blur(9px);animation:modal-fade .16s ease-out}
-.live-orders-window{width:min(1240px,96vw);height:min(820px,92vh);display:grid;grid-template-rows:72px minmax(0,1fr);overflow:hidden;border:1px solid #604717;border-radius:20px;background:#070807;box-shadow:0 35px 120px #000,0 0 55px #d7972022;animation:modal-rise .2s ease-out}
-.live-orders-window>header{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:12px 16px;border-bottom:1px solid #2c302c;background:linear-gradient(180deg,#17140d,#0b0c0b)}
-.live-orders-window>header>div:first-child{display:flex;flex-direction:column}.live-orders-window>header span{font-size:8px;letter-spacing:.18em;color:#e4ac40;font-weight:900}.live-orders-window>header strong{font-size:20px}.live-orders-window>header small{font-size:9px;color:#929892;margin-top:2px}
-.live-orders-window-actions{display:flex;align-items:center;gap:7px}.live-orders-window-actions button,.live-orders-window-actions a{height:36px;display:inline-flex;align-items:center;justify-content:center;border:1px solid #3a403a;border-radius:9px;background:#111411;color:#ddd;text-decoration:none;padding:0 12px;font-size:10px;font-weight:800;cursor:pointer}.live-orders-window-actions button:hover,.live-orders-window-actions a:hover{border-color:#a77827;color:#f4c55e}.live-orders-window-actions .close-live-orders{width:38px;padding:0;border-color:#6c2c2b;background:#201010;color:#ff8179;font-size:22px}
-.live-orders-window iframe{width:100%;height:100%;border:0;background:#050605}
-@media(max-width:900px){.live-orders-overlay{padding:7px}.live-orders-window{width:99vw;height:96vh;border-radius:13px}.live-orders-window>header{padding:9px}.live-orders-window>header small,.live-orders-window-actions a{display:none}}
-.grand-total{
-border-top:2px dashed #111;
-padding-top:8px;
-margin-top:8px;
-font-size:22px;
-font-weight:900;
+.cart-summary .manual-discount-heading {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
 }
 
-.grand-total b{
-font-size:24px;
+.cart-summary .manual-discount-heading span {
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 900;
+  line-height: 1.25;
+  letter-spacing: 0.08em;
+  color: #f5f5f5;
+  white-space: normal;
 }
+
+.cart-summary .manual-discount-heading strong {
+  flex: 0 0 auto;
+  color: #f2c65d;
+  font-size: 17px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.cart-summary .discount-quick-buttons {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.cart-summary .discount-quick-buttons button {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 8px 5px;
+  border: 1px solid rgba(212, 169, 75, 0.32);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.035);
+  color: #f7e2a5;
+  font-size: 13px;
+  font-weight: 850;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.cart-summary .discount-quick-buttons button:hover {
+  border-color: rgba(242, 198, 93, 0.75);
+  background: rgba(212, 169, 75, 0.13);
+}
+
+.cart-summary .discount-custom-row {
+  display: grid !important;
+  grid-template-columns: minmax(92px, 1fr) auto auto;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.cart-summary .discount-custom-row input {
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 11px;
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  box-sizing: border-box;
+}
+
+.cart-summary .discount-custom-row button {
+  min-width: 66px;
+  height: 44px;
+  padding: 0 13px;
+  border: 1px solid rgba(212, 169, 75, 0.32);
+  border-radius: 11px;
+  background: rgba(212, 169, 75, 0.1);
+  color: #f6dda0;
+  font-size: 13px;
+  font-weight: 850;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.cart-summary .manual-discount-panel > select {
+  display: block !important;
+  width: 100%;
+  min-width: 0;
+  height: 46px;
+  padding: 0 42px 0 13px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 12px;
+  background-color: #171717;
+  color: #f4f4f4;
+  font-size: 14px;
+  font-weight: 700;
+  box-sizing: border-box;
+}
+
+/* Narrow POS/cart widths */
+@media (max-width: 1450px) {
+  .cart-summary .discount-quick-buttons {
+    grid-template-columns: repeat(4, minmax(52px, 1fr));
+  }
+
+  .cart-summary .discount-custom-row {
+    grid-template-columns: minmax(86px, 1fr) minmax(64px, auto) minmax(60px, auto);
+  }
+}
+
+@media (max-width: 1180px) {
+  .cart-summary .discount-quick-buttons {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cart-summary .discount-custom-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .cart-summary .discount-custom-row input {
+    grid-column: 1 / -1;
+  }
+}
+
+/* =========================================================
+   BUILD 42.1 SAFE PATCH
+   Paste at the VERY BOTTOM of app/pos/pos.css
+
+   IMPORTANT:
+   This file does NOT change .workspace, .products-panel,
+   .cart-panel, or the main POS grid.
+   ========================================================= */
+
+/* Loyalty stays in its existing right-sidebar position */
+.workspace > .checkout-panel > .safe421-loyalty-card {
+  padding: 12px !important;
+  border-color: rgba(225, 174, 55, 0.24) !important;
+}
+
+.workspace > .checkout-panel > .safe421-loyalty-card > h3 {
+  margin-bottom: 8px;
+  color: #efbd49;
+}
+
+.workspace > .checkout-panel > .safe421-loyalty-card > input {
+  width: 100%;
+  min-height: 43px;
+  box-sizing: border-box;
+  font-size: 13px;
+}
+
+.workspace > .checkout-panel > .safe421-loyalty-card .member-search-results {
+  max-height: 170px;
+  overflow-y: auto;
+}
+
+.workspace > .checkout-panel > .safe421-loyalty-card .customer-empty {
+  min-height: auto !important;
+  padding: 9px 2px 0 !important;
+  font-size: 10px !important;
+}
+
+/* Payment buttons remain directly below loyalty */
+.workspace > .checkout-panel > .safe421-payment-card {
+  padding: 11px 12px !important;
+}
+
+.workspace > .checkout-panel > .safe421-payment-card .payment-tabs {
+  gap: 7px;
+}
+
+.workspace > .checkout-panel > .safe421-payment-card .payment-tabs button {
+  min-height: 42px;
+  font-weight: 900;
+}
+
+/* Cash calculator: large touchscreen controls */
+.workspace > .checkout-panel > .safe421-calculator-card {
+  padding: 12px !important;
+  border-color: rgba(225, 174, 55, 0.25) !important;
+}
+
+.workspace > .checkout-panel > .safe421-calculator-card .calculator-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.workspace > .checkout-panel > .safe421-calculator-card .calculator-title h3 {
+  color: #efbd49;
+}
+
+.workspace > .checkout-panel > .safe421-calculator-card .calculator-title span {
+  color: rgba(255, 255, 255, 0.42);
+  font-size: 10px;
+}
+
+.workspace > .checkout-panel > .safe421-calculator-card .safe421-cash-display {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  min-height: 72px !important;
+  margin-top: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-radius: 12px !important;
+  background: rgba(0, 0, 0, 0.36) !important;
+  color: #f5c64f !important;
+  font-size: clamp(30px, 2.6vw, 42px) !important;
+  font-weight: 950 !important;
+  line-height: 1 !important;
+  text-align: center;
+}
+
+.workspace > .checkout-panel > .safe421-calculator-card .safe421-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 8px;
+}
+
+.workspace > .checkout-panel > .safe421-calculator-card .safe421-keypad button {
+  min-width: 0;
+  height: 49px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 10px;
+  background: linear-gradient(
+    180deg,
+    rgba(31, 31, 31, 0.97),
+    rgba(17, 17, 17, 0.99)
+  );
+  color: #fff;
+  font-size: 21px;
+  font-weight: 950;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.workspace > .checkout-panel > .safe421-calculator-card .safe421-keypad button:hover,
+.workspace > .checkout-panel > .safe421-calculator-card .safe421-keypad button:active {
+  border-color: rgba(225, 174, 55, 0.75);
+  background: rgba(225, 174, 55, 0.13);
+}
+
+.workspace > .checkout-panel > .safe421-calculator-card .safe421-backspace {
+  color: #ffaaaa;
+}
+
+.workspace > .checkout-panel > .safe421-calculator-card button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.workspace > .checkout-panel > .safe421-calculator-card .safe421-quick-cash {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+  margin-top: 8px;
+}
+
+.workspace > .checkout-panel > .safe421-calculator-card .safe421-quick-cash button {
+  min-width: 0 !important;
+  min-height: 38px !important;
+  padding: 5px 2px !important;
+  font-size: 10px !important;
+  font-weight: 900 !important;
+  white-space: nowrap;
+}
+
+.workspace > .checkout-panel > .safe421-calculator-card .safe421-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.workspace > .checkout-panel > .safe421-calculator-card .safe421-actions button {
+  min-height: 43px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.workspace > .checkout-panel > .safe421-calculator-card .safe421-actions .exact {
+  border: 1px solid rgba(34, 197, 94, 0.58);
+  background: rgba(34, 197, 94, 0.1);
+  color: #67e88c;
+}
+
+.workspace > .checkout-panel > .safe421-calculator-card .safe421-actions .danger {
+  border: 1px solid rgba(239, 68, 68, 0.58);
+  background: rgba(239, 68, 68, 0.08);
+  color: #ff7b7b;
+}
+
+.workspace > .checkout-panel > .safe421-calculator-card .safe421-change-row {
+  min-height: 47px;
+  margin-top: 8px !important;
+  padding: 0 11px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.27);
+}
+
+.workspace > .checkout-panel > .safe421-calculator-card .safe421-change-row strong {
+  color: #59e67b !important;
+  font-size: 24px !important;
+}
+
+.workspace > .checkout-panel > .safe421-calculator-card .suggested-title {
+  margin-top: 10px !important;
+  font-size: 10px !important;
+}
+
+.workspace > .checkout-panel > .safe421-calculator-card .safe421-suggested-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+}
+
+.workspace > .checkout-panel > .safe421-calculator-card .safe421-suggested-grid button {
+  min-width: 0;
+  min-height: 54px;
+  padding: 6px 3px !important;
+}
+
+.workspace > .checkout-panel > .safe421-calculator-card .safe421-suggested-grid strong {
+  font-size: 12px !important;
+}
+
+.workspace > .checkout-panel > .safe421-calculator-card .safe421-suggested-grid span {
+  font-size: 8px !important;
+}
+
+/* Manual discount stays in the cart and remains compact */
+.workspace > .cart-panel .manual-discount-panel {
+  padding: 13px !important;
+  gap: 9px !important;
+}
+
+.workspace > .cart-panel .discount-quick-buttons button {
+  min-height: 38px !important;
+}
+
+.workspace > .cart-panel .discount-custom-row input,
+.workspace > .cart-panel .discount-custom-row button {
+  height: 40px !important;
+}
+
+.workspace > .cart-panel .manual-discount-panel > select {
+  height: 42px !important;
+}
+
