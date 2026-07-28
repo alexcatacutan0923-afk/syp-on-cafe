@@ -48,6 +48,13 @@ type TrackedOrder = {
   items: OrderItem[];
 };
 
+type ExistingReview = {
+  id: string;
+  rating: number;
+  comment: string;
+  customer_location: string | null;
+};
+
 type TrackingStep = {
   status: OrderStatus;
   title: string;
@@ -126,6 +133,55 @@ export default function TrackOrderPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [existingReview, setExistingReview] =
+    useState<ExistingReview | null>(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewLocation, setReviewLocation] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewMessage, setReviewMessage] = useState("");
+
+  function getOrCreateReviewDeviceId() {
+    const storageKey = "sypReviewDeviceId";
+    const savedDeviceId = window.localStorage.getItem(storageKey);
+
+    if (savedDeviceId) return savedDeviceId;
+
+    const newDeviceId =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `syp-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    window.localStorage.setItem(storageKey, newDeviceId);
+    return newDeviceId;
+  }
+
+  const loadExistingReview = useCallback(async (orderId: number) => {
+    const { data, error } = await supabase
+      .from("customer_reviews")
+      .select("id, rating, comment, customer_location")
+      .eq("order_id", orderId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Unable to load existing review:", error);
+      return;
+    }
+
+    if (!data) {
+      setExistingReview(null);
+      setReviewRating(5);
+      setReviewComment("");
+      setReviewLocation("");
+      return;
+    }
+
+    const savedReview = data as ExistingReview;
+    setExistingReview(savedReview);
+    setReviewRating(Number(savedReview.rating));
+    setReviewComment(savedReview.comment || "");
+    setReviewLocation(savedReview.customer_location || "");
+  }, []);
 
   const loadOrder = useCallback(async (silent = false) => {
     if (!orderNumber) return;
@@ -153,7 +209,17 @@ export default function TrackOrderPage() {
         .order("id", { ascending: true });
 
       if (itemError) throw itemError;
-      setOrder({ ...orderRow, items: (itemRows ?? []) as OrderItem[] } as TrackedOrder);
+      setOrder({
+        ...orderRow,
+        items: (itemRows ?? []) as OrderItem[],
+      } as TrackedOrder);
+
+      if (orderRow.status === "completed") {
+        await loadExistingReview(orderRow.id);
+      } else {
+        setExistingReview(null);
+        setReviewMessage("");
+      }
     } catch (error) {
       console.error("Track order load error:", error);
       setErrorMessage(error instanceof Error ? error.message : "Unable to load your order.");
@@ -161,7 +227,7 @@ export default function TrackOrderPage() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [orderNumber]);
+  }, [loadExistingReview, orderNumber]);
 
   useEffect(() => {
     void loadOrder();
@@ -195,6 +261,76 @@ export default function TrackOrderPage() {
   const riderTip = useMemo(() => extractRiderTip(order?.notes), [order?.notes]);
   const customerNotes = useMemo(() => cleanCustomerNotes(order?.notes), [order?.notes]);
   const customerTotal = Number(order?.total ?? 0) + riderTip;
+
+  async function submitVerifiedReview() {
+    if (!order || order.status !== "completed") return;
+
+    const cleanLocation = reviewLocation.trim();
+    const cleanComment = reviewComment.trim();
+
+    if (!cleanLocation) {
+      setReviewMessage("Please enter your barangay or municipality.");
+      return;
+    }
+
+    if (cleanComment.length > 800) {
+      setReviewMessage("Review must be 800 characters or fewer.");
+      return;
+    }
+
+    setReviewSubmitting(true);
+    setReviewMessage("");
+
+    try {
+      const reviewPayload = {
+        order_id: order.id,
+        order_number: order.order_number,
+        customer_name: order.customer_name,
+        customer_location: cleanLocation,
+        rating: reviewRating,
+        comment: cleanComment,
+        product_name: order.items[0]?.product_name || null,
+        is_verified_purchase: true,
+        is_approved: true,
+        device_id: getOrCreateReviewDeviceId(),
+        user_agent: navigator.userAgent.slice(0, 500),
+      };
+
+      const request = existingReview
+        ? supabase
+            .from("customer_reviews")
+            .update(reviewPayload)
+            .eq("id", existingReview.id)
+            .eq("order_id", order.id)
+            .select("id, rating, comment, customer_location")
+            .single()
+        : supabase
+            .from("customer_reviews")
+            .insert(reviewPayload)
+            .select("id, rating, comment, customer_location")
+            .single();
+
+      const { data, error } = await request;
+
+      if (error) throw error;
+
+      setExistingReview(data as ExistingReview);
+      setReviewMessage(
+        existingReview
+          ? "Your verified rating has been updated."
+          : "Thank you! Your verified rating is now public.",
+      );
+    } catch (error) {
+      console.error("Unable to save verified review:", error);
+      setReviewMessage(
+        error instanceof Error
+          ? error.message
+          : JSON.stringify(error),
+      );
+    } finally {
+      setReviewSubmitting(false);
+    }
+  }
 
   async function shareOrder() {
     if (!order) return;
@@ -413,10 +549,122 @@ export default function TrackOrderPage() {
               </div>
             </section>
 
+            {order.status === "completed" && (
+              <section className="mt-6 rounded-[2rem] border border-emerald-400/20 bg-[linear-gradient(145deg,rgba(6,38,28,0.74),rgba(5,12,10,0.98))] p-5 shadow-[0_0_60px_rgba(52,211,153,0.08)] sm:p-7">
+                <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.24em] text-emerald-300">
+                      ✓ Verified Purchase Rating
+                    </p>
+                    <h2 className="mt-2 text-2xl font-black">
+                      How was your SYP ON CAFÉ experience?
+                    </h2>
+                    <p className="mt-2 text-sm leading-6 text-neutral-400">
+                      This rating is linked to your completed order and appears
+                      on the public reviews page.
+                    </p>
+                  </div>
+
+                  {existingReview && (
+                    <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-2 text-xs font-black uppercase tracking-wider text-emerald-300">
+                      Rating Submitted
+                    </span>
+                  )}
+                </div>
+
+                <div className="mt-6">
+                  <p className="text-sm font-black text-neutral-300">
+                    Tap your rating
+                  </p>
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setReviewRating(star)}
+                        aria-label={`${star} star rating`}
+                        className={`flex h-14 w-14 items-center justify-center rounded-2xl border text-3xl transition ${
+                          star <= reviewRating
+                            ? "border-amber-300 bg-amber-400 text-black shadow-[0_0_25px_rgba(251,191,36,0.2)]"
+                            : "border-white/10 bg-black/30 text-neutral-700 hover:border-amber-400/30"
+                        }`}
+                      >
+                        ★
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="text-sm font-black text-neutral-300">
+                      Barangay / Municipality
+                    </span>
+                    <input
+                      value={reviewLocation}
+                      onChange={(event) =>
+                        setReviewLocation(event.target.value)
+                      }
+                      maxLength={100}
+                      placeholder="Example: Apollo, Orani"
+                      className="mt-2 w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition placeholder:text-neutral-700 focus:border-emerald-400/50"
+                    />
+                    <small className="mt-2 block text-xs leading-5 text-neutral-600">
+                      Only the location you type here will be shown publicly.
+                    </small>
+                  </label>
+
+                  <label className="block">
+                    <span className="text-sm font-black text-neutral-300">
+                      Review (optional)
+                    </span>
+                    <textarea
+                      value={reviewComment}
+                      onChange={(event) =>
+                        setReviewComment(event.target.value)
+                      }
+                      maxLength={800}
+                      rows={4}
+                      placeholder="Tell us about your drink and experience…"
+                      className="mt-2 w-full resize-none rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-white outline-none transition placeholder:text-neutral-700 focus:border-emerald-400/50"
+                    />
+                  </label>
+                </div>
+
+                {reviewMessage && (
+                  <p className="mt-4 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-neutral-200">
+                    {reviewMessage}
+                  </p>
+                )}
+
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => void submitVerifiedReview()}
+                    disabled={reviewSubmitting}
+                    className="rounded-full bg-emerald-400 px-6 py-3 font-black text-black transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {reviewSubmitting
+                      ? "Saving Rating..."
+                      : existingReview
+                        ? "Update My Rating"
+                        : "Publish My Rating"}
+                  </button>
+
+                  <Link
+                    href="/reviews"
+                    className="rounded-full border border-white/15 px-6 py-3 font-black text-neutral-200"
+                  >
+                    View Public Reviews
+                  </Link>
+                </div>
+              </section>
+            )}
+
             <section className="mt-6 flex flex-wrap justify-center gap-3 print:hidden">
               <button type="button" onClick={() => window.print()} className="rounded-full border border-white/15 bg-white/[0.03] px-5 py-3 font-black">Print / Save Receipt</button>
               <button type="button" onClick={() => void shareOrder()} className="rounded-full bg-amber-400 px-5 py-3 font-black text-black">Share Order</button>
-              {order.status === "completed" && <Link href={`/reviews?order=${encodeURIComponent(order.order_number)}`} className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-5 py-3 font-black text-emerald-300">Leave a Review</Link>}
             </section>
 
             <footer className="mt-8 border-t border-white/10 py-8 text-center text-xs leading-6 text-neutral-600">

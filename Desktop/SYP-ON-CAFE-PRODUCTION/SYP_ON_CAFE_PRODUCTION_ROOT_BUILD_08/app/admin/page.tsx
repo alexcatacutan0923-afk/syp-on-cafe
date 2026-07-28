@@ -1174,6 +1174,13 @@ export default function AdminPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/admin/reviews"
+              className="rounded-full border border-amber-400/30 bg-amber-400/10 px-4 py-2 text-sm font-black text-amber-300"
+            >
+              ⭐ Reviews
+            </Link>
+
             <button
               type="button"
               onClick={() =>
