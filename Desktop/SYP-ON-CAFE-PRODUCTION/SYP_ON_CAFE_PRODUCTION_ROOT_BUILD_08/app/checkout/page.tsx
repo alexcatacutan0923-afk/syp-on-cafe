@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { getToken } from "firebase/messaging";
+import { messaging } from "@/lib/firebase-messaging";
 
 type Temperature = "iced" | "hot" | "regular";
 
@@ -46,6 +48,9 @@ export default function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [fcmToken, setFcmToken] = useState("");
+
   const [customerName, setCustomerName] = useState("");
   const [mobile, setMobile] = useState("");
   const [orderType, setOrderType] =
@@ -72,7 +77,7 @@ export default function CheckoutPage() {
   const gcashAccountNumber = cleanPublicEnv(process.env.NEXT_PUBLIC_GCASH_ACCOUNT_NUMBER);
   const gcashPaymentUrl = cleanPublicEnv(process.env.NEXT_PUBLIC_GCASH_PAYMENT_URL) || "https://gcash.com/";
   const gcashPaymentUrlTemplate = cleanPublicEnv(process.env.NEXT_PUBLIC_GCASH_PAYMENT_URL_TEMPLATE);
-  const gcashQrImageUrl = cleanPublicEnv(process.env.NEXT_PUBLIC_GCASH_QR_IMAGE_URL) || "https://i.ibb.co/XfvgSJPb/IMG-3363.png";
+  const gcashQrImageUrl = cleanPublicEnv(process.env.NEXT_PUBLIC_GCASH_QR_IMAGE_URL) || "https://i.ibb.co/XfvgSJPb/IMG-3363.png";  
 
   function buildGcashPaymentUrl(amount: number, orderNumber: string) {
     const template = gcashPaymentUrlTemplate || gcashPaymentUrl;
@@ -90,6 +95,54 @@ export default function CheckoutPage() {
     } catch {
       setCopyNotice(`Unable to copy ${label.toLowerCase()}`);
       window.setTimeout(() => setCopyNotice(""), 2200);
+    }
+  }
+
+  async function enableOrderUpdates() {
+    if (typeof window === "undefined") return;
+
+    if (!("Notification" in window)) {
+      alert("Notifications are not supported on this browser.");
+      return;
+    }
+
+    if (!messaging) {
+      alert("Firebase Messaging is unavailable on this device.");
+      return;
+    }
+
+    try {
+      const permission = await Notification.requestPermission();
+
+      if (permission !== "granted") {
+        alert("Notifications were not enabled.");
+        return;
+      }
+
+      const registration = await navigator.serviceWorker.register(
+        "/firebase-messaging-sw.js",
+      );
+
+      const token = await getToken(messaging, {
+        vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY!,
+        serviceWorkerRegistration: registration,
+      });
+
+      if (!token) {
+        alert("Unable to get a notification token.");
+        return;
+      }
+
+      setFcmToken(token);
+      setPushEnabled(true);
+      alert("Live order updates enabled!");
+    } catch (error) {
+      console.error("Unable to enable order updates:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unable to enable live order updates.",
+      );
     }
   }
 
@@ -224,6 +277,36 @@ export default function CheckoutPage() {
         );
       }
 
+     try {
+  const { error: notificationError } = await supabase.functions.invoke(
+    "send-admin-push",
+    {
+      body: {
+        record: {
+          id: createdOrder.order_id,
+          order_number: createdOrder.order_number,
+          customer_name: cleanName,
+          mobile: cleanMobile,
+          order_type: orderType,
+          payment_method: paymentMethod,
+          address:
+            orderType === "delivery" ? address.trim() : "",
+          landmark:
+            orderType === "delivery" ? landmark.trim() : "",
+          total,
+          items: orderItems,
+        },
+      },
+    },
+  );
+
+  if (notificationError) {
+    console.error("Order notification failed:", notificationError);
+  }
+} catch (notificationError) {
+  console.error("Order notification failed:", notificationError);
+}
+
       // The order RPC already creates/finds the customer. Ensure every new
       // online customer also receives a permanent KaSYP member ID.
       let resolvedMemberCode = "";
@@ -246,6 +329,28 @@ export default function CheckoutPage() {
         }
       }
 
+      if (fcmToken) {
+  const { data: savedPushToken, error: pushTokenError } = await supabase
+    .from("customer_push_tokens")
+    .insert({
+      customer_id: customerRow?.id ?? null,
+      order_id: createdOrder.order_id,
+      mobile: cleanMobile,
+      fcm_token: fcmToken,
+      platform: navigator.platform || "unknown",
+      browser: navigator.userAgent,
+      is_active: true,
+    })
+    .select()
+    .single();
+
+  if (pushTokenError) {
+    console.error("Customer push token insert failed:", pushTokenError);
+    alert(`Push token save failed: ${pushTokenError.message}`);
+  } else {
+    console.log("Customer push token saved:", savedPushToken);
+  }
+}
       if (resolvedMemberCode) {
         const target = `${window.location.origin}/member-login?identity=${encodeURIComponent(resolvedMemberCode)}&source=online-order`;
         setMemberCode(resolvedMemberCode);
@@ -845,6 +950,26 @@ export default function CheckoutPage() {
                 <span className="text-amber-400">₱{total}</span>
               </div>
             </div>
+
+            <div className="rounded-3xl border border-emerald-500/30 bg-emerald-500/10 p-5">
+  <h3 className="font-bold text-lg">
+    🔔 Live Order Updates
+  </h3>
+
+  <p className="mt-2 text-sm text-neutral-300">
+    Receive notifications when your order is accepted,
+    preparing, ready or out for delivery.
+  </p>
+
+  <button
+    type="button"
+    onClick={enableOrderUpdates}
+    disabled={pushEnabled}
+    className="mt-4 rounded-full bg-emerald-500 px-5 py-3 font-bold text-black"
+  >
+    {pushEnabled ? "Enabled ✓" : "Enable Updates"}
+  </button>
+</div>
 
             <button
               type="button"
