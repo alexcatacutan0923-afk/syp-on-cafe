@@ -239,7 +239,7 @@ export default function MemberDashboardPage() {
             <div className="wheel-zone">
               <div className="wheel-pointer">▼</div>
               <div className="reward-wheel" style={{ transform: `rotate(${rotation}deg)` }}>
-                {spinRewards.map((reward, i) => <span key={reward} style={{ transform: `rotate(${i * 60 + 30}deg) translateY(-74px) rotate(-${i * 60 + 30}deg)` }}>{reward.replace("Free ", "").replace("Bonus ", "")}</span>)}
+                {spinRewards.map((reward, i) => <span key={`${reward}-${i}`} style={{ transform: `rotate(${i * 60 + 30}deg) translateY(-74px) rotate(-${i * 60 + 30}deg)` }}>{reward.replace("Free ", "").replace("Bonus ", "")}</span>)}
               </div>
               <button onClick={spin} disabled={spinning || !!result}>{spinning ? "..." : "SPIN"}</button>
             </div>
@@ -247,6 +247,11 @@ export default function MemberDashboardPage() {
           </article>
 
           <article className="member-card rewards-panel">
+  <CardTitle
+    eyebrow="REWARD CENTER"
+    title="Your Reward Wallet"
+    action={`${member.rewards.filter(r=>r.status==="available").length} Available`}
+  />
             <CardTitle eyebrow="AVAILABLE REWARDS" title="Your Reward Wallet" action={`${member.rewards.filter(item => item.status === "available").length} available`} />
             {member.rewards.slice(0, 5).map(reward => (
               <div className={`reward-item ${reward.status === "available" ? "active" : ""}`} key={reward.id}>

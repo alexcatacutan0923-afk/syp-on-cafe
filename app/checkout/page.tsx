@@ -348,80 +348,108 @@ const token = await getToken(messaging, {
         );
       }
 
-     try {
-  const { error: notificationError } = await supabase.functions.invoke(
-    "send-admin-push",
-    {
-      body: {
-        record: {
-          id: createdOrder.order_id,
-          order_number: createdOrder.order_number,
-          customer_name: cleanName,
-          mobile: cleanMobile,
-          order_type: orderType,
-          payment_method: paymentMethod,
-          address:
-            orderType === "delivery" ? address.trim() : "",
-          landmark:
-            orderType === "delivery" ? landmark.trim() : "",
-          total: finalTotal,
-          items: orderItems,
-        },
-      },
-    },
-  );
 
-  if (notificationError) {
-    console.error("Order notification failed:", notificationError);
-  }
-} catch (notificationError) {
-  console.error("Order notification failed:", notificationError);
-}
-
-      // The order RPC already creates/finds the customer. Ensure every new
-      // online customer also receives a permanent KaSYP member ID.
+      // Create/find the real loyalty account before showing a member QR.
+      // The temporary PIN for online-order members is 1234 and can be changed
+      // later from the member dashboard.
       let resolvedMemberCode = "";
-      const { data: customerRow } = await supabase
-        .from("customers")
-        .select("id,customer_code")
-        .eq("mobile", cleanMobile)
-        .order("id", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      let customerId: number | null = null;
+      let currentCustomerCode: string | null = null;
 
-      if (customerRow?.id) {
-        resolvedMemberCode = customerRow.customer_code || `SYP${String(customerRow.id).padStart(4, "0")}`;
-        if (!customerRow.customer_code) {
-          const { error: memberUpdateError } = await supabase
-            .from("customers")
-            .update({ customer_code: resolvedMemberCode })
-            .eq("id", customerRow.id);
-          if (memberUpdateError) console.warn("Member ID update failed:", memberUpdateError);
+      const { data: memberData, error: memberError } = await supabase.rpc(
+        "register_loyalty_member",
+        {
+          p_name: cleanName,
+          p_mobile: cleanMobile,
+          p_birthday: null,
+          p_pin: "1234",
+        },
+      );
+
+      if (memberError) {
+        console.error(
+          "Automatic loyalty member creation failed:",
+          memberError,
+        );
+      } else {
+        const loyaltyMember = Array.isArray(memberData)
+          ? memberData[0]
+          : memberData;
+
+        resolvedMemberCode = loyaltyMember?.member_code || "";
+      }
+
+      const { data: foundCustomer, error: customerLookupError } =
+        await supabase
+          .from("customers")
+          .select("id,customer_code")
+          .eq("mobile", cleanMobile)
+          .order("id", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+      if (customerLookupError) {
+        console.warn(
+          "Customer lookup failed after checkout:",
+          customerLookupError,
+        );
+      } else if (foundCustomer) {
+        customerId = Number(foundCustomer.id);
+        currentCustomerCode =
+          foundCustomer.customer_code ?? null;
+      }
+
+      // Keep the legacy customers table aligned with the real loyalty member ID.
+      if (
+        customerId !== null &&
+        resolvedMemberCode &&
+        currentCustomerCode !== resolvedMemberCode
+      ) {
+        const { error: memberUpdateError } = await supabase
+          .from("customers")
+          .update({
+            customer_code: resolvedMemberCode,
+          })
+          .eq("id", customerId);
+
+        if (memberUpdateError) {
+          console.warn(
+            "Customer member ID sync failed:",
+            memberUpdateError,
+          );
         }
       }
 
       if (fcmToken) {
-  const { data: savedPushToken, error: pushTokenError } = await supabase
-    .from("customer_push_tokens")
-    .insert({
-      customer_id: customerRow?.id ?? null,
-      order_id: createdOrder.order_id,
-      mobile: cleanMobile,
-      fcm_token: fcmToken,
-      platform: navigator.platform || "unknown",
-      browser: navigator.userAgent,
-      is_active: true,
-    })
-    .select()
-    .single();
+        const { data: savedPushToken, error: pushTokenError } =
+          await supabase
+            .from("customer_push_tokens")
+            .insert({
+              customer_id: customerId,
+              order_id: createdOrder.order_id,
+              mobile: cleanMobile,
+              fcm_token: fcmToken,
+              platform: navigator.platform || "unknown",
+              browser: navigator.userAgent,
+              is_active: true,
+            })
+            .select()
+            .single();
 
-  if (pushTokenError) {
-    console.error("Customer push token insert failed:", pushTokenError);
-    alert(`Push token save failed: ${pushTokenError.message}`);
-  } else {
-    console.log("Customer push token saved:", savedPushToken);
-  }
-}
+        if (pushTokenError) {
+          console.error(
+            "Customer push token insert failed:",
+            pushTokenError,
+          );
+          alert(`Push token save failed: ${pushTokenError.message}`);
+        } else {
+          console.log(
+            "Customer push token saved:",
+            savedPushToken,
+          );
+        }
+      }
+
       if (resolvedMemberCode) {
         const target = `${window.location.origin}/member-login?identity=${encodeURIComponent(resolvedMemberCode)}&source=online-order`;
         setMemberCode(resolvedMemberCode);

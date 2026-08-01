@@ -115,6 +115,8 @@ export default function HomePage() {
   const [mediaLoading, setMediaLoading] = useState(true);
   const [activeMedia, setActiveMedia] = useState<HomeMediaRow | null>(null);
   const [storeSettings, setStoreSettings] = useState<StoreSettings>(defaultStoreSettings);
+  const [memberLoggedIn, setMemberLoggedIn] = useState(false);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const featuredRail = useRef<HTMLDivElement | null>(null);
   const communityRail = useRef<HTMLDivElement | null>(null);
   const cafeVideo = useRef<HTMLVideoElement | null>(null);
@@ -144,6 +146,50 @@ export default function HomePage() {
     observer.observe(hero);
     return () => observer.disconnect();
   }, []);
+
+  useEffect(() => {
+    const readMemberSession = () => {
+      if (typeof window === "undefined") return;
+
+      const hasMemberSession = Object.keys(window.localStorage).some((key) => {
+        const normalizedKey = key.toLowerCase();
+        if (!normalizedKey.includes("member")) return false;
+        if (!normalizedKey.includes("session")) return false;
+        return Boolean(window.localStorage.getItem(key));
+      });
+
+      setMemberLoggedIn(hasMemberSession);
+      if (!hasMemberSession) setAccountMenuOpen(false);
+    };
+
+    readMemberSession();
+    window.addEventListener("focus", readMemberSession);
+    window.addEventListener("storage", readMemberSession);
+    window.addEventListener("pageshow", readMemberSession);
+
+    return () => {
+      window.removeEventListener("focus", readMemberSession);
+      window.removeEventListener("storage", readMemberSession);
+      window.removeEventListener("pageshow", readMemberSession);
+    };
+  }, []);
+
+  const logoutMemberFromHomepage = () => {
+    if (typeof window === "undefined") return;
+
+    Object.keys(window.localStorage).forEach((key) => {
+      const normalizedKey = key.toLowerCase();
+      if (
+        normalizedKey.includes("member") &&
+        normalizedKey.includes("session")
+      ) {
+        window.localStorage.removeItem(key);
+      }
+    });
+
+    setMemberLoggedIn(false);
+    setAccountMenuOpen(false);
+  };
 
   useEffect(() => {
     let active = true;
@@ -836,6 +882,168 @@ export default function HomePage() {
   }
 }
 
+/* BUILD 47 — MEMBER LOGIN / ACCOUNT STATE */
+.b45-member-auth {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.b45-auth-link,
+.b45-account-button {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 15px;
+  border: 1px solid rgba(255, 255, 255, .24);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, .28);
+  color: #fff !important;
+  font-size: 11px !important;
+  font-weight: 850;
+  letter-spacing: .04em;
+  text-decoration: none;
+  cursor: pointer;
+  backdrop-filter: blur(14px);
+}
+
+.b45-auth-link.is-create {
+  border-color: rgba(244, 201, 93, .72);
+  background: var(--b45-gold);
+  color: #090a08 !important;
+}
+
+.b45-account-avatar {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffe59b, #b7791f);
+  color: #100b03;
+  font-size: 10px;
+  font-weight: 950;
+}
+
+.b45-account-menu {
+  position: absolute;
+  z-index: 50;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 205px;
+  padding: 8px;
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(244, 201, 93, .24);
+  border-radius: 16px;
+  background: rgba(7, 9, 7, .97);
+  box-shadow: 0 22px 70px rgba(0, 0, 0, .55);
+  backdrop-filter: blur(20px);
+}
+
+.b45-account-menu a,
+.b45-account-menu button {
+  width: 100%;
+  min-height: 39px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 12px !important;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  color: rgba(255, 255, 255, .84) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.b45-account-menu a:hover,
+.b45-account-menu button:hover {
+  background: rgba(244, 201, 93, .10) !important;
+  color: #f4c95d !important;
+}
+
+.b45-account-menu button {
+  border-top: 1px solid rgba(255, 255, 255, .08) !important;
+  color: #ff7d7d !important;
+}
+
+.b45-hero-auth {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.b45-hero-auth > span {
+  color: rgba(255, 255, 255, .38);
+  font-size: 11px;
+}
+
+.b45-hero-auth .b45-auth-link {
+  min-height: 42px;
+  padding: 0 18px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.b45-hero-account-card {
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  padding: 7px 16px 7px 8px;
+  border: 1px solid rgba(244, 201, 93, .34);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, .40);
+  color: #fff;
+  text-decoration: none;
+  backdrop-filter: blur(16px);
+}
+
+.b45-hero-account-card b {
+  display: block;
+  font-size: 12px;
+}
+
+.b45-hero-account-card small {
+  display: block;
+  margin-top: 2px;
+  color: rgba(255, 255, 255, .50);
+  font-size: 9px;
+}
+
+@media (max-width: 1000px) {
+  .b45-header {
+    grid-template-columns: auto 1fr;
+  }
+
+  .b45-member-auth .b45-auth-link {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .b45-member-auth {
+    display: none;
+  }
+
+  .b45-hero-auth {
+    width: 100%;
+  }
+
+  .b45-hero-auth .b45-auth-link,
+  .b45-hero-account-card {
+    flex: 1 1 145px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .b45-hero-video video {
     animation: none;
@@ -1180,6 +1388,44 @@ export default function HomePage() {
             >
               {videoMuted ? "Sound off" : "Sound on"}
             </button>
+
+            <div className="b45-member-auth">
+              {memberLoggedIn ? (
+                <>
+                  <button
+                    type="button"
+                    className="b45-account-button"
+                    onClick={() => setAccountMenuOpen((open) => !open)}
+                    aria-expanded={accountMenuOpen}
+                  >
+                    <span className="b45-account-avatar">KS</span>
+                    Account
+                    <span aria-hidden="true">⌄</span>
+                  </button>
+
+                  {accountMenuOpen && (
+                    <div className="b45-account-menu">
+                      <Link href="/member">Dashboard</Link>
+                      <Link href="/member">My Stamps & Rewards</Link>
+                      <Link href="/member">My Account</Link>
+                      <button type="button" onClick={logoutMemberFromHomepage}>
+                        Logout
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <Link className="b45-auth-link" href="/member-login">
+                    Login
+                  </Link>
+                  <Link className="b45-auth-link is-create" href="/member-register">
+                    Create Account
+                  </Link>
+                </>
+              )}
+            </div>
+
             <Link href={orderingAvailable ? "/menu" : "#"} className={!orderingAvailable ? "b45-order-disabled" : undefined} aria-disabled={!orderingAvailable} onClick={(event) => { if (!orderingAvailable) event.preventDefault(); }}>{orderingAvailable ? "Order Now" : "Currently Closed"}</Link>
           </div>
         </header>
@@ -1216,6 +1462,28 @@ export default function HomePage() {
               <span>★</span>
               <Link href={orderingAvailable ? "/menu" : "#"} className={!orderingAvailable ? "b45-order-disabled" : undefined} aria-disabled={!orderingAvailable} onClick={(event) => { if (!orderingAvailable) event.preventDefault(); }}>{orderingAvailable ? "Start your order" : "Currently closed"}</Link>
               <Link href="/moments">See KaSYP moments</Link>
+            </div>
+
+            <div className="b45-hero-auth">
+              {memberLoggedIn ? (
+                <Link href="/member" className="b45-hero-account-card">
+                  <span className="b45-account-avatar">KS</span>
+                  <span>
+                    <b>Open My Account</b>
+                    <small>Dashboard, stamps, rewards, and profile</small>
+                  </span>
+                </Link>
+              ) : (
+                <>
+                  <Link href="/member-login" className="b45-auth-link">
+                    🔒 Login
+                  </Link>
+                  <span>or</span>
+                  <Link href="/member-register" className="b45-auth-link is-create">
+                    👤 Create Account
+                  </Link>
+                </>
+              )}
             </div>
 
             <div className="b45-proof">

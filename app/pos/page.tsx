@@ -22,6 +22,14 @@ type LiveOrderSnapshot = {
   discount: number;
   total: number;
   customerName?: string;
+  memberCode?: string;
+  memberStamps?: number;
+  paymentMethod?: Payment;
+  cashReceived?: number;
+  changeDue?: number;
+  amountDue?: number;
+  stampAdded?: boolean;
+  rewardClaimed?: boolean;
   updatedAt: string;
 };
 type KitchenOrder = LiveOrderSnapshot & {
@@ -118,6 +126,21 @@ function printOnlineOrderReceipt(order: OnlineOrderRow, items: OnlineOrderItemRo
 const LIVE_ORDER_KEY = "syp-live-order-v1";
 const KITCHEN_ORDERS_KEY = "syp-kitchen-orders-v1";
 const DISPLAY_CHANNEL = "syp-cafe-live-v1";
+const LAST_POS_RECEIPT_KEY = "syp-last-pos-receipt-html-v1";
+
+function openReceiptWindow(receiptHtml: string, existingWindow?: Window | null) {
+  const printWindow =
+    existingWindow && !existingWindow.closed
+      ? existingWindow
+      : window.open("", "_blank", "width=420,height=780");
+
+  if (!printWindow) return false;
+
+  printWindow.document.open();
+  printWindow.document.write(receiptHtml);
+  printWindow.document.close();
+  return true;
+}
 
 function publishCafeEvent(type: string, payload: unknown) {
   if (typeof window === "undefined") return;
@@ -274,6 +297,9 @@ export default function PosPage() {
   const [addStamp, setAddStamp] = useState(true);
   const [redeemFreeDrink, setRedeemFreeDrink] = useState(false);
   const [autoPrint, setAutoPrint] = useState(true);
+  const [lastReceiptHtml, setLastReceiptHtml] = useState("");
+  const [savingSale, setSavingSale] = useState(false);
+  const [displayRevision, setDisplayRevision] = useState(0);
   const [receiptStyle, setReceiptStyle] = useState<ReceiptStyle>("eco");
   const [orderNote, setOrderNote] = useState("");
   const [now, setNow] = useState(new Date());
@@ -296,6 +322,8 @@ export default function PosPage() {
   const onlineAlertIntervalRef = useRef<number | null>(null);
   const printedOnlineOrdersRef = useRef<Set<string>>(new Set());
   const searchRef = useRef<HTMLInputElement>(null);
+  const holdThankYouRef = useRef(false);
+  const thankYouTimerRef = useRef<number | null>(null);
 
   const filteredProducts = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -366,6 +394,7 @@ export default function PosPage() {
   useEffect(() => {
     const savedCashier = window.localStorage.getItem("sypCashierName");
     if (savedCashier?.trim()) setCashierName(savedCashier.trim());
+    setLastReceiptHtml(window.localStorage.getItem(LAST_POS_RECEIPT_KEY) || "");
   }, []);
 
   const updateCashierName = (value: string) => {
@@ -455,6 +484,11 @@ export default function PosPage() {
   };
 
   useEffect(() => {
+    // Keep the completed-sale screen on the customer monitor for a full
+    // 10 seconds, regardless of whether printing is enabled, cancelled,
+    // blocked, or already finished.
+    if (holdThankYouRef.current) return;
+
     const snapshot: LiveOrderSnapshot = {
       mode: "cart",
       items: cart.map((item) => ({
@@ -471,11 +505,17 @@ export default function PosPage() {
       discount: discount + loyaltyRewardDiscount,
       total,
       customerName: selectedMember?.name || customerQuery.trim() || undefined,
+      memberCode: selectedMember?.member_code || undefined,
+      memberStamps: selectedMember?.stamps ?? undefined,
+      paymentMethod: payment,
+      cashReceived: payment === "Cash" ? cash : undefined,
+      changeDue: payment === "Cash" ? change : undefined,
+      amountDue: payment === "Cash" ? Math.max(0, total - cash) : 0,
       updatedAt: new Date().toISOString(),
     };
     window.localStorage.setItem(LIVE_ORDER_KEY, JSON.stringify(snapshot));
     publishCafeEvent("live-order", snapshot);
-  }, [cart, subtotal, discount, loyaltyRewardDiscount, total, selectedMember, customerQuery]);
+  }, [cart, subtotal, discount, loyaltyRewardDiscount, total, selectedMember, customerQuery, payment, cash, change, displayRevision]);
 
   const applyManualDiscount = (amount: number, reason: DiscountReason = discountReason) => {
     const safeAmount = Math.max(0, Math.min(subtotal, Math.round(amount)));
@@ -670,7 +710,21 @@ export default function PosPage() {
   };
 
   const completeSale = async () => {
-    if (!checkoutReady) return;
+    if (!checkoutReady || savingSale) return;
+
+    setSavingSale(true);
+    setNotice("Saving sale to Supabase...");
+
+    const reservedPrintWindow = autoPrint
+      ? window.open("", "_blank", "width=420,height=780")
+      : null;
+
+    if (reservedPrintWindow) {
+      reservedPrintWindow.document.write(
+        "<!doctype html><title>Preparing receipt...</title><body style='font-family:Arial;padding:24px'>Saving sale and preparing receipt...</body>",
+      );
+      reservedPrintWindow.document.close();
+    }
 
     const completedAt = new Date();
     const receiptNo = createReceiptNumber(completedAt);
@@ -678,117 +732,306 @@ export default function PosPage() {
     let memberForReceipt = selectedMember;
     let rewardWasClaimed = false;
 
-    if (redeemFreeDrink && selectedMember) {
-      if (!eligibleRewardLine || selectedMember.stamps < 10) {
-        setNotice("Free drink claim requires 10 stamps and one eligible 16oz drink in the cart");
-        return;
-      }
-      try {
-        memberForReceipt = await claimCloudFreeDrink(selectedMember.member_code, receiptNo, "Alex");
-        rewardWasClaimed = true;
-        setSelectedMember(memberForReceipt);
-      } catch (cause) {
-        setNotice(cause instanceof Error ? `Claim stopped: ${cause.message}` : "Unable to claim free drink");
-        return;
-      }
-    }
+    const saleItems = cart.map((item) => ({
+      productId: null,
+      name: item.name,
+      size: item.size,
+      price: Number(item.unitPrice),
+      quantity: Number(item.qty),
+      temperature: item.customization.temperature.toLowerCase(),
+      basePrice: Number(item.price),
+      addOns: item.customization.addons.map((addon) => ({
+        id: null,
+        name: addon.name,
+        price: Number(addon.price),
+        group: "POS",
+      })),
+      details:
+        item.category === "Fries"
+          ? String(item.customization.flavor || "")
+          : [
+              item.customization.temperature,
+              `${item.customization.sugar} sugar`,
+              item.customization.ice,
+              item.customization.notes,
+            ]
+              .filter(Boolean)
+              .join(" · "),
+    }));
 
-    if (!rewardWasClaimed && addStamp && selectedMember && cart.some((item) => item.category !== "Soda" && item.category !== "ADDS")) {
-      try {
-        memberForReceipt = await addCloudStamp(selectedMember.member_code, 1);
-        setSelectedMember(memberForReceipt);
-      } catch (cause) {
-        setNotice(cause instanceof Error ? `Sale stopped: ${cause.message}` : "Unable to add loyalty stamp");
-        return;
-      }
-    }
-    const quote = chooseReceiptQuote(completedAt);
-    const seasonalTheme = getSeasonalReceiptTheme(completedAt);
-    const stampWasAdded = Boolean(
-      !rewardWasClaimed && addStamp && selectedMember && cart.some((item) => item.category !== "Soda" && item.category !== "ADDS")
-    );
-    const qrTarget = memberForReceipt
-      ? `${window.location.origin}/member-login?identity=${encodeURIComponent(memberForReceipt.member_code)}&source=receipt&receipt=${encodeURIComponent(receiptNo)}`
-      : `${window.location.origin}/member-register?source=receipt&receipt=${encodeURIComponent(receiptNo)}`;
+    try {
+      const memberMobile =
+        selectedMember?.mobile?.replace(/\s+/g, "").trim() || "";
+      const validMemberMobile = /^09\d{9}$/.test(memberMobile)
+        ? memberMobile
+        : "09999999999";
+      const memberName =
+        selectedMember?.name?.trim() ||
+        customerQuery.trim() ||
+        "WALK-IN CUSTOMER";
 
-    if (autoPrint) {
-      const printWindow = window.open("", "_blank", "width=420,height=780");
-      if (printWindow) {
-        printWindow.document.open();
-        printWindow.document.write(buildReceiptHtml({
-          receiptNo,
-          completedAt,
-          cart,
-          subtotal,
-          discount: discount + loyaltyRewardDiscount,
-          discountReason: rewardWasClaimed
+      const { data: savedRows, error: saveError } = await supabase.rpc(
+        "create_pos_sale",
+        {
+          p_receipt_no: receiptNo,
+          p_queue_no: queueNo,
+          p_customer_name: memberName,
+          p_mobile: validMemberMobile,
+          p_member_code: selectedMember?.member_code || null,
+          p_payment_method: payment.toLowerCase(),
+          p_subtotal: subtotal,
+          p_discount: discount + loyaltyRewardDiscount,
+          p_discount_reason: redeemFreeDrink
             ? discount > 0
               ? `${discountReason} + Free Drink Reward`
               : "Free Drink Reward"
             : discountReason,
-          total,
-          payment,
-          cash,
-          change,
-          customerQuery: memberForReceipt ? `${memberForReceipt.name} (${memberForReceipt.member_code})` : customerQuery,
-          addStamp,
-          orderNote,
-          receiptStyle,
-          quote,
-          seasonalTheme,
-          qrTarget,
-          member: memberForReceipt,
-          stampWasAdded,
-          rewardWasClaimed,
-          rewardDiscount: loyaltyRewardDiscount,
-        }));
-        printWindow.document.close();
-      } else {
-        setNotice("Sale completed, but receipt popup was blocked");
+          p_total: total,
+          p_cash_received: payment === "Cash" ? cash : total,
+          p_change_due: payment === "Cash" ? change : 0,
+          p_cashier: cashierName.trim() || "Alex",
+          p_notes: orderNote.trim(),
+          p_items: saleItems,
+        },
+      );
+
+      if (saveError) {
+        throw new Error(
+          [
+            saveError.message,
+            saveError.details,
+            saveError.hint,
+            saveError.code,
+          ]
+            .filter(Boolean)
+            .join(" | ") || "Unable to save POS sale.",
+        );
       }
+
+      const savedSale = Array.isArray(savedRows) ? savedRows[0] : savedRows;
+      if (!savedSale?.order_id) {
+        throw new Error("Supabase did not return a saved POS order ID.");
+      }
+
+      // Send the same admin push + Telegram alert used by online orders.
+      // Notification failure never cancels an already-saved POS sale.
+      
+
+      // Loyalty changes only after the sale itself is safely recorded.
+      if (redeemFreeDrink && selectedMember) {
+        if (!eligibleRewardLine || selectedMember.stamps < 10) {
+          throw new Error(
+            "Free drink claim requires 10 stamps and one eligible 16oz drink in the cart.",
+          );
+        }
+
+        memberForReceipt = await claimCloudFreeDrink(
+          selectedMember.member_code,
+          receiptNo,
+          cashierName.trim() || "Alex",
+        );
+        rewardWasClaimed = true;
+        setSelectedMember(memberForReceipt);
+      } else if (
+        addStamp &&
+        selectedMember &&
+        cart.some(
+          (item) => item.category !== "Soda" && item.category !== "ADDS",
+        )
+      ) {
+        try {
+          memberForReceipt = await addCloudStamp(
+            selectedMember.member_code,
+            1,
+          );
+          setSelectedMember(memberForReceipt);
+        } catch (loyaltyError) {
+          console.error("Sale saved but loyalty update failed:", loyaltyError);
+          setNotice(
+            "Sale saved. Loyalty stamp failed; you may add it manually.",
+          );
+        }
+      }
+
+      const quote = chooseReceiptQuote(completedAt);
+      const seasonalTheme = getSeasonalReceiptTheme(completedAt);
+      const stampWasAdded = Boolean(
+        !rewardWasClaimed &&
+          addStamp &&
+          selectedMember &&
+          cart.some(
+            (item) =>
+              item.category !== "Soda" && item.category !== "ADDS",
+          ),
+      );
+      const qrTarget = memberForReceipt
+        ? `${window.location.origin}/member-login?identity=${encodeURIComponent(
+            memberForReceipt.member_code,
+          )}&source=receipt&receipt=${encodeURIComponent(receiptNo)}`
+        : `${window.location.origin}/member-register?source=receipt&receipt=${encodeURIComponent(
+            receiptNo,
+          )}`;
+
+      const receiptHtml = buildReceiptHtml({
+        receiptNo,
+        completedAt,
+        cart,
+        subtotal,
+        discount: discount + loyaltyRewardDiscount,
+        discountReason: rewardWasClaimed
+          ? discount > 0
+            ? `${discountReason} + Free Drink Reward`
+            : "Free Drink Reward"
+          : discountReason,
+        total,
+        payment,
+        cash,
+        change,
+        customerQuery: memberForReceipt
+          ? `${memberForReceipt.name} (${memberForReceipt.member_code})`
+          : customerQuery,
+        addStamp,
+        orderNote,
+        receiptStyle,
+        quote,
+        seasonalTheme,
+        qrTarget,
+        member: memberForReceipt,
+        stampWasAdded,
+        rewardWasClaimed,
+        rewardDiscount: loyaltyRewardDiscount,
+      });
+
+      setLastReceiptHtml(receiptHtml);
+      window.localStorage.setItem(LAST_POS_RECEIPT_KEY, receiptHtml);
+
+      const orderItems: LiveOrderItem[] = cart.map((item) => ({
+        name: item.name,
+        size: item.size,
+        qty: item.qty,
+        unitPrice: item.unitPrice,
+        image: item.image,
+        details:
+          item.category === "Fries"
+            ? String(item.customization.flavor || "")
+            : [
+                item.customization.temperature,
+                `${item.customization.sugar} sugar`,
+                item.customization.ice,
+                item.customization.notes,
+              ]
+                .filter(Boolean)
+                .join(" · "),
+      }));
+
+      const finishedSnapshot: LiveOrderSnapshot = {
+        mode: "thank-you",
+        queueNo,
+        receiptNo,
+        items: orderItems,
+        subtotal,
+        discount: discount + loyaltyRewardDiscount,
+        total,
+        customerName:
+          memberForReceipt?.name || customerQuery.trim() || undefined,
+        memberCode: memberForReceipt?.member_code || undefined,
+        memberStamps: memberForReceipt?.stamps ?? undefined,
+        paymentMethod: payment,
+        cashReceived: payment === "Cash" ? cash : undefined,
+        changeDue: payment === "Cash" ? change : undefined,
+        amountDue: 0,
+        stampAdded: stampWasAdded,
+        rewardClaimed: rewardWasClaimed,
+        updatedAt: completedAt.toISOString(),
+      };
+
+      const kitchenOrder: KitchenOrder = {
+        ...finishedSnapshot,
+        id: receiptNo,
+        queueNo,
+        receiptNo,
+        status: "new",
+        createdAt: completedAt.toISOString(),
+        note: orderNote.trim() || undefined,
+      };
+
+      const existingOrders: KitchenOrder[] = JSON.parse(
+        window.localStorage.getItem(KITCHEN_ORDERS_KEY) || "[]",
+      );
+      window.localStorage.setItem(
+        KITCHEN_ORDERS_KEY,
+        JSON.stringify([kitchenOrder, ...existingOrders].slice(0, 100)),
+      );
+      // Lock the customer display before opening the print dialog so the
+      // THANK YOU screen appears immediately after a successful checkout.
+      holdThankYouRef.current = true;
+      if (thankYouTimerRef.current) {
+        window.clearTimeout(thankYouTimerRef.current);
+      }
+
+      window.localStorage.setItem(
+        LIVE_ORDER_KEY,
+        JSON.stringify(finishedSnapshot),
+      );
+      publishCafeEvent("kitchen-order", kitchenOrder);
+      publishCafeEvent("live-order", finishedSnapshot);
+
+      // Printing happens only after the customer display has already updated.
+      // Cancelling or disabling print does not shorten the 10-second screen.
+      if (autoPrint) {
+        const printed = openReceiptWindow(receiptHtml, reservedPrintWindow);
+        if (!printed) {
+          setNotice(
+            "Sale saved, but receipt popup was blocked. Use Reprint Last Receipt.",
+          );
+        }
+      } else if (reservedPrintWindow && !reservedPrintWindow.closed) {
+        reservedPrintWindow.close();
+      }
+
+      thankYouTimerRef.current = window.setTimeout(() => {
+        holdThankYouRef.current = false;
+        thankYouTimerRef.current = null;
+        // Publish the latest cart state after the fixed standby period.
+        setDisplayRevision((value) => value + 1);
+      }, 10_000);
+
+      setNotice(
+        `SAVED • Queue ${queueNo} • ${money(total)} • ${receiptNo}${
+          rewardWasClaimed
+            ? " • FREE DRINK CLAIMED"
+            : memberForReceipt && stampWasAdded
+              ? ` • ${memberForReceipt.stamps}/10 stamps`
+              : ""
+        }`,
+      );
+
+      window.setTimeout(() => void loadShiftStats(), 500);
+      window.setTimeout(() => {
+        setCart([]);
+        setCash(0);
+        setDiscount(0);
+        setDiscountReason("None");
+        setCustomDiscount("");
+        setOrderNote("");
+        setCustomerQuery("");
+        setSelectedMember(null);
+        setRedeemFreeDrink(false);
+        setMemberResults([]);
+        setNotice("");
+      }, 1800);
+    } catch (cause) {
+      if (reservedPrintWindow && !reservedPrintWindow.closed) {
+        reservedPrintWindow.close();
+      }
+
+      const message =
+        cause instanceof Error ? cause.message : "Unable to save POS sale.";
+      console.error("POS sale failed:", cause);
+      setNotice(`SALE NOT SAVED: ${message}`);
+    } finally {
+      setSavingSale(false);
     }
-
-    const orderItems: LiveOrderItem[] = cart.map((item) => ({
-      name: item.name,
-      size: item.size,
-      qty: item.qty,
-      unitPrice: item.unitPrice,
-      image: item.image,
-      details: item.category === "Fries"
-        ? String(item.customization.flavor || "")
-        : [item.customization.temperature, `${item.customization.sugar} sugar`, item.customization.ice, item.customization.notes].filter(Boolean).join(" · "),
-    }));
-    const finishedSnapshot: LiveOrderSnapshot = {
-      mode: "thank-you", queueNo, receiptNo, items: orderItems, subtotal,
-      discount: discount + loyaltyRewardDiscount, total,
-      customerName: memberForReceipt?.name || customerQuery.trim() || undefined,
-      updatedAt: completedAt.toISOString(),
-    };
-    const kitchenOrder: KitchenOrder = {
-      ...finishedSnapshot, id: receiptNo, queueNo, receiptNo, status: "new",
-      createdAt: completedAt.toISOString(), note: orderNote.trim() || undefined,
-    };
-    const existingOrders: KitchenOrder[] = JSON.parse(window.localStorage.getItem(KITCHEN_ORDERS_KEY) || "[]");
-    window.localStorage.setItem(KITCHEN_ORDERS_KEY, JSON.stringify([kitchenOrder, ...existingOrders].slice(0, 100)));
-    window.localStorage.setItem(LIVE_ORDER_KEY, JSON.stringify(finishedSnapshot));
-    publishCafeEvent("kitchen-order", kitchenOrder);
-    publishCafeEvent("live-order", finishedSnapshot);
-
-    setNotice(`Queue ${queueNo} • ${money(total)} • ${receiptNo}${rewardWasClaimed ? " • FREE DRINK CLAIMED" : memberForReceipt && addStamp ? ` • ${memberForReceipt.stamps}/10 stamps` : ""}`);
-    window.setTimeout(() => void loadShiftStats(), 500);
-    window.setTimeout(() => {
-      setCart([]);
-      setCash(0);
-      setDiscount(0);
-      setDiscountReason("None");
-      setCustomDiscount("");
-      setOrderNote("");
-      setCustomerQuery("");
-      setSelectedMember(null);
-      setRedeemFreeDrink(false);
-      setMemberResults([]);
-      setNotice("");
-    }, 1800);
   };
 
   return (
@@ -1140,7 +1383,27 @@ export default function PosPage() {
             <small>QR to KaSYP registration is always printed in every style.</small>
           </div>
 
-          <button className="checkout-button" disabled={!checkoutReady} onClick={completeSale}><span className="lock">▣</span><span>CHECKOUT<small>F5 / ENTER</small></span></button>
+          <button
+            className="reprint-button"
+            disabled={!lastReceiptHtml || savingSale}
+            onClick={() => {
+              const printed = openReceiptWindow(lastReceiptHtml);
+              if (!printed) setNotice("Receipt popup was blocked by the browser");
+            }}
+          >
+            ↻ REPRINT LAST RECEIPT
+          </button>
+          <button
+            className="checkout-button"
+            disabled={!checkoutReady || savingSale}
+            onClick={completeSale}
+          >
+            <span className="lock">▣</span>
+            <span>
+              {savingSale ? "SAVING..." : "CHECKOUT"}
+              <small>{savingSale ? "Supabase" : "F5 / ENTER"}</small>
+            </span>
+          </button>
         </aside>
       </section>
 
