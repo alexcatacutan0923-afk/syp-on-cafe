@@ -6,3 +6,8 @@
 /* Build 25 member PIN controls */
 .change-pin-panel{margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,.08)}.change-pin-panel small{color:#dba63f;font-size:9px;font-weight:900;letter-spacing:.16em}.change-pin-panel h3{margin:7px 0}.change-pin-panel p{color:#949b94;font-size:12px;line-height:1.55}.pin-change-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}.pin-change-grid label{display:grid;gap:7px;color:#aab0aa;font-size:10px;font-weight:800}.pin-change-grid input{min-width:0;border:1px solid #303630;border-radius:10px;background:#090b09;color:#fff;padding:12px}.pin-change-status{margin:0 0 10px!important;color:#ff927f!important}.pin-change-status.success{color:#75d997!important}@media(max-width:700px){.pin-change-grid{grid-template-columns:1fr}}
 .member-auth-notice{margin:14px 0;padding:11px 13px;border:1px solid rgba(219,166,63,.25);border-radius:12px;background:rgba(219,166,63,.06);color:#aeb4ae;font-size:12px}.member-auth-notice b{color:#e8b94f}
+
+
+/* Build 43 admin-controlled Lucky Spin */
+.reward-wheel span{white-space:normal;overflow-wrap:anywhere;padding:0 3px}.wheel-zone>button{cursor:pointer}.wheel-zone>button:disabled{cursor:not-allowed;filter:grayscale(.35)}
+@media(max-width:650px){.wheel-zone{height:270px}.reward-wheel{width:225px;height:225px}.reward-wheel span{width:86px;margin-left:-43px;font-size:7px}.wheel-zone>button{width:66px;height:66px}.wheel-pointer{top:2px}}

@@ -19,7 +19,16 @@ type CustomerOrder = {
   created_at: string;
 };
 
-const spinRewards = ["Try Again", "Try Again", "Try Again", "Try Again", "Try Again", "Try Again"];
+type SpinPrize = { id: string; title: string; description: string; icon: string; weight: number; active: boolean; sort_order: number; is_try_again: boolean };
+type SpinSettings = { enabled: boolean; access_mode: "off" | "all" | "selected"; force_try_again: boolean; max_spins_per_member: number; minimum_stamps: number };
+const fallbackSpinPrizes: SpinPrize[] = [
+  { id: "free-fries", title: "Free Fries", description: "One free small fries", icon: "🍟", weight: 1, active: true, sort_order: 1, is_try_again: false },
+  { id: "ten-off", title: "₱10 OFF", description: "₱10 off one eligible drink", icon: "₱", weight: 1, active: true, sort_order: 2, is_try_again: false },
+  { id: "free-drink", title: "Free 16oz Drink", description: "One selected 16oz drink", icon: "🥤", weight: 1, active: true, sort_order: 3, is_try_again: false },
+  { id: "try-again", title: "Try Again", description: "Better luck next time", icon: "↻", weight: 6, active: true, sort_order: 4, is_try_again: true },
+  { id: "bonus-stamp", title: "Bonus Stamp", description: "One bonus loyalty stamp", icon: "★", weight: 1, active: true, sort_order: 5, is_try_again: false },
+  { id: "free-addon", title: "Free Add-on", description: "One selected add-on", icon: "+", weight: 1, active: true, sort_order: 6, is_try_again: false },
+];
 
 export default function MemberDashboardPage() {
   const router = useRouter();
@@ -39,6 +48,11 @@ export default function MemberDashboardPage() {
   const [pinDraft, setPinDraft] = useState({ current: "", next: "", confirm: "" });
   const [pinStatus, setPinStatus] = useState("");
   const [pinSaving, setPinSaving] = useState(false);
+  const [spinSettings, setSpinSettings] = useState<SpinSettings | null>(null);
+  const [spinPrizes, setSpinPrizes] = useState<SpinPrize[]>(fallbackSpinPrizes);
+  const [spinAllowed, setSpinAllowed] = useState(false);
+  const [spinAccessLoading, setSpinAccessLoading] = useState(true);
+  const [spinCount, setSpinCount] = useState(0);
 
   useEffect(() => {
     const current = getCurrentMember();
@@ -49,6 +63,8 @@ export default function MemberDashboardPage() {
 
   useEffect(() => {
     if (!member?.id) return;
+
+    const memberCode = member.id;
     let active = true;
 
     const refreshMember = async (showSpinner = false) => {
@@ -56,8 +72,8 @@ export default function MemberDashboardPage() {
 
       try {
         const [cloudResult, visitsResult] = await Promise.allSettled([
-          getCloudMember(member.id),
-          getCloudMemberVisits(member.id, calendarMonth),
+          getCloudMember(memberCode),
+          getCloudMemberVisits(memberCode, calendarMonth),
         ]);
 
         if (!active) return;
@@ -89,8 +105,8 @@ export default function MemberDashboardPage() {
     document.addEventListener("visibilitychange", onVisibility);
 
     const channel = supabase
-      .channel(`member-live-${member.id}`)
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "loyalty_members", filter: `member_code=eq.${member.id}` }, () => void refreshMember(false))
+      .channel(`member-live-${memberCode}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "loyalty_members", filter: `member_code=eq.${memberCode}` }, () => void refreshMember(false))
       .subscribe();
 
     return () => {
@@ -105,13 +121,14 @@ export default function MemberDashboardPage() {
   useEffect(() => {
     if (!member?.mobile) return;
 
+    const memberMobile = member.mobile.replace(/\s+/g, "");
     let active = true;
     setOrdersLoading(true);
 
     void supabase
       .from("orders")
       .select("id, order_number, status, order_type, payment_method, total, created_at")
-      .eq("mobile", member.mobile.replace(/\s+/g, ""))
+      .eq("mobile", memberMobile)
       .order("created_at", { ascending: false })
       .limit(12)
       .then(({ data, error }) => {
@@ -133,6 +150,59 @@ export default function MemberDashboardPage() {
     };
   }, [member?.mobile]);
 
+  useEffect(() => {
+    if (!member?.id) return;
+
+    const memberCode = member.id;
+    const memberStamps = member.stamps;
+    let active = true;
+
+    async function loadSpinAccess() {
+      setSpinAccessLoading(true);
+
+      try {
+        const [settingsResult, prizesResult, accessResult, resultsResult] = await Promise.all([
+          supabase.from("spin_settings").select("enabled,access_mode,force_try_again,max_spins_per_member,minimum_stamps").eq("id", 1).maybeSingle(),
+          supabase.from("spin_prizes").select("id,title,description,icon,weight,active,sort_order,is_try_again").eq("active", true).order("sort_order", { ascending: true }),
+          supabase.from("spin_member_access").select("enabled").eq("member_code", memberCode).maybeSingle(),
+          supabase.from("spin_results").select("id", { count: "exact", head: true }).eq("member_code", memberCode),
+        ]);
+        if (!active) return;
+        if (settingsResult.error) throw settingsResult.error;
+        if (prizesResult.error) throw prizesResult.error;
+        if (accessResult.error) throw accessResult.error;
+        if (resultsResult.error) throw resultsResult.error;
+
+        const settings = (settingsResult.data as SpinSettings | null) ?? { enabled: false, access_mode: "off", force_try_again: true, max_spins_per_member: 1, minimum_stamps: 0 };
+        const prizes = ((prizesResult.data ?? []) as SpinPrize[]).map((prize) => ({ ...prize, weight: Number(prize.weight ?? 1), sort_order: Number(prize.sort_order ?? 0) }));
+        const selectedEnabled = Boolean(accessResult.data?.enabled);
+        const allowedByMode = settings.enabled && (settings.access_mode === "all" || (settings.access_mode === "selected" && selectedEnabled));
+        const usedSpins = Number(resultsResult.count ?? 0);
+
+        setSpinSettings(settings);
+        setSpinPrizes(prizes.length >= 2 ? prizes : fallbackSpinPrizes);
+        setSpinCount(usedSpins);
+        setSpinAllowed(
+          allowedByMode &&
+          memberStamps >= Number(settings.minimum_stamps || 0) &&
+          usedSpins < Number(settings.max_spins_per_member || 1)
+        );
+      } catch (error) {
+        console.error("Unable to load Lucky Spin access:", error);
+        if (active) {
+          setSpinSettings(null);
+          setSpinPrizes(fallbackSpinPrizes);
+          setSpinAllowed(false);
+        }
+      } finally {
+        if (active) setSpinAccessLoading(false);
+      }
+    }
+
+    void loadSpinAccess();
+    return () => { active = false; };
+  }, [member?.id, member?.stamps]);
+
   const currentMonth = calendarMonth;
   const visitedDays = useMemo(() => new Set(cloudVisits.filter(date => date.startsWith(currentMonth)).map(date => Number(date.slice(-2)))), [cloudVisits, currentMonth]);
   const calendarDate = useMemo(() => new Date(`${currentMonth}-01T00:00:00`), [currentMonth]);
@@ -152,13 +222,46 @@ export default function MemberDashboardPage() {
     .reduce((sum, order) => sum + order.total, 0);
 
   function spin() {
-    if (!member || spinning || result) return;
+    if (!member || spinning || result || !spinAllowed) return;
+
+    const memberCode = member.id;
+    const activePrizes = spinPrizes.filter((prize) => prize.active);
+    if (!activePrizes.length) return;
+
     setSpinning(true);
-    setRotation((current) => current + 1800 + Math.floor(Math.random() * 360));
-    window.setTimeout(() => {
-      setResult("Sorry! Please try again next time.");
+    const forcedTryAgain = spinSettings?.force_try_again !== false;
+    const tryAgainPrize = activePrizes.find((prize) => prize.is_try_again) ?? activePrizes[0];
+    const totalWeight = activePrizes.reduce((sum, prize) => sum + Math.max(0, Number(prize.weight || 0)), 0);
+    let selectedPrize = tryAgainPrize;
+
+    if (!forcedTryAgain && totalWeight > 0) {
+      let cursor = Math.random() * totalWeight;
+      selectedPrize = activePrizes.find((prize) => {
+        cursor -= Math.max(0, Number(prize.weight || 0));
+        return cursor <= 0;
+      }) ?? tryAgainPrize;
+    }
+
+    const selectedIndex = Math.max(0, activePrizes.findIndex((prize) => prize.id === selectedPrize.id));
+    const segmentSize = 360 / activePrizes.length;
+    const segmentCenter = selectedIndex * segmentSize + segmentSize / 2;
+    setRotation((current) => Math.ceil(current / 360) * 360 + 5 * 360 + (360 - segmentCenter));
+
+    window.setTimeout(async () => {
+      const won = !selectedPrize.is_try_again && !forcedTryAgain;
+      setResult(won ? `${selectedPrize.icon} ${selectedPrize.title}` : "Try Again");
       setSpinning(false);
-    }, 2200);
+      setSpinAllowed(false);
+      setSpinCount((current) => current + 1);
+
+      const { error } = await supabase.from("spin_results").insert({
+        member_code: memberCode,
+        prize_id: selectedPrize.id,
+        prize_title: won ? selectedPrize.title : "Try Again",
+        won,
+      });
+      if (error) console.error("Unable to save Lucky Spin result:", error);
+    }, 3200);
   }
 
   function claimReward(id: string) {
@@ -178,13 +281,15 @@ export default function MemberDashboardPage() {
 
   async function changePin() {
     if (!member) return;
+
+    const memberCode = member.id;
     setPinStatus("");
     if (!/^\d{4,6}$/.test(pinDraft.current) || !/^\d{4,6}$/.test(pinDraft.next)) { setPinStatus("PIN must be 4 to 6 digits."); return; }
     if (pinDraft.next !== pinDraft.confirm) { setPinStatus("New PIN confirmation does not match."); return; }
     if (pinDraft.current === pinDraft.next) { setPinStatus("Choose a different new PIN."); return; }
     setPinSaving(true);
     try {
-      await changeCloudMemberPin(member.id, pinDraft.current, pinDraft.next);
+      await changeCloudMemberPin(memberCode, pinDraft.current, pinDraft.next);
       const updated = updateCurrentMember(current => ({ ...current, pin: pinDraft.next }));
       if (updated) setMember(updated);
       setPinDraft({ current: "", next: "", confirm: "" });
@@ -235,23 +340,30 @@ export default function MemberDashboardPage() {
           </article>
 
           <article id="wheel" className="member-card wheel-panel">
-            <CardTitle eyebrow="COMING SOON" title="KaSYP Lucky Spin" action={result ? "Try again next time" : "Preview mode"} />
+            <CardTitle eyebrow="KASYP REWARDS" title="KaSYP Lucky Spin" action={spinAccessLoading ? "Checking access" : spinAllowed ? "Ready to spin" : result ? "Spin completed" : "Admin controlled"} />
             <div className="wheel-zone">
               <div className="wheel-pointer">▼</div>
               <div className="reward-wheel" style={{ transform: `rotate(${rotation}deg)` }}>
-                {spinRewards.map((reward, i) => <span key={`${reward}-${i}`} style={{ transform: `rotate(${i * 60 + 30}deg) translateY(-74px) rotate(-${i * 60 + 30}deg)` }}>{reward.replace("Free ", "").replace("Bonus ", "")}</span>)}
+                {spinPrizes.map((prize, index) => {
+                  const angle = index * (360 / spinPrizes.length) + (360 / spinPrizes.length) / 2;
+                  return <span key={prize.id} style={{ transform: `rotate(${angle}deg) translateY(-74px) rotate(-${angle}deg)` }}>{prize.icon} {prize.title}</span>;
+                })}
               </div>
-              <button onClick={spin} disabled={spinning || !!result}>{spinning ? "..." : "SPIN"}</button>
+              <button type="button" onClick={spin} disabled={spinning || !!result || !spinAllowed || spinAccessLoading}>{spinning ? "..." : spinAccessLoading ? "WAIT" : spinAllowed ? "SPIN" : "LOCKED"}</button>
             </div>
-            {result ? <div className="wheel-result"><small>KASYP LUCKY SPIN</small><b>{result}</b><span>Free rewards will launch soon. No prize was saved.</span></div> : <p className="card-note">Preview mode only. Free prizes and claims are temporarily disabled until the official launch.</p>}
+            {result ? (
+              <div className="wheel-result"><small>KASYP LUCKY SPIN</small><b>{result === "Try Again" ? "Better luck next time!" : result}</b><span>{result === "Try Again" ? "No reward was added to your account." : "Show this reward to the cashier for verification."}</span></div>
+            ) : spinAccessLoading ? (
+              <p className="card-note">Checking your Lucky Spin access…</p>
+            ) : spinAllowed ? (
+              <p className="card-note">You are selected to spin. Prize labels and availability are managed by SYP ON CAFÉ.</p>
+            ) : (
+              <p className="card-note">Lucky Spin is currently unavailable for this account. The admin may enable all members or select specific KaSYP members.</p>
+            )}
+            {spinSettings && <p className="member-demo-note"><b>{spinCount}</b> of <b>{spinSettings.max_spins_per_member}</b> spin(s) used • Minimum <b>{spinSettings.minimum_stamps}</b> stamp(s)</p>}
           </article>
 
           <article className="member-card rewards-panel">
-  <CardTitle
-    eyebrow="REWARD CENTER"
-    title="Your Reward Wallet"
-    action={`${member.rewards.filter(r=>r.status==="available").length} Available`}
-  />
             <CardTitle eyebrow="AVAILABLE REWARDS" title="Your Reward Wallet" action={`${member.rewards.filter(item => item.status === "available").length} available`} />
             {member.rewards.slice(0, 5).map(reward => (
               <div className={`reward-item ${reward.status === "available" ? "active" : ""}`} key={reward.id}>

@@ -13,6 +13,46 @@ import ProtectedRoute from "../components/ProtectedRoute";
 
 type Temperature = "iced" | "hot" | "regular";
 
+type SpinAccessMode = "off" | "all" | "selected";
+
+type SpinSettings = {
+  id: number;
+  enabled: boolean;
+  access_mode: SpinAccessMode;
+  force_try_again: boolean;
+  max_spins_per_member: number;
+  minimum_stamps: number;
+};
+
+type SpinPrize = {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  weight: number;
+  active: boolean;
+  sort_order: number;
+  is_try_again: boolean;
+};
+
+type SpinMember = {
+  member_code: string;
+  name: string;
+  mobile: string;
+  stamps: number;
+  enabled: boolean;
+};
+
+const defaultSpinSettings: SpinSettings = {
+  id: 1,
+  enabled: true,
+  access_mode: "selected",
+  force_try_again: true,
+  max_spins_per_member: 1,
+  minimum_stamps: 0,
+};
+
+
 type StoreStatus = "open" | "busy" | "closing_early" | "temporarily_closed" | "closed";
 
 type StoreSettings = {
@@ -507,6 +547,21 @@ export default function AdminPage() {
   const [savingStoreSettings, setSavingStoreSettings] = useState(false);
   const [storeSettingsNotice, setStoreSettingsNotice] = useState("");
 
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [spinSettings, setSpinSettings] = useState<SpinSettings>(defaultSpinSettings);
+  const [spinPrizes, setSpinPrizes] = useState<SpinPrize[]>([]);
+  const [spinMembers, setSpinMembers] = useState<SpinMember[]>([]);
+  const [spinMemberSearch, setSpinMemberSearch] = useState("");
+  const [spinLoading, setSpinLoading] = useState(true);
+  const [spinSaving, setSpinSaving] = useState(false);
+  const [spinNotice, setSpinNotice] = useState("");
+  const [newPrize, setNewPrize] = useState({
+    title: "",
+    description: "",
+    icon: "🎁",
+    weight: 1,
+  });
+
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [updatingOrderId, setUpdatingOrderId] =
@@ -609,6 +664,165 @@ export default function AdminPage() {
 
     return () => { void supabase.removeChannel(channel); };
   }, [loadStoreSettings]);
+
+  const loadSpinAdmin = useCallback(async () => {
+    setSpinLoading(true);
+    try {
+      const [settingsResult, prizesResult, membersResult, accessResult] = await Promise.all([
+        supabase.from("spin_settings").select("*").eq("id", 1).maybeSingle(),
+        supabase.from("spin_prizes").select("*").order("sort_order", { ascending: true }),
+        supabase.from("loyalty_members").select("member_code,name,mobile,stamps").order("name", { ascending: true }),
+        supabase.from("spin_member_access").select("member_code,enabled"),
+      ]);
+
+      if (settingsResult.error) throw settingsResult.error;
+      if (prizesResult.error) throw prizesResult.error;
+      if (membersResult.error) throw membersResult.error;
+      if (accessResult.error) throw accessResult.error;
+
+      if (settingsResult.data) {
+        setSpinSettings({
+          ...(settingsResult.data as SpinSettings),
+          max_spins_per_member: Number(settingsResult.data.max_spins_per_member ?? 1),
+          minimum_stamps: Number(settingsResult.data.minimum_stamps ?? 0),
+        });
+      }
+
+      setSpinPrizes(
+        ((prizesResult.data ?? []) as SpinPrize[]).map((prize) => ({
+          ...prize,
+          weight: Number(prize.weight ?? 1),
+          sort_order: Number(prize.sort_order ?? 0),
+        })),
+      );
+
+      const accessMap = new Map(
+        (accessResult.data ?? []).map((row) => [String(row.member_code), Boolean(row.enabled)]),
+      );
+
+      setSpinMembers(
+        (membersResult.data ?? []).map((row) => ({
+          member_code: String(row.member_code),
+          name: String(row.name || "Unnamed member"),
+          mobile: String(row.mobile || ""),
+          stamps: Number(row.stamps ?? 0),
+          enabled: accessMap.get(String(row.member_code)) ?? false,
+        })),
+      );
+    } catch (error) {
+  console.error(
+    "Unable to load spin controls:",
+    JSON.stringify(error, null, 2),
+  );
+
+  const message =
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error
+      ? String(error.message)
+      : "Unable to load spin controls.";
+
+  setErrorMessage(message);
+      setErrorMessage(error instanceof Error ? error.message : "Unable to load spin controls.");
+    } finally {
+      setSpinLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadSpinAdmin();
+  }, [loadSpinAdmin]);
+
+  async function saveSpinSettings() {
+    setSpinSaving(true);
+    setSpinNotice("");
+    try {
+      const { data, error } = await supabase
+        .from("spin_settings")
+        .upsert({
+          ...spinSettings,
+          id: 1,
+          max_spins_per_member: Math.max(1, Number(spinSettings.max_spins_per_member || 1)),
+          minimum_stamps: Math.max(0, Number(spinSettings.minimum_stamps || 0)),
+          updated_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      setSpinSettings(data as SpinSettings);
+      setSpinNotice("Lucky Spin settings saved.");
+      window.setTimeout(() => setSpinNotice(""), 3500);
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "Unable to save spin settings.");
+    } finally {
+      setSpinSaving(false);
+    }
+  }
+
+  async function toggleSpinMember(memberCode: string, enabled: boolean) {
+    setSpinMembers((current) => current.map((member) => member.member_code === memberCode ? { ...member, enabled } : member));
+    const { error } = await supabase.from("spin_member_access").upsert({
+      member_code: memberCode,
+      enabled,
+      updated_at: new Date().toISOString(),
+    });
+    if (error) {
+      setErrorMessage(error.message);
+      void loadSpinAdmin();
+    }
+  }
+
+  async function updateSpinPrize(prize: SpinPrize, patch: Partial<SpinPrize>) {
+    const next = { ...prize, ...patch };
+    setSpinPrizes((current) => current.map((item) => item.id === prize.id ? next : item));
+    const { error } = await supabase.from("spin_prizes").update({
+      title: next.title,
+      description: next.description,
+      icon: next.icon,
+      weight: Math.max(0, Number(next.weight || 0)),
+      active: next.active,
+      sort_order: next.sort_order,
+      is_try_again: next.is_try_again,
+      updated_at: new Date().toISOString(),
+    }).eq("id", prize.id);
+    if (error) {
+      setErrorMessage(error.message);
+      void loadSpinAdmin();
+    }
+  }
+
+  async function addSpinPrize() {
+    if (!newPrize.title.trim()) {
+      setErrorMessage("Enter a prize title first.");
+      return;
+    }
+    const { error } = await supabase.from("spin_prizes").insert({
+      title: newPrize.title.trim(),
+      description: newPrize.description.trim(),
+      icon: newPrize.icon.trim() || "🎁",
+      weight: Math.max(0, Number(newPrize.weight || 1)),
+      active: true,
+      sort_order: spinPrizes.length + 1,
+      is_try_again: false,
+    });
+    if (error) {
+      setErrorMessage(error.message);
+      return;
+    }
+    setNewPrize({ title: "", description: "", icon: "🎁", weight: 1 });
+    await loadSpinAdmin();
+  }
+
+  async function deleteSpinPrize(prize: SpinPrize) {
+    if (prize.is_try_again) {
+      setErrorMessage("The Try Again segment cannot be deleted. You may disable it only after another Try Again segment exists.");
+      return;
+    }
+    if (!window.confirm(`Delete prize “${prize.title}”?`)) return;
+    const { error } = await supabase.from("spin_prizes").delete().eq("id", prize.id);
+    if (error) setErrorMessage(error.message);
+    else setSpinPrizes((current) => current.filter((item) => item.id !== prize.id));
+  }
 
   const loadOrders = useCallback(async (silent = false) => {
     if (silent) {
@@ -1302,7 +1516,54 @@ export default function AdminPage() {
   return (
     <ProtectedRoute>
       <main className="min-h-screen bg-[#080808] text-white">
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-black/90 backdrop-blur">
+        <button
+          type="button"
+          onClick={() => setMobileSidebarOpen(true)}
+          className="fixed left-4 top-4 z-[70] grid h-11 w-11 place-items-center rounded-xl border border-amber-400/30 bg-black/90 text-xl text-amber-300 shadow-xl md:hidden"
+          aria-label="Open admin menu"
+        >
+          ☰
+        </button>
+
+        {mobileSidebarOpen && (
+          <button
+            type="button"
+            className="fixed inset-0 z-[55] bg-black/75 md:hidden"
+            onClick={() => setMobileSidebarOpen(false)}
+            aria-label="Close admin menu overlay"
+          />
+        )}
+
+        <aside className={`fixed inset-y-0 left-0 z-[60] w-72 border-r border-amber-400/15 bg-[#090b09] p-5 transition-transform duration-300 md:translate-x-0 ${mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
+          <div className="flex items-center justify-between border-b border-white/10 pb-5">
+            <Link href="/admin" className="flex items-center gap-3" onClick={() => setMobileSidebarOpen(false)}>
+              <span className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-amber-300 to-amber-700 font-black text-black">S</span>
+              <span><b className="block">SYP ON CAFÉ</b><small className="text-[10px] tracking-[0.2em] text-amber-400">ADMIN PANEL</small></span>
+            </Link>
+            <button type="button" className="text-neutral-400 md:hidden" onClick={() => setMobileSidebarOpen(false)}>✕</button>
+          </div>
+
+          <nav className="mt-6 grid gap-2 text-sm">
+            <a href="#dashboard" onClick={() => setMobileSidebarOpen(false)} className="rounded-xl bg-amber-400 px-4 py-3 font-black text-black">▦ Dashboard</a>
+            <a href="#orders" onClick={() => setMobileSidebarOpen(false)} className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300">🧾 Live Orders</a>
+            <a href="#store-control" onClick={() => setMobileSidebarOpen(false)} className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300">🏪 Store Settings</a>
+            <a href="#spin-wheel" onClick={() => setMobileSidebarOpen(false)} className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300">🎡 Spin the Wheel</a>
+            <Link href="/admin/home-media" onClick={() => setMobileSidebarOpen(false)} className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300">▣ Home Media</Link>
+            <Link href="/admin/reviews" onClick={() => setMobileSidebarOpen(false)} className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300">★ Reviews</Link>
+            <Link href="/admin/community" onClick={() => setMobileSidebarOpen(false)} className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300">☕ Community</Link>
+            <Link href="/admin/inventory" onClick={() => setMobileSidebarOpen(false)} className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300">▤ Inventory</Link>
+            <Link href="/admin/analytics" onClick={() => setMobileSidebarOpen(false)} className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300">▥ Analytics</Link>
+            <Link href="/admin/crm" onClick={() => setMobileSidebarOpen(false)} className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300">◎ Customer CRM</Link>
+          </nav>
+
+          <div className="absolute bottom-5 left-5 right-5 grid gap-2">
+            <Link href="/menu" className="rounded-xl border border-amber-400/30 px-4 py-3 text-center text-sm font-bold text-amber-300">Open Customer Menu</Link>
+            <button type="button" onClick={() => void handleLogout()} className="rounded-xl border border-red-500/25 px-4 py-3 text-sm font-bold text-red-300">Logout</button>
+          </div>
+        </aside>
+
+        <div className="min-w-0 md:pl-72">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-black/90 pl-16 backdrop-blur md:pl-0">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-5 py-4">
           <div>
             <p className="font-bold">SYP ON CAFÉ ADMIN</p>
@@ -1434,8 +1695,111 @@ export default function AdminPage() {
         </div>
       )}
 
-      <div className="mx-auto max-w-7xl px-5 py-8">
-        <section className="mb-8 rounded-3xl border border-amber-400/20 bg-neutral-950 p-6">
+      <div id="dashboard" className="mx-auto max-w-7xl px-4 py-6 sm:px-5 sm:py-8">
+
+        <section id="spin-wheel" className="mb-8 rounded-3xl border border-amber-400/20 bg-neutral-950 p-4 sm:p-6">
+          <div className="flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-amber-400">🎡 Lucky Spin Control</p>
+              <h2 className="mt-2 text-2xl font-black">Choose who can spin</h2>
+              <p className="mt-2 max-w-2xl text-sm text-neutral-500">Turn it on for everyone, selected members only, or disable it completely. Real prize labels are editable below.</p>
+            </div>
+            <span className={spinSettings.enabled && spinSettings.access_mode !== "off" ? "rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm font-bold text-emerald-300" : "rounded-full border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm font-bold text-red-300"}>
+              {spinSettings.enabled && spinSettings.access_mode !== "off" ? "● Spin Active" : "● Spin Off"}
+            </span>
+          </div>
+
+          {spinLoading ? (
+            <div className="py-12 text-center text-neutral-500">Loading Lucky Spin controls…</div>
+          ) : (
+            <>
+              <div className="mt-5 grid gap-4 lg:grid-cols-3">
+                {([
+                  ["off", "Off for Everyone", "Nobody can spin."],
+                  ["all", "All Members", "Every logged-in member can spin."],
+                  ["selected", "Selected Members", "Only members enabled below can spin."],
+                ] as const).map(([mode, label, note]) => (
+                  <button key={mode} type="button" onClick={() => setSpinSettings((current) => ({ ...current, enabled: mode !== "off", access_mode: mode }))} className={spinSettings.access_mode === mode ? "rounded-2xl border border-amber-400 bg-amber-400/10 p-4 text-left" : "rounded-2xl border border-white/10 bg-black p-4 text-left hover:border-amber-400/40"}>
+                    <b className={spinSettings.access_mode === mode ? "text-amber-300" : "text-white"}>{label}</b>
+                    <small className="mt-2 block text-neutral-500">{note}</small>
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-5 grid gap-4 md:grid-cols-3">
+                <label className="rounded-2xl border border-white/10 bg-black p-4">
+                  <span className="text-sm font-bold">Maximum spins per member</span>
+                  <input type="number" min="1" value={spinSettings.max_spins_per_member} onChange={(event) => setSpinSettings((current) => ({ ...current, max_spins_per_member: Number(event.target.value) }))} className="mt-3 w-full rounded-xl border border-white/10 bg-neutral-950 px-4 py-3 outline-none focus:border-amber-400" />
+                </label>
+                <label className="rounded-2xl border border-white/10 bg-black p-4">
+                  <span className="text-sm font-bold">Minimum stamps required</span>
+                  <input type="number" min="0" value={spinSettings.minimum_stamps} onChange={(event) => setSpinSettings((current) => ({ ...current, minimum_stamps: Number(event.target.value) }))} className="mt-3 w-full rounded-xl border border-white/10 bg-neutral-950 px-4 py-3 outline-none focus:border-amber-400" />
+                </label>
+                <label className="flex items-center justify-between rounded-2xl border border-amber-400/25 bg-amber-400/5 p-4">
+                  <span><b className="block">Force Try Again</b><small className="mt-1 block text-neutral-500">Keep this ON while testing. Prize names still appear, but every result is Try Again.</small></span>
+                  <input type="checkbox" checked={spinSettings.force_try_again} onChange={(event) => setSpinSettings((current) => ({ ...current, force_try_again: event.target.checked }))} className="h-5 w-5" />
+                </label>
+              </div>
+
+              <div className="mt-5 flex flex-wrap items-center gap-3">
+                <button type="button" onClick={() => void saveSpinSettings()} disabled={spinSaving} className="rounded-full bg-amber-400 px-6 py-3 font-black text-black disabled:opacity-50">{spinSaving ? "Saving…" : "Save Spin Settings"}</button>
+                {spinNotice && <span className="text-sm font-bold text-emerald-300">✓ {spinNotice}</span>}
+              </div>
+
+              {spinSettings.access_mode === "selected" && (
+                <div className="mt-8 rounded-2xl border border-white/10 bg-black p-4 sm:p-5">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div><h3 className="font-black">Selected member access</h3><p className="mt-1 text-sm text-neutral-500">Search by name, mobile, or SYP member ID.</p></div>
+                    <input value={spinMemberSearch} onChange={(event) => setSpinMemberSearch(event.target.value)} placeholder="Search member…" className="w-full rounded-xl border border-white/10 bg-neutral-950 px-4 py-3 outline-none focus:border-amber-400 sm:max-w-sm" />
+                  </div>
+                  <div className="mt-4 grid max-h-[430px] gap-2 overflow-y-auto pr-1">
+                    {spinMembers.filter((member) => {
+                      const query = spinMemberSearch.trim().toLowerCase();
+                      return !query || member.name.toLowerCase().includes(query) || member.mobile.includes(query) || member.member_code.toLowerCase().includes(query);
+                    }).map((member) => (
+                      <div key={member.member_code} className="flex flex-col gap-3 rounded-xl border border-white/10 bg-neutral-950 p-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div><b>{member.name}</b><small className="mt-1 block text-neutral-500">{member.member_code} · {member.mobile} · {member.stamps}/10 stamps</small></div>
+                        <button type="button" onClick={() => void toggleSpinMember(member.member_code, !member.enabled)} className={member.enabled ? "rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm font-bold text-emerald-300" : "rounded-full border border-white/15 px-4 py-2 text-sm font-bold text-neutral-400"}>{member.enabled ? "✓ Can Spin" : "Enable Spin"}</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="mt-8 rounded-2xl border border-white/10 bg-black p-4 sm:p-5">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><div><h3 className="font-black">Wheel prize segments</h3><p className="mt-1 text-sm text-neutral-500">Edit labels, icons, chances, and active status. Keep Force Try Again ON until launch.</p></div><span className="rounded-full border border-amber-400/25 px-3 py-2 text-xs font-bold text-amber-300">{spinPrizes.filter((prize) => prize.active).length} active</span></div>
+                <div className="mt-4 grid gap-3">
+                  {spinPrizes.map((prize) => (
+                    <div key={prize.id} className="grid gap-3 rounded-xl border border-white/10 bg-neutral-950 p-3 md:grid-cols-[70px_1fr_1fr_90px_auto] md:items-center">
+                      <input value={prize.icon} onChange={(event) => void updateSpinPrize(prize, { icon: event.target.value })} className="w-full rounded-lg border border-white/10 bg-black px-3 py-2 text-center" aria-label="Prize icon" />
+                      <input value={prize.title} onChange={(event) => setSpinPrizes((current) => current.map((item) => item.id === prize.id ? { ...item, title: event.target.value } : item))} onBlur={() => void updateSpinPrize(prize, { title: spinPrizes.find((item) => item.id === prize.id)?.title || prize.title })} className="w-full rounded-lg border border-white/10 bg-black px-3 py-2" />
+                      <input value={prize.description} onChange={(event) => setSpinPrizes((current) => current.map((item) => item.id === prize.id ? { ...item, description: event.target.value } : item))} onBlur={() => void updateSpinPrize(prize, { description: spinPrizes.find((item) => item.id === prize.id)?.description || "" })} placeholder="Description" className="w-full rounded-lg border border-white/10 bg-black px-3 py-2" />
+                      <input type="number" min="0" value={prize.weight} onChange={(event) => void updateSpinPrize(prize, { weight: Number(event.target.value) })} className="w-full rounded-lg border border-white/10 bg-black px-3 py-2" aria-label="Prize weight" />
+                      <div className="flex flex-wrap gap-2 md:justify-end">
+                        <button type="button" onClick={() => void updateSpinPrize(prize, { active: !prize.active })} className={prize.active ? "rounded-lg bg-emerald-500/15 px-3 py-2 text-xs font-bold text-emerald-300" : "rounded-lg bg-white/5 px-3 py-2 text-xs font-bold text-neutral-500"}>{prize.active ? "Active" : "Inactive"}</button>
+                        {!prize.is_try_again && <button type="button" onClick={() => void deleteSpinPrize(prize)} className="rounded-lg bg-red-500/10 px-3 py-2 text-xs font-bold text-red-300">Delete</button>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 grid gap-3 rounded-xl border border-dashed border-amber-400/25 p-3 md:grid-cols-[70px_1fr_1fr_90px_auto]">
+                  <input value={newPrize.icon} onChange={(event) => setNewPrize((current) => ({ ...current, icon: event.target.value }))} className="rounded-lg border border-white/10 bg-neutral-950 px-3 py-2 text-center" />
+                  <input value={newPrize.title} onChange={(event) => setNewPrize((current) => ({ ...current, title: event.target.value }))} placeholder="New prize title" className="rounded-lg border border-white/10 bg-neutral-950 px-3 py-2" />
+                  <input value={newPrize.description} onChange={(event) => setNewPrize((current) => ({ ...current, description: event.target.value }))} placeholder="Description" className="rounded-lg border border-white/10 bg-neutral-950 px-3 py-2" />
+                  <input type="number" min="0" value={newPrize.weight} onChange={(event) => setNewPrize((current) => ({ ...current, weight: Number(event.target.value) }))} className="rounded-lg border border-white/10 bg-neutral-950 px-3 py-2" />
+                  <button type="button" onClick={() => void addSpinPrize()} className="rounded-lg bg-amber-400 px-4 py-2 text-sm font-black text-black">+ Add Prize</button>
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-amber-400/20 bg-gradient-to-r from-amber-400/10 to-transparent p-5 sm:flex-row sm:items-center sm:justify-between">
+                <div><b>Home Media Manager</b><p className="mt-1 text-sm text-neutral-500">Manage homepage albums, banners, claimed rewards, and featured media.</p></div>
+                <Link href="/admin/home-media" className="rounded-full bg-amber-400 px-5 py-3 text-center text-sm font-black text-black">Open Home Media</Link>
+              </div>
+            </>
+          )}
+        </section>
+
+        <section id="store-control" className="mb-8 rounded-3xl border border-amber-400/20 bg-neutral-950 p-4 sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.22em] text-amber-400">🏪 Store Control</p>
@@ -1533,7 +1897,7 @@ export default function AdminPage() {
           />
         </section>
 
-        <section className="mt-8">
+        <section id="orders" className="mt-8">
           <div className="flex flex-col gap-5">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
@@ -2046,6 +2410,7 @@ export default function AdminPage() {
           )}
         </section>
       </div>
+        </div>
       </main>
     </ProtectedRoute>
   );
