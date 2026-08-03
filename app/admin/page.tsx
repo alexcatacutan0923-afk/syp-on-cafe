@@ -1543,23 +1543,120 @@ export default function AdminPage() {
             <button type="button" className="text-neutral-400 md:hidden" onClick={() => setMobileSidebarOpen(false)}>✕</button>
           </div>
 
-          <nav className="mt-6 grid gap-2 text-sm">
-            <a href="#dashboard" onClick={() => setMobileSidebarOpen(false)} className="rounded-xl bg-amber-400 px-4 py-3 font-black text-black">▦ Dashboard</a>
-            <a href="#orders" onClick={() => setMobileSidebarOpen(false)} className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300">🧾 Live Orders</a>
-            <a href="#store-control" onClick={() => setMobileSidebarOpen(false)} className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300">🏪 Store Settings</a>
-            <a href="#spin-wheel" onClick={() => setMobileSidebarOpen(false)} className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300">🎡 Spin the Wheel</a>
-            <Link href="/admin/home-media" onClick={() => setMobileSidebarOpen(false)} className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300">▣ Home Media</Link>
-            <Link href="/admin/reviews" onClick={() => setMobileSidebarOpen(false)} className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300">★ Reviews</Link>
-            <Link href="/admin/community" onClick={() => setMobileSidebarOpen(false)} className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300">☕ Community</Link>
-            <Link href="/admin/inventory" onClick={() => setMobileSidebarOpen(false)} className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300">▤ Inventory</Link>
-            <Link href="/admin/analytics" onClick={() => setMobileSidebarOpen(false)} className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300">▥ Analytics</Link>
-            <Link href="/admin/crm" onClick={() => setMobileSidebarOpen(false)} className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300">◎ Customer CRM</Link>
-          </nav>
+          <nav className="grid gap-1 overflow-y-auto px-3 pb-40">
+  <Link
+    href="/admin"
+    onClick={() => setMobileSidebarOpen(false)}
+    className="rounded-xl bg-amber-400 px-4 py-3 font-black text-black"
+  >
+    ▦ Dashboard
+  </Link>
 
-          <div className="absolute bottom-5 left-5 right-5 grid gap-2">
-            <Link href="/menu" className="rounded-xl border border-amber-400/30 px-4 py-3 text-center text-sm font-bold text-amber-300">Open Customer Menu</Link>
-            <button type="button" onClick={() => void handleLogout()} className="rounded-xl border border-red-500/25 px-4 py-3 text-sm font-bold text-red-300">Logout</button>
-          </div>
+  <Link
+    href="/admin#orders"
+    onClick={() => setMobileSidebarOpen(false)}
+    className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300"
+  >
+    🧾 Live Orders
+  </Link>
+
+  <Link
+    href="/admin#store-settings"
+    onClick={() => setMobileSidebarOpen(false)}
+    className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300"
+  >
+    🏪 Store Settings
+  </Link>
+
+  <Link
+    href="/admin#spin"
+    onClick={() => setMobileSidebarOpen(false)}
+    className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300"
+  >
+    🎡 Spin the Wheel
+  </Link>
+
+  <Link
+    href="/admin/home-media"
+    onClick={() => setMobileSidebarOpen(false)}
+    className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300"
+  >
+    ▣ Home Media
+  </Link>
+
+  <Link
+    href="/admin/tv-standby"
+    onClick={() => setMobileSidebarOpen(false)}
+    className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300"
+  >
+    📺 TV Standby
+  </Link>
+
+  <Link
+    href="/admin/tv-media"
+    onClick={() => setMobileSidebarOpen(false)}
+    className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300"
+  >
+    🎞 TV Media Library
+  </Link>
+
+  <Link
+    href="/admin/reviews"
+    onClick={() => setMobileSidebarOpen(false)}
+    className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300"
+  >
+    ★ Reviews
+  </Link>
+
+  <Link
+    href="/admin/community"
+    onClick={() => setMobileSidebarOpen(false)}
+    className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300"
+  >
+    ☕ Community
+  </Link>
+
+  <Link
+    href="/admin/inventory"
+    onClick={() => setMobileSidebarOpen(false)}
+    className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300"
+  >
+    ▤ Inventory
+  </Link>
+
+  <Link
+    href="/admin/analytics"
+    onClick={() => setMobileSidebarOpen(false)}
+    className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300"
+  >
+    ▥ Analytics
+  </Link>
+
+  <Link
+    href="/admin/crm"
+    onClick={() => setMobileSidebarOpen(false)}
+    className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300"
+  >
+    ◎ Customer CRM
+  </Link>
+</nav>
+
+<div className="absolute bottom-5 left-5 right-5 grid gap-2">
+  <Link
+    href="/menu"
+    className="rounded-xl border border-amber-400/30 px-4 py-3 text-center text-sm font-bold text-amber-300 hover:bg-amber-400/10"
+  >
+    Open Customer Menu
+  </Link>
+
+  <button
+    type="button"
+    onClick={() => void handleLogout()}
+    className="rounded-xl border border-red-500/30 px-4 py-3 text-sm font-bold text-red-300 hover:bg-red-500/10"
+  >
+    Logout
+  </button>
+</div>
         </aside>
 
         <div className="min-w-0 md:pl-72">

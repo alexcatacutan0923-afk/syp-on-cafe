@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import "./customer-display.css";
+import TvStandby from "./TvStandby";
 
 type LiveItem = {
   name: string;
@@ -97,6 +98,10 @@ export default function CustomerDisplayPage() {
   const memberUrl = typeof window !== "undefined" && data.memberCode
     ? `${window.location.origin}/member-login?identity=${encodeURIComponent(data.memberCode)}&source=customer-display&receipt=${encodeURIComponent(data.receiptNo || "")}`
     : "/member-login";
+
+  if (data.mode !== "thank-you" && data.items.length === 0) {
+    return <TvStandby now={now} />;
+  }
 
   return (
     <main className="customer-screen">
