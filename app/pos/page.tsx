@@ -5,6 +5,8 @@ import "./pos.css";
 import { chooseReceiptQuote, getSeasonalReceiptTheme } from "@/lib/receipt-quotes";
 import { supabase } from "@/lib/supabase";
 import { addCloudStamp, claimCloudFreeDrink, CloudMember, listCloudMembers, searchCloudMembers } from "@/lib/member-cloud";
+import ActiveOrdersPanel from "./ActiveOrdersPanel";
+import "./active-orders.css";
 
 type Category = "All" | "Coffee" | "Matcha" | "Soda" | "Milky" | "Fries" | "Signature" | "ADDS";
 type Payment = "Cash" | "GCash" | "Maya";
@@ -962,6 +964,33 @@ export default function PosPage() {
         KITCHEN_ORDERS_KEY,
         JSON.stringify([kitchenOrder, ...existingOrders].slice(0, 100)),
       );
+
+      // Persist the paid preparation ticket in Supabase so it remains after
+      // refresh/restart and updates the extended customer display in realtime.
+      const { error: preparationQueueError } = await supabase
+        .from("pos_preparation_queue")
+        .insert({
+          source_order_id: String(savedSale.order_id),
+          receipt_no: receiptNo,
+          queue_no: queueNo,
+          customer_name:
+            memberForReceipt?.name || customerQuery.trim() || "WALK-IN CUSTOMER",
+          member_code: memberForReceipt?.member_code || null,
+          payment_method: payment.toLowerCase(),
+          total,
+          status: "waiting",
+          items: orderItems,
+          notes: orderNote.trim() || null,
+          cashier: cashierName.trim() || "Alex",
+          paid_at: completedAt.toISOString(),
+        });
+
+      if (preparationQueueError) {
+        console.error(
+          "Sale saved, but preparation ticket failed:",
+          preparationQueueError,
+        );
+      }
       // Lock the customer display before opening the print dialog so the
       // THANK YOU screen appears immediately after a successful checkout.
       holdThankYouRef.current = true;
@@ -1038,20 +1067,44 @@ export default function PosPage() {
     <main className="pos-shell">
       {notice && <div className="pos-toast" role="status">✓ {notice}</div>}
       {liveOrdersOpen && (
-        <div className="live-orders-overlay" role="dialog" aria-modal="true" aria-label="Live online orders">
-          <section className="live-orders-window">
-            <header>
-              <div><span>ONLINE ORDER CENTER</span><strong>Live Orders</strong><small>Manage orders without leaving the POS.</small></div>
-              <div className="live-orders-window-actions">
-                <button onClick={() => { const frame = document.getElementById("live-orders-frame") as HTMLIFrameElement | null; if (frame) frame.src = frame.src; }}>↻ Refresh</button>
-                <a href="/admin" target="_blank" rel="noreferrer">Open full screen</a>
-                <button className="close-live-orders" onClick={() => setLiveOrdersOpen(false)} aria-label="Close live orders">×</button>
-              </div>
-            </header>
-            <iframe id="live-orders-frame" src="/admin" title="SYP ON CAFÉ Live Orders" />
-          </section>
+  <div
+    className="live-orders-overlay"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Active paid orders"
+  >
+    <section className="live-orders-window preparation-orders-window">
+      <header>
+        <div>
+          <span>POS PREPARATION CENTER</span>
+          <strong>Active Paid Orders</strong>
+          <small>
+            Start preparing, mark ready, then mark served from this POS.
+          </small>
         </div>
-      )}
+
+        <div className="live-orders-window-actions">
+          <a href="/admin" target="_blank" rel="noreferrer">
+            Open Admin
+          </a>
+
+          <button
+            className="close-live-orders"
+            type="button"
+            onClick={() => setLiveOrdersOpen(false)}
+            aria-label="Close active orders"
+          >
+            ×
+          </button>
+        </div>
+      </header>
+
+      <div className="preparation-orders-scroll">
+        <ActiveOrdersPanel />
+      </div>
+    </section>
+  </div>
+)}
       {onlineOrderAlert && (
         <div className="online-order-alert" role="alert">
           <div><span>NEW ONLINE ORDER</span><strong>{onlineOrderAlert}</strong><small>Receipt sent to printer. Open Live Orders to accept.</small></div>
@@ -1406,6 +1459,8 @@ export default function PosPage() {
           </button>
         </aside>
       </section>
+
+      
 
       {selectedProduct && (
         <div className="customizer-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeCustomizer(); }}>

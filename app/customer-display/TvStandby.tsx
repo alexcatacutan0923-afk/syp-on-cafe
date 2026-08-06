@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import "./tv-standby.css";
 
@@ -49,6 +49,14 @@ type QueueOrder = {
   customer_name: string;
   queue_no?: string | null;
   status: string;
+};
+
+type NowServing = {
+  orderId: number;
+  queueLabel: string;
+  customerName: string;
+  orderType: string;
+  orderNumber: string;
 };
 
 type Review = {
@@ -154,9 +162,95 @@ export default function TvStandby({ now }: Props) {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [store, setStore] = useState<Store>({});
   const [mounted, setMounted] = useState(false);
+  const [transitioning, setTransitioning] = useState(false);
+  const [mediaError, setMediaError] = useState("");
+  const [fullscreen, setFullscreen] = useState(false);
+  const advanceLockRef = useRef(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const nowServingTimerRef = useRef<number | null>(null);
+  const [nowServing, setNowServing] = useState<NowServing | null>(null);
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  function playServingChime() {
+    try {
+      const AudioContextClass =
+        window.AudioContext ||
+        (window as typeof window & {
+          webkitAudioContext?: typeof AudioContext;
+        }).webkitAudioContext;
+
+      if (!AudioContextClass) return;
+
+      const context = new AudioContextClass();
+      const gain = context.createGain();
+      const first = context.createOscillator();
+      const second = context.createOscillator();
+
+      gain.gain.setValueAtTime(0.0001, context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.18, context.currentTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.75);
+
+      first.type = "sine";
+      first.frequency.setValueAtTime(880, context.currentTime);
+      first.frequency.setValueAtTime(1046.5, context.currentTime + 0.22);
+
+      second.type = "sine";
+      second.frequency.setValueAtTime(1318.5, context.currentTime + 0.26);
+
+      first.connect(gain);
+      second.connect(gain);
+      gain.connect(context.destination);
+
+      first.start(context.currentTime);
+      first.stop(context.currentTime + 0.5);
+      second.start(context.currentTime + 0.24);
+      second.stop(context.currentTime + 0.7);
+
+      window.setTimeout(() => void context.close(), 900);
+    } catch {
+      // Some TV browsers block sound until the page receives one user action.
+    }
+  }
+
+  function showNowServing(row: Record<string, unknown>) {
+    const orderId = Number(row.id || 0);
+    const orderNumber = clean(row.order_number) || `ORDER-${orderId}`;
+    const queueLabel =
+      clean(row.queue_no) || orderNumber.split("-").slice(-1)[0] || orderNumber;
+
+    if (nowServingTimerRef.current) {
+      window.clearTimeout(nowServingTimerRef.current);
+    }
+
+    setNowServing({
+      orderId,
+      queueLabel,
+      customerName: clean(row.customer_name) || "KaSYP",
+      orderType: clean(row.order_type || row.order_source || "pickup"),
+      orderNumber,
+    });
+
+    videoRef.current?.pause();
+    playServingChime();
+
+    nowServingTimerRef.current = window.setTimeout(() => {
+      setNowServing(null);
+      nowServingTimerRef.current = null;
+
+      if (videoRef.current && slide.video_url) {
+        void videoRef.current.play().catch(() => undefined);
+      }
+    }, 8000);
+  }
+
+
+  useEffect(() => {
+    const sync = () => setFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", sync);
+    return () => document.removeEventListener("fullscreenchange", sync);
   }, []);
 
   useEffect(() => {
@@ -299,43 +393,90 @@ export default function TvStandby({ now }: Props) {
       .on(
         "postgres_changes",
         {
-          event: "*",
+          event: "INSERT",
           schema: "public",
           table: "orders",
         },
-        () => void load(),
+        (payload) => {
+          const row = payload.new as Record<string, unknown>;
+          if (clean(row.status).toLowerCase() === "ready") {
+            showNowServing(row);
+          }
+          void load();
+        },
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "orders",
+        },
+        (payload) => {
+          const next = payload.new as Record<string, unknown>;
+          const previous = payload.old as Record<string, unknown>;
+          const becameReady =
+            clean(next.status).toLowerCase() === "ready" &&
+            clean(previous.status).toLowerCase() !== "ready";
+
+          if (becameReady) {
+            showNowServing(next);
+          }
+
+          void load();
+        },
       )
       .subscribe();
 
     return () => {
       active = false;
       window.clearInterval(timer);
+      if (nowServingTimerRef.current) {
+        window.clearTimeout(nowServingTimerRef.current);
+      }
       void supabase.removeChannel(channel);
     };
   }, []);
 
   const slide =
     slides[index % Math.max(1, slides.length)] ?? fallback[0];
+  const nextSlide =
+    slides[(index + 1) % Math.max(1, slides.length)] ?? fallback[0];
+
+  function advanceSlide() {
+    if (advanceLockRef.current || slides.length <= 1) return;
+    advanceLockRef.current = true;
+    setTransitioning(true);
+    setMediaError("");
+    window.setTimeout(() => {
+      setIndex((current) => (current + 1) % Math.max(1, slides.length));
+      setTransitioning(false);
+      window.setTimeout(() => {
+        advanceLockRef.current = false;
+      }, 250);
+    }, 420);
+  }
 
   useEffect(() => {
-    if (!settings.enabled || !slide) return;
+    if (!settings.enabled || !slide || slide.video_url) return;
+    const timer = window.setTimeout(
+      advanceSlide,
+      Math.max(5, Number(slide.duration_seconds || settings.slide_seconds)) * 1000,
+    );
+    return () => window.clearTimeout(timer);
+  }, [slide.id, slide.video_url, slide.duration_seconds, slides.length, settings.enabled, settings.slide_seconds]);
 
-    const timer = window.setTimeout(() => {
-      setIndex(
-        (current) =>
-          (current + 1) % Math.max(1, slides.length),
-      );
-    }, Math.max(5, Number(slide.duration_seconds || settings.slide_seconds)) * 1000);
-
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [
-    slide,
-    slides.length,
-    settings.enabled,
-    settings.slide_seconds,
-  ]);
+  useEffect(() => {
+    if (!slide.video_url || !videoRef.current) return;
+    const video = videoRef.current;
+    video.currentTime = 0;
+    video.muted = true;
+    const playPromise = video.play();
+    playPromise?.catch(() => {
+      setMediaError("Video autoplay was blocked. Skipping...");
+      window.setTimeout(advanceSlide, 1500);
+    });
+  }, [slide.id, slide.video_url]);
 
   const review = useMemo<Review>(
     () =>
@@ -361,6 +502,15 @@ export default function TvStandby({ now }: Props) {
       ? `${window.location.origin}/menu`
       : "";
 
+  async function toggleFullscreen() {
+    try {
+      if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+      else await document.exitFullscreen();
+    } catch {
+      setMediaError("Fullscreen is unavailable in this browser.");
+    }
+  }
+
   const storeStatus =
     clean(store.store_status).toLowerCase() === "closed"
       ? "CLOSED"
@@ -373,6 +523,36 @@ export default function TvStandby({ now }: Props) {
 
   return (
     <main className="tv-standby">
+      <div className="tv-preload" aria-hidden="true">
+        {nextSlide.video_url ? (
+          <video src={nextSlide.video_url} preload="auto" muted />
+        ) : nextSlide.image_url ? (
+          <img src={nextSlide.image_url} alt="" />
+        ) : null}
+      </div>
+
+      {nowServing && (
+        <section className="tv-now-serving" role="status" aria-live="assertive">
+          <div className="tv-now-serving-rings" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </div>
+
+          <div className="tv-now-serving-card">
+            <div className="tv-serving-bell">🔔</div>
+            <span className="tv-serving-label">NOW SERVING</span>
+            <strong className="tv-serving-queue">{nowServing.queueLabel}</strong>
+            <h2>{nowServing.customerName}</h2>
+            <p>
+              {nowServing.orderType.replaceAll("_", " ")} · {nowServing.orderNumber}
+            </p>
+            <div className="tv-serving-ready">READY FOR PICKUP</div>
+            <small>Please claim your freshly prepared order. Thank you, KaSYP!</small>
+          </div>
+        </section>
+      )}
+
       <header className="tv-header">
         <div className="tv-brand">
           <img
@@ -393,6 +573,14 @@ export default function TvStandby({ now }: Props) {
               {storeStatus}
             </span>
           )}
+
+          <button
+            type="button"
+            onClick={() => void toggleFullscreen()}
+            className="tv-fullscreen-button"
+          >
+            {fullscreen ? "⤢ Exit" : "⛶ Fullscreen"}
+          </button>
 
           <div className="tv-clock">
             <b>
@@ -415,21 +603,31 @@ export default function TvStandby({ now }: Props) {
       </header>
 
       <section className="tv-layout">
-        <div className="tv-hero">
+        <div className={`tv-hero ${transitioning ? "is-transitioning" : ""}`}>
           {slide.video_url ? (
             <video
+              ref={videoRef}
               key={slide.id}
               src={slide.video_url}
               autoPlay
               muted
-              loop
               playsInline
+              preload="auto"
+              onEnded={advanceSlide}
+              onError={() => {
+                setMediaError("Unable to play this video. Skipping...");
+                window.setTimeout(advanceSlide, 1200);
+              }}
             />
           ) : slide.image_url ? (
             <img
               key={slide.id}
               src={slide.image_url}
               alt={slide.title}
+              onError={() => {
+                setMediaError("Unable to load this image. Skipping...");
+                window.setTimeout(advanceSlide, 1200);
+              }}
             />
           ) : (
             <div className="tv-gradient" />
@@ -444,6 +642,8 @@ export default function TvStandby({ now }: Props) {
             {slide.body && <p>{slide.body}</p>}
             {slide.badge && <b>{slide.badge}</b>}
           </div>
+
+          {mediaError && <div className="tv-media-error">{mediaError}</div>}
 
           <div className="tv-dots">
             {slides.map((item, slideIndex) => (
