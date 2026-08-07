@@ -19,19 +19,6 @@ type Settings = {
   footer_message: string;
 };
 
-type Slide = {
-  id: string;
-  title: string;
-  subtitle: string;
-  body: string;
-  badge: string;
-  image_url: string;
-  video_url: string;
-  duration_seconds: number;
-  active: boolean;
-  sort_order: number;
-};
-
 type MediaRow = {
   id: string;
   title: string;
@@ -43,24 +30,8 @@ type MediaRow = {
   sort_order: number;
 };
 
-type QueueOrder = {
-  id: number;
-  order_number: string;
-  customer_name: string;
-  queue_no?: string | null;
-  status: string;
-};
-
-type NowServing = {
-  orderId: number;
-  queueLabel: string;
-  customerName: string;
-  orderType: string;
-  orderNumber: string;
-};
-
 type Review = {
-  id: number | string;
+  id: string | number;
   customer_name?: string | null;
   name?: string | null;
   rating?: number | null;
@@ -69,183 +40,138 @@ type Review = {
 };
 
 type Store = {
-  store_status?: string;
-  announcement?: string;
-  closing_time?: string;
-  free_delivery?: boolean;
+  store_status?: string | null;
+  announcement?: string | null;
+  closing_time?: string | null;
+  free_delivery?: boolean | null;
 };
+
+type QueueItem = {
+  name?: string;
+  qty?: number;
+};
+
+type PreparationTicket = {
+  id: string;
+  queue_no: string;
+  customer_name: string;
+  status: "waiting" | "preparing" | "ready" | "served";
+  items: QueueItem[];
+  total?: number;
+  paid_at: string;
+};
+
+type OnlineOrder = {
+  id: number;
+  order_number: string;
+  customer_name: string;
+  queue_no?: string | null;
+  status: string;
+};
+
+type PriorityEvent = {
+  id: string;
+  event_type: "birthday" | "spin_winner" | "new_menu" | "lucky_queue" | "announcement";
+  title: string;
+  subtitle?: string | null;
+  body?: string | null;
+  person_name?: string | null;
+  reward?: string | null;
+  image_url?: string | null;
+  active: boolean;
+  priority: number;
+  duration_seconds: number;
+  starts_at?: string | null;
+  ends_at?: string | null;
+  created_at?: string | null;
+};
+
+type ProductStat = {
+  name: string;
+  qty: number;
+};
+
+type Scene =
+  | { id: string; type: "welcome"; duration: number }
+  | { id: string; type: "trending"; duration: number }
+  | { id: string; type: "promo"; duration: number }
+  | { id: string; type: "review"; duration: number }
+  | { id: string; type: "membership"; duration: number }
+  | { id: string; type: "order"; duration: number }
+  | { id: string; type: "fact"; duration: number }
+  | { id: string; type: "media"; duration: number; media: MediaRow };
 
 const defaults: Settings = {
   enabled: true,
-  slide_seconds: 10,
+  slide_seconds: 15,
   show_queue: true,
   show_reviews: true,
   show_membership: true,
   show_store_status: true,
   show_social: true,
-  footer_message: "Perfect weather for coffee.",
+  footer_message: "Good coffee. Good moments. Made for you.",
 };
 
-const fallback: Slide[] = [
-  {
-    id: "welcome",
-    title: "Good coffee. Good moments.",
-    subtitle: "WELCOME TO SYP ON CAFÉ",
-    body: "Street • Iced • Brewed",
-    badge: "OPEN DAILY • 5PM–4AM",
-    image_url: "",
-    video_url: "/videos/syp-cafe-background.mp4",
-    duration_seconds: 12,
-    active: true,
-    sort_order: 1,
-  },
-  {
-    id: "best",
-    title: "Tonight's favorites",
-    subtitle: "BEST SELLERS",
-    body: "Spanish Latte • Biscoff Matcha • SYP White Rush • Milo Dino",
-    badge: "MADE FRESH FOR EVERY ORDER",
-    image_url: "/brand/syp-logo-glow-v2.webp",
-    video_url: "",
-    duration_seconds: 11,
-    active: true,
-    sort_order: 2,
-  },
-  {
-    id: "member",
-    title: "Every sip gets you closer.",
-    subtitle: "KASYP DIGITAL MEMBERSHIP",
-    body:
-      "Earn stamps, unlock rewards, birthday treats, and selected Lucky Spin events.",
-    badge: "SCAN TO JOIN FREE",
-    image_url: "",
-    video_url: "",
-    duration_seconds: 12,
-    active: true,
-    sort_order: 3,
-  },
-  {
-    id: "late",
-    title: "Your late-night coffee stop.",
-    subtitle: "OPEN UNTIL 4AM",
-    body:
-      "Tambay, board games, Wi‑Fi, Netflix, YouTube, and freshly made drinks.",
-    badge: "APOLLO, ORANI, BATAAN",
-    image_url: "",
-    video_url: "/videos/syp-cafe-background.mp4",
-    duration_seconds: 12,
-    active: true,
-    sort_order: 4,
-  },
-  {
-    id: "local",
-    title: "Thank you for supporting local.",
-    subtitle: "MADE IN ORANI",
-    body:
-      "Every order helps our small café grow, improve, and serve more KaSYP moments.",
-    badge: "SYP ON CAFÉ",
-    image_url: "/brand/syp-logo-glow-v2.webp",
-    video_url: "",
-    duration_seconds: 10,
-    active: true,
-    sort_order: 5,
-  },
+const facts = [
+  "Espresso is concentrated coffee brewed by forcing hot water through finely ground coffee.",
+  "Matcha is stone-ground green tea traditionally whisked into water or milk.",
+  "Coffee aroma is created by hundreds of naturally occurring aromatic compounds.",
+  "Ice changes dilution as it melts, which is why balance matters in every iced drink.",
+  "Fresh grinding helps preserve the aroma released from roasted coffee beans.",
 ];
 
-const clean = (value: unknown) => String(value ?? "").trim();
+function clean(value: unknown) {
+  return String(value ?? "").trim();
+}
+
+function greeting(hour: number) {
+  if (hour < 12) return "GOOD MORNING";
+  if (hour < 18) return "GOOD AFTERNOON";
+  return "GOOD EVENING";
+}
+
+function normalizeQueue(value: string) {
+  const raw = clean(value).toUpperCase();
+  if (!raw) return "A-000";
+  if (/^[A-Z]-\d{3,}$/.test(raw)) return raw;
+
+  const letter = raw.match(/[A-Z]/)?.[0] || "A";
+  const digits = raw.replace(/\D/g, "");
+
+  return digits
+    ? `${letter}-${digits.slice(-3).padStart(3, "0")}`
+    : raw;
+}
+
+function isEventLive(event: PriorityEvent, now: Date) {
+  if (!event.active) return false;
+
+  const start = event.starts_at ? new Date(event.starts_at).getTime() : 0;
+  const end = event.ends_at ? new Date(event.ends_at).getTime() : Number.MAX_SAFE_INTEGER;
+  const current = now.getTime();
+
+  return current >= start && current <= end;
+}
 
 export default function TvStandby({ now }: Props) {
   const [settings, setSettings] = useState<Settings>(defaults);
-  const [slides, setSlides] = useState<Slide[]>(fallback);
-  const [index, setIndex] = useState(0);
-  const [queue, setQueue] = useState<QueueOrder[]>([]);
+  const [media, setMedia] = useState<MediaRow[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [store, setStore] = useState<Store>({});
+  const [ticketsToday, setTicketsToday] = useState<PreparationTicket[]>([]);
+  const [onlineQueue, setOnlineQueue] = useState<OnlineOrder[]>([]);
+  const [priorityEvents, setPriorityEvents] = useState<PriorityEvent[]>([]);
+  const [sceneIndex, setSceneIndex] = useState(0);
   const [mounted, setMounted] = useState(false);
-  const [transitioning, setTransitioning] = useState(false);
-  const [mediaError, setMediaError] = useState("");
   const [fullscreen, setFullscreen] = useState(false);
-  const advanceLockRef = useRef(false);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const nowServingTimerRef = useRef<number | null>(null);
-  const [nowServing, setNowServing] = useState<NowServing | null>(null);
+  const [connectionState, setConnectionState] = useState<"live" | "syncing">("syncing");
+  const [activePriorityEvent, setActivePriorityEvent] = useState<PriorityEvent | null>(null);
+  const [dismissedEventIds, setDismissedEventIds] = useState<string[]>([]);
+  const priorityTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  function playServingChime() {
-    try {
-      const AudioContextClass =
-        window.AudioContext ||
-        (window as typeof window & {
-          webkitAudioContext?: typeof AudioContext;
-        }).webkitAudioContext;
-
-      if (!AudioContextClass) return;
-
-      const context = new AudioContextClass();
-      const gain = context.createGain();
-      const first = context.createOscillator();
-      const second = context.createOscillator();
-
-      gain.gain.setValueAtTime(0.0001, context.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.18, context.currentTime + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.75);
-
-      first.type = "sine";
-      first.frequency.setValueAtTime(880, context.currentTime);
-      first.frequency.setValueAtTime(1046.5, context.currentTime + 0.22);
-
-      second.type = "sine";
-      second.frequency.setValueAtTime(1318.5, context.currentTime + 0.26);
-
-      first.connect(gain);
-      second.connect(gain);
-      gain.connect(context.destination);
-
-      first.start(context.currentTime);
-      first.stop(context.currentTime + 0.5);
-      second.start(context.currentTime + 0.24);
-      second.stop(context.currentTime + 0.7);
-
-      window.setTimeout(() => void context.close(), 900);
-    } catch {
-      // Some TV browsers block sound until the page receives one user action.
-    }
-  }
-
-  function showNowServing(row: Record<string, unknown>) {
-    const orderId = Number(row.id || 0);
-    const orderNumber = clean(row.order_number) || `ORDER-${orderId}`;
-    const queueLabel =
-      clean(row.queue_no) || orderNumber.split("-").slice(-1)[0] || orderNumber;
-
-    if (nowServingTimerRef.current) {
-      window.clearTimeout(nowServingTimerRef.current);
-    }
-
-    setNowServing({
-      orderId,
-      queueLabel,
-      customerName: clean(row.customer_name) || "KaSYP",
-      orderType: clean(row.order_type || row.order_source || "pickup"),
-      orderNumber,
-    });
-
-    videoRef.current?.pause();
-    playServingChime();
-
-    nowServingTimerRef.current = window.setTimeout(() => {
-      setNowServing(null);
-      nowServingTimerRef.current = null;
-
-      if (videoRef.current && slide.video_url) {
-        void videoRef.current.play().catch(() => undefined);
-      }
-    }, 8000);
-  }
-
 
   useEffect(() => {
     const sync = () => setFullscreen(Boolean(document.fullscreenElement));
@@ -257,12 +183,19 @@ export default function TvStandby({ now }: Props) {
     let active = true;
 
     async function load() {
+      setConnectionState("syncing");
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
       const [
         settingsResult,
         mediaResult,
-        queueResult,
         reviewsResult,
         storeResult,
+        prepResult,
+        onlineResult,
+        priorityResult,
       ] = await Promise.allSettled([
         supabase
           .from("tv_standby_settings")
@@ -277,7 +210,26 @@ export default function TvStandby({ now }: Props) {
           )
           .eq("active", true)
           .order("featured", { ascending: false })
-          .order("sort_order", { ascending: true }),
+          .order("sort_order", { ascending: true })
+          .limit(30),
+
+        supabase
+          .from("public_reviews")
+          .select("*")
+          .limit(20),
+
+        supabase
+          .from("store_settings")
+          .select("*")
+          .eq("id", 1)
+          .maybeSingle(),
+
+        supabase
+          .from("pos_preparation_queue")
+          .select("id,queue_no,customer_name,status,items,total,paid_at")
+          .gte("paid_at", today.toISOString())
+          .order("paid_at", { ascending: false })
+          .limit(200),
 
         supabase
           .from("orders")
@@ -286,13 +238,13 @@ export default function TvStandby({ now }: Props) {
           .order("created_at", { ascending: true })
           .limit(6),
 
-        supabase.from("public_reviews").select("*").limit(12),
-
         supabase
-          .from("store_settings")
+          .from("tv_priority_events")
           .select("*")
-          .eq("id", 1)
-          .maybeSingle(),
+          .eq("active", true)
+          .order("priority", { ascending: false })
+          .order("created_at", { ascending: false })
+          .limit(20),
       ]);
 
       if (!active) return;
@@ -310,42 +262,9 @@ export default function TvStandby({ now }: Props) {
 
       if (
         mediaResult.status === "fulfilled" &&
-        !mediaResult.value.error &&
-        Array.isArray(mediaResult.value.data)
+        !mediaResult.value.error
       ) {
-        const rows = mediaResult.value.data as MediaRow[];
-
-        const mediaSlides: Slide[] = rows.map((item) => ({
-          id: item.id,
-          title: item.title,
-          subtitle: item.featured ? "FEATURED" : "SYP ON CAFÉ",
-          body: "",
-          badge: item.featured ? "FEATURED MEDIA" : "",
-          image_url:
-            item.media_type === "image" ? item.public_url : "",
-          video_url:
-            item.media_type === "video" ? item.public_url : "",
-          duration_seconds: Math.max(
-            5,
-            Number(item.duration_seconds || 10),
-          ),
-          active: Boolean(item.active),
-          sort_order: Number(item.sort_order || 1),
-        }));
-
-        setSlides(mediaSlides.length > 0 ? mediaSlides : fallback);
-        setIndex((current) =>
-          mediaSlides.length > 0
-            ? current % mediaSlides.length
-            : current % fallback.length,
-        );
-      }
-
-      if (
-        queueResult.status === "fulfilled" &&
-        !queueResult.value.error
-      ) {
-        setQueue((queueResult.value.data ?? []) as QueueOrder[]);
+        setMedia((mediaResult.value.data ?? []) as MediaRow[]);
       }
 
       if (
@@ -362,139 +281,201 @@ export default function TvStandby({ now }: Props) {
       ) {
         setStore(storeResult.value.data as Store);
       }
+
+      if (
+        prepResult.status === "fulfilled" &&
+        !prepResult.value.error
+      ) {
+        setTicketsToday(
+          (prepResult.value.data ?? []) as PreparationTicket[],
+        );
+      }
+
+      if (
+        onlineResult.status === "fulfilled" &&
+        !onlineResult.value.error
+      ) {
+        setOnlineQueue(
+          (onlineResult.value.data ?? []) as OnlineOrder[],
+        );
+      }
+
+      if (
+        priorityResult.status === "fulfilled" &&
+        !priorityResult.value.error
+      ) {
+        setPriorityEvents(
+          (priorityResult.value.data ?? []) as PriorityEvent[],
+        );
+      }
+
+      setConnectionState("live");
     }
 
     void load();
 
-    const timer = window.setInterval(() => {
-      void load();
-    }, 15000);
+    const refresh = window.setInterval(() => void load(), 15000);
 
     const channel = supabase
-      .channel("tv-standby")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "tv_standby_settings",
-        },
-        () => void load(),
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "tv_media_library",
-        },
-        () => void load(),
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "orders",
-        },
-        (payload) => {
-          const row = payload.new as Record<string, unknown>;
-          if (clean(row.status).toLowerCase() === "ready") {
-            showNowServing(row);
-          }
-          void load();
-        },
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "orders",
-        },
-        (payload) => {
-          const next = payload.new as Record<string, unknown>;
-          const previous = payload.old as Record<string, unknown>;
-          const becameReady =
-            clean(next.status).toLowerCase() === "ready" &&
-            clean(previous.status).toLowerCase() !== "ready";
-
-          if (becameReady) {
-            showNowServing(next);
-          }
-
-          void load();
-        },
-      )
+      .channel("tv-experience-v2")
+      .on("postgres_changes", { event: "*", schema: "public", table: "tv_media_library" }, () => void load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "tv_standby_settings" }, () => void load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "pos_preparation_queue" }, () => void load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => void load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "tv_priority_events" }, () => void load())
       .subscribe();
 
     return () => {
       active = false;
-      window.clearInterval(timer);
-      if (nowServingTimerRef.current) {
-        window.clearTimeout(nowServingTimerRef.current);
+      window.clearInterval(refresh);
+      if (priorityTimerRef.current !== null) {
+        window.clearTimeout(priorityTimerRef.current);
       }
       void supabase.removeChannel(channel);
     };
   }, []);
 
-  const slide =
-    slides[index % Math.max(1, slides.length)] ?? fallback[0];
-  const nextSlide =
-    slides[(index + 1) % Math.max(1, slides.length)] ?? fallback[0];
+  const topProducts = useMemo<ProductStat[]>(() => {
+    const counts = new Map<string, number>();
 
-  function advanceSlide() {
-    if (advanceLockRef.current || slides.length <= 1) return;
-    advanceLockRef.current = true;
-    setTransitioning(true);
-    setMediaError("");
-    window.setTimeout(() => {
-      setIndex((current) => (current + 1) % Math.max(1, slides.length));
-      setTransitioning(false);
-      window.setTimeout(() => {
-        advanceLockRef.current = false;
-      }, 250);
-    }, 420);
-  }
-
-  useEffect(() => {
-    if (!settings.enabled || !slide || slide.video_url) return;
-    const timer = window.setTimeout(
-      advanceSlide,
-      Math.max(5, Number(slide.duration_seconds || settings.slide_seconds)) * 1000,
-    );
-    return () => window.clearTimeout(timer);
-  }, [slide.id, slide.video_url, slide.duration_seconds, slides.length, settings.enabled, settings.slide_seconds]);
-
-  useEffect(() => {
-    if (!slide.video_url || !videoRef.current) return;
-    const video = videoRef.current;
-    video.currentTime = 0;
-    video.muted = true;
-    const playPromise = video.play();
-    playPromise?.catch(() => {
-      setMediaError("Video autoplay was blocked. Skipping...");
-      window.setTimeout(advanceSlide, 1500);
+    ticketsToday.forEach((ticket) => {
+      (ticket.items ?? []).forEach((item) => {
+        const name = clean(item.name);
+        if (!name) return;
+        counts.set(
+          name,
+          (counts.get(name) || 0) + Math.max(1, Number(item.qty || 1)),
+        );
+      });
     });
-  }, [slide.id, slide.video_url]);
 
-  const review = useMemo<Review>(
+    return Array.from(counts.entries())
+      .map(([name, qty]) => ({ name, qty }))
+      .sort((a, b) => b.qty - a.qty)
+      .slice(0, 5);
+  }, [ticketsToday]);
+
+  const livePriorityEvents = useMemo(
     () =>
-      reviews.length > 0
-        ? reviews[index % reviews.length]
-        : {
-            id: "fallback-review",
-            customer_name: "Verified KaSYP",
-            rating: 5,
-            comment:
-              "Good coffee, good vibes, and worth coming back for.",
-          },
-    [reviews, index],
+      priorityEvents
+        .filter((event) => isEventLive(event, now))
+        .filter((event) => !dismissedEventIds.includes(event.id))
+        .sort((a, b) => b.priority - a.priority),
+    [priorityEvents, now, dismissedEventIds],
   );
+
+  useEffect(() => {
+    if (activePriorityEvent) return;
+    const next = livePriorityEvents[0];
+    if (!next) return;
+
+    setActivePriorityEvent(next);
+
+    if (priorityTimerRef.current !== null) {
+      window.clearTimeout(priorityTimerRef.current);
+    }
+
+    priorityTimerRef.current = window.setTimeout(() => {
+      setDismissedEventIds((current) =>
+        current.includes(next.id) ? current : [...current, next.id],
+      );
+      setActivePriorityEvent(null);
+      priorityTimerRef.current = null;
+    }, Math.max(7, Number(next.duration_seconds || 12)) * 1000);
+  }, [activePriorityEvent, livePriorityEvents]);
+
+  const scenes = useMemo<Scene[]>(() => {
+    const result: Scene[] = [
+      { id: "welcome", type: "welcome", duration: 13 },
+    ];
+
+    if (topProducts.length) {
+      result.push({ id: "trending", type: "trending", duration: 14 });
+    }
+
+    if (clean(store.announcement) || store.free_delivery) {
+      result.push({ id: "promo", type: "promo", duration: 13 });
+    }
+
+    media.forEach((item) => {
+      result.push({
+        id: `media-${item.id}`,
+        type: "media",
+        media: item,
+        duration: Math.max(7, Number(item.duration_seconds || 12)),
+      });
+    });
+
+    if (settings.show_reviews) {
+      result.push({ id: "review", type: "review", duration: 14 });
+    }
+
+    if (settings.show_membership) {
+      result.push({ id: "membership", type: "membership", duration: 14 });
+    }
+
+    if (settings.show_social) {
+      result.push({ id: "order", type: "order", duration: 14 });
+    }
+
+    result.push({ id: "fact", type: "fact", duration: 13 });
+
+    return result;
+  }, [
+    media,
+    settings.show_membership,
+    settings.show_reviews,
+    settings.show_social,
+    store.announcement,
+    store.free_delivery,
+    topProducts,
+  ]);
+
+  useEffect(() => {
+    if (!settings.enabled || !scenes.length || activePriorityEvent) return;
+
+    const scene = scenes[sceneIndex % scenes.length];
+    const timer = window.setTimeout(() => {
+      setSceneIndex((current) => (current + 1) % scenes.length);
+    }, Math.max(7, scene.duration || settings.slide_seconds) * 1000);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    activePriorityEvent,
+    sceneIndex,
+    scenes,
+    settings.enabled,
+    settings.slide_seconds,
+  ]);
+
+  useEffect(() => {
+    setSceneIndex((current) =>
+      scenes.length ? current % scenes.length : 0,
+    );
+  }, [scenes.length]);
+
+  const scene = scenes[sceneIndex % Math.max(1, scenes.length)] ?? {
+    id: "welcome",
+    type: "welcome",
+    duration: 13,
+  };
+
+  const review: Review = reviews.length
+    ? reviews[sceneIndex % reviews.length]
+    : {
+        id: "fallback-review",
+        customer_name: "Verified KaSYP",
+        rating: 5,
+        comment: "Good coffee, good vibes, and worth coming back for.",
+        review: null,
+        name: null,
+      };
+
+  const fact = facts[sceneIndex % facts.length];
 
   const memberUrl =
     mounted && typeof window !== "undefined"
-      ? `${window.location.origin}/member-register?source=tv-standby`
+      ? `${window.location.origin}/member-register?source=tv-experience`
       : "";
 
   const orderUrl =
@@ -502,303 +483,456 @@ export default function TvStandby({ now }: Props) {
       ? `${window.location.origin}/menu`
       : "";
 
-  async function toggleFullscreen() {
-    try {
-      if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
-      else await document.exitFullscreen();
-    } catch {
-      setMediaError("Fullscreen is unavailable in this browser.");
-    }
-  }
-
   const storeStatus =
     clean(store.store_status).toLowerCase() === "closed"
       ? "CLOSED"
       : clean(store.store_status).toLowerCase() === "busy"
         ? "BUSY • SHORT WAIT"
-        : clean(store.store_status).toLowerCase() ===
-            "temporarily_closed"
-          ? "TEMPORARILY CLOSED"
-          : "OPEN NOW";
+        : "OPEN NOW";
 
-  return (
-    <main className="tv-standby">
-      <div className="tv-preload" aria-hidden="true">
-        {nextSlide.video_url ? (
-          <video src={nextSlide.video_url} preload="auto" muted />
-        ) : nextSlide.image_url ? (
-          <img src={nextSlide.image_url} alt="" />
-        ) : null}
-      </div>
+  async function toggleFullscreen() {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch {}
+  }
 
-      {nowServing && (
-        <section className="tv-now-serving" role="status" aria-live="assertive">
-          <div className="tv-now-serving-rings" aria-hidden="true">
-            <i />
-            <i />
-            <i />
+  function renderPriorityEvent(event: PriorityEvent) {
+    const type = event.event_type;
+
+    if (type === "birthday") {
+      return (
+        <section className="tvx-priority tvx-birthday">
+          <div className="tvx-confetti" aria-hidden="true">
+            {Array.from({ length: 28 }, (_, index) => (
+              <i key={index} style={{ "--i": index } as React.CSSProperties} />
+            ))}
           </div>
 
-          <div className="tv-now-serving-card">
-            <div className="tv-serving-bell">🔔</div>
-            <span className="tv-serving-label">NOW SERVING</span>
-            <strong className="tv-serving-queue">{nowServing.queueLabel}</strong>
-            <h2>{nowServing.customerName}</h2>
-            <p>
-              {nowServing.orderType.replaceAll("_", " ")} · {nowServing.orderNumber}
-            </p>
-            <div className="tv-serving-ready">READY FOR PICKUP</div>
-            <small>Please claim your freshly prepared order. Thank you, KaSYP!</small>
+          <div className="tvx-priority-card">
+            <span>🎂 HAPPY BIRTHDAY</span>
+            <h2>{event.person_name || event.title || "KaSYP!"}</h2>
+            <p>{event.body || "Wishing you more coffee, good vibes, and great moments."}</p>
+            <b>{event.reward || "ENJOY YOUR SPECIAL TREAT"}</b>
           </div>
         </section>
-      )}
+      );
+    }
 
-      <header className="tv-header">
-        <div className="tv-brand">
-          <img
-            src="/brand/syp-logo-glow-v2.webp"
-            alt="SYP ON CAFÉ"
-          />
+    if (type === "spin_winner") {
+      return (
+        <section className="tvx-priority tvx-winner">
+          <div className="tvx-priority-card">
+            <span>🎉 SPIN WINNER</span>
+            <h2>{event.person_name || event.title || "Congratulations!"}</h2>
+            <p>{event.body || "You just won a SYP ON CAFÉ reward."}</p>
+            <b>{event.reward || "CLAIM YOUR PRIZE"}</b>
+          </div>
+        </section>
+      );
+    }
 
+    if (type === "lucky_queue") {
+      return (
+        <section className="tvx-priority tvx-lucky">
+          <div className="tvx-priority-card">
+            <span>⭐ LUCKY QUEUE</span>
+            <h2>{event.person_name || event.title || "A-000"}</h2>
+            <p>{event.body || "Tonight's lucky queue has been selected."}</p>
+            <b>{event.reward || "FREE SURPRISE REWARD"}</b>
+          </div>
+        </section>
+      );
+    }
+
+    if (type === "new_menu") {
+      return (
+        <section className="tvx-priority tvx-new-menu">
+          <div className="tvx-priority-copy">
+            <span>✨ NEW MENU SPOTLIGHT</span>
+            <h2>{event.title || "Something new is brewing."}</h2>
+            <p>{event.body || event.subtitle || "Try the newest SYP ON CAFÉ creation tonight."}</p>
+            <b>{event.reward || "AVAILABLE NOW"}</b>
+          </div>
+
+          {event.image_url ? (
+            <div className="tvx-priority-product">
+              <img src={event.image_url} alt={event.title} />
+            </div>
+          ) : (
+            <div className="tvx-priority-product fallback">☕</div>
+          )}
+        </section>
+      );
+    }
+
+    return (
+      <section className="tvx-priority tvx-announcement">
+        <div className="tvx-priority-card">
+          <span>{event.subtitle || "SYP ON CAFÉ"}</span>
+          <h2>{event.title}</h2>
+          <p>{event.body}</p>
+          {event.reward && <b>{event.reward}</b>}
+        </div>
+      </section>
+    );
+  }
+
+  function renderScene() {
+    if (scene.type === "media") {
+      const item = scene.media;
+
+      return (
+        <section className="tvx-scene tvx-media-scene">
+          <div className="tvx-media-frame">
+            {item.media_type === "video" ? (
+              <video
+                key={item.id}
+                src={item.public_url}
+                autoPlay
+                muted
+                loop
+                playsInline
+              />
+            ) : (
+              <img key={item.id} src={item.public_url} alt={item.title} />
+            )}
+            <div className="tvx-media-shade" />
+          </div>
+
+          <div className="tvx-scene-copy">
+            <span>{item.featured ? "FEATURED" : "SYP MOMENTS"}</span>
+            <h2>{item.title || "Made for your moment."}</h2>
+            <p>Fresh coffee, late-night vibes, and moments worth sharing.</p>
+            <b>{item.featured ? "FEATURED TONIGHT" : "SYP ON CAFÉ"}</b>
+          </div>
+        </section>
+      );
+    }
+
+    if (scene.type === "trending") {
+      return (
+        <section className="tvx-scene tvx-trending">
+          <div className="tvx-scene-copy">
+            <span>🔥 TRENDING TODAY</span>
+            <h2>{topProducts[0]?.name || "Spanish Latte"}</h2>
+            <p>One of tonight&apos;s most ordered drinks at SYP ON CAFÉ.</p>
+            <b>{topProducts[0]?.qty || 0} cups today</b>
+          </div>
+
+          <div className="tvx-ranking">
+            {topProducts.slice(0, 5).map((product, index) => (
+              <article key={product.name}>
+                <strong>{String(index + 1).padStart(2, "0")}</strong>
+                <div>
+                  <b>{product.name}</b>
+                  <span>{product.qty} ordered</span>
+                </div>
+                <i
+                  style={{
+                    width: `${(product.qty / Math.max(1, topProducts[0]?.qty || 1)) * 100}%`,
+                  }}
+                />
+              </article>
+            ))}
+          </div>
+        </section>
+      );
+    }
+
+    if (scene.type === "review") {
+      return (
+        <section className="tvx-scene tvx-review">
+          <div className="tvx-stars">
+            {"★".repeat(Math.max(1, Math.min(5, Number(review.rating || 5))))}
+          </div>
+          <span>REAL CUSTOMER REVIEW</span>
+          <blockquote>
+            “{clean(review.comment || review.review) || "Good coffee, good vibes, and worth coming back for."}”
+          </blockquote>
+          <b>— {clean(review.customer_name || review.name) || "Verified KaSYP"}</b>
+        </section>
+      );
+    }
+
+    if (scene.type === "membership") {
+      return (
+        <section className="tvx-scene tvx-qr-scene">
+          <div className="tvx-scene-copy">
+            <span>KASYP DIGITAL MEMBERSHIP</span>
+            <h2>Scan. Earn. Enjoy.</h2>
+            <p>Collect stamps, unlock rewards, birthday treats, and selected Lucky Spin events.</p>
+            <b>JOIN FREE</b>
+          </div>
+
+          {memberUrl ? (
+            <div className="tvx-qr-card">
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=5&format=png&data=${encodeURIComponent(memberUrl)}`}
+                alt="KaSYP membership QR"
+              />
+              <strong>SCAN TO JOIN</strong>
+            </div>
+          ) : (
+            <div className="tvx-qr-fallback">SYP</div>
+          )}
+        </section>
+      );
+    }
+
+    if (scene.type === "order") {
+      return (
+        <section className="tvx-scene tvx-qr-scene">
+          <div className="tvx-scene-copy">
+            <span>ORDER ONLINE</span>
+            <h2>One scan. Your next coffee.</h2>
+            <p>Browse the menu and place your order from your phone.</p>
+            <b>syponcafe.shop</b>
+          </div>
+
+          {orderUrl ? (
+            <div className="tvx-qr-card">
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=360x360&margin=5&format=png&data=${encodeURIComponent(orderUrl)}`}
+                alt="Order online QR"
+              />
+              <strong>SCAN TO ORDER</strong>
+            </div>
+          ) : (
+            <div className="tvx-qr-fallback">SYP</div>
+          )}
+        </section>
+      );
+    }
+
+    if (scene.type === "promo") {
+      return (
+        <section className="tvx-scene tvx-promo">
+          <div className="tvx-promo-icon">
+            {store.free_delivery ? "🛵" : "☕"}
+          </div>
+          <div className="tvx-scene-copy">
+            <span>TONIGHT AT SYP</span>
+            <h2>
+              {store.free_delivery
+                ? "Free delivery is active."
+                : clean(store.announcement) || "Coffee made for your moment."}
+            </h2>
+            <p>
+              {store.free_delivery
+                ? "Order your favorite drinks and enjoy them wherever you are."
+                : settings.footer_message}
+            </p>
+            <b>{store.free_delivery ? "ORDER NOW" : "SYP ON CAFÉ"}</b>
+          </div>
+        </section>
+      );
+    }
+
+    if (scene.type === "fact") {
+      return (
+        <section className="tvx-scene tvx-fact">
+          <div className="tvx-fact-bean">☕</div>
+          <span>DID YOU KNOW?</span>
+          <h2>{fact}</h2>
+          <p>Good coffee tastes even better when you know the story.</p>
+        </section>
+      );
+    }
+
+    return (
+      <section className="tvx-scene tvx-welcome">
+        <div className="tvx-scene-copy">
+          <span>{greeting(now.getHours())}</span>
+          <h2>Welcome to SYP ON CAFÉ.</h2>
+          <p>Street • Iced • Brewed</p>
+          <b>OPEN DAILY • 5PM–4AM</b>
+        </div>
+
+        <div className="tvx-logo-stage">
+          <img src="/brand/syp-logo-glow-v2.webp" alt="SYP ON CAFÉ" />
+          <div className="tvx-steam">
+            <i />
+            <i />
+            <i />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (!settings.enabled) {
+    return (
+      <main className="tvx-screen">
+        <div className="tvx-disabled">
+          <img src="/brand/syp-logo-glow-v2.webp" alt="SYP ON CAFÉ" />
+          <h1>SYP ON CAFÉ</h1>
+          <p>TV standby is currently disabled.</p>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="tvx-screen">
+      <div className="tvx-background" aria-hidden="true">
+        <video
+          src="/videos/syp-cafe-background.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          poster="/brand/syp-logo-glow-v2.webp"
+        />
+        <div className="tvx-bg-shade" />
+        <div className="tvx-aurora" />
+      </div>
+
+      <div className="tvx-particles" aria-hidden="true">
+        {Array.from({ length: 18 }, (_, index) => (
+          <i key={index} style={{ "--i": index } as React.CSSProperties} />
+        ))}
+      </div>
+
+      {activePriorityEvent && renderPriorityEvent(activePriorityEvent)}
+
+      <header className="tvx-header">
+        <div className="tvx-brand">
+          <img src="/brand/syp-logo-glow-v2.webp" alt="SYP ON CAFÉ" />
           <div>
             <h1>SYP ON CAFÉ</h1>
             <p>Street · Iced · Brewed</p>
           </div>
         </div>
 
-        <div className="tv-header-right">
+        <div className="tvx-header-right">
           {settings.show_store_status && (
-            <span className="tv-status">
+            <span className="tvx-store-status">
               <i />
               {storeStatus}
             </span>
           )}
 
-          <button
-            type="button"
-            onClick={() => void toggleFullscreen()}
-            className="tv-fullscreen-button"
-          >
+          <span className={`tvx-sync ${connectionState}`}>
+            <i />
+            {connectionState === "live" ? "LIVE" : "SYNCING"}
+          </span>
+
+          <button type="button" onClick={() => void toggleFullscreen()} className="tvx-fullscreen">
             {fullscreen ? "⤢ Exit" : "⛶ Fullscreen"}
           </button>
 
-          <div className="tv-clock">
+          <time>
             <b>
               {now.toLocaleTimeString("en-US", {
                 hour: "2-digit",
                 minute: "2-digit",
               })}
             </b>
-
-            <span>
+            <small>
               {now.toLocaleDateString("en-PH", {
                 weekday: "long",
                 month: "long",
                 day: "numeric",
                 year: "numeric",
               })}
-            </span>
-          </div>
+            </small>
+          </time>
         </div>
       </header>
 
-      <section className="tv-layout">
-        <div className={`tv-hero ${transitioning ? "is-transitioning" : ""}`}>
-          {slide.video_url ? (
-            <video
-              ref={videoRef}
-              key={slide.id}
-              src={slide.video_url}
-              autoPlay
-              muted
-              playsInline
-              preload="auto"
-              onEnded={advanceSlide}
-              onError={() => {
-                setMediaError("Unable to play this video. Skipping...");
-                window.setTimeout(advanceSlide, 1200);
-              }}
-            />
-          ) : slide.image_url ? (
-            <img
-              key={slide.id}
-              src={slide.image_url}
-              alt={slide.title}
-              onError={() => {
-                setMediaError("Unable to load this image. Skipping...");
-                window.setTimeout(advanceSlide, 1200);
-              }}
-            />
-          ) : (
-            <div className="tv-gradient" />
-          )}
-
-          <div className="tv-overlay" />
-
-          <div className="tv-copy">
-            <span>{slide.subtitle}</span>
-            <h2>{slide.title}</h2>
-
-            {slide.body && <p>{slide.body}</p>}
-            {slide.badge && <b>{slide.badge}</b>}
+      <section className="tvx-layout">
+        <article className="tvx-main">
+          <div key={scene.id} className="tvx-scene-shell">
+            {renderScene()}
           </div>
 
-          {mediaError && <div className="tv-media-error">{mediaError}</div>}
-
-          <div className="tv-dots">
-            {slides.map((item, slideIndex) => (
+          <div className="tvx-scene-dots">
+            {scenes.map((item, index) => (
               <i
                 key={item.id}
-                className={
-                  slideIndex === index % Math.max(1, slides.length)
-                    ? "active"
-                    : ""
-                }
+                className={index === sceneIndex % scenes.length ? "active" : ""}
               />
             ))}
           </div>
-        </div>
+        </article>
 
-        <aside className="tv-rail">
-          {settings.show_queue && (
-            <section className="tv-card">
-              <div className="tv-card-head">
-                <span>LIVE QUEUE</span>
-                <b>● LIVE</b>
-              </div>
+        <aside className="tvx-side">
+          <section className="tvx-side-card">
+            <header>
+              <span>LIVE QUEUE</span>
+              <b>● LIVE</b>
+            </header>
 
-              <div className="tv-queue">
-                {queue.length > 0 ? (
-                  queue.slice(0, 5).map((order) => (
-                    <article key={order.id}>
-                      <strong>
-                        {order.queue_no ||
-                          order.order_number
-                            .split("-")
-                            .slice(-1)[0]}
-                      </strong>
-
-                      <div>
-                        <b>{order.customer_name || "KaSYP"}</b>
-                        <span>{order.status}</span>
-                      </div>
-
-                      <i
-                        className={
-                          order.status === "ready" ? "ready" : ""
-                        }
-                      >
-                        {order.status === "ready"
-                          ? "READY"
-                          : "IN PROGRESS"}
-                      </i>
-                    </article>
-                  ))
-                ) : (
-                  <div className="tv-empty">
-                    <strong>NO ACTIVE QUEUE</strong>
-                    <span>Your order will appear here.</span>
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
-
-          {settings.show_reviews && (
-            <section className="tv-card tv-review">
-              <div className="tv-card-head">
-                <span>REAL CUSTOMER REVIEW</span>
-
-                <b>
-                  {"★".repeat(
-                    Math.max(
-                      1,
-                      Math.min(5, Number(review.rating || 5)),
-                    ),
-                  )}
-                </b>
-              </div>
-
-              <blockquote>
-                “
-                {clean(review.comment || review.review) ||
-                  "Good coffee, good vibes, and worth coming back for."}
-                ”
-              </blockquote>
-
-              <small>
-                —{" "}
-                {clean(review.customer_name || review.name) ||
-                  "Verified KaSYP"}
-              </small>
-            </section>
-          )}
-
-          {settings.show_membership && (
-            <section className="tv-card tv-membership">
-              <div>
-                <span>KASYP MEMBERSHIP</span>
-                <h3>Scan. Earn. Enjoy.</h3>
-                <p>
-                  Collect stamps, unlock rewards, and keep every
-                  café visit in one place.
-                </p>
-              </div>
-
-              {mounted && memberUrl ? (
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=5&format=png&data=${encodeURIComponent(
-                    memberUrl,
-                  )}`}
-                  alt="Membership QR"
-                />
+            <div className="tvx-queue">
+              {onlineQueue.length ? (
+                onlineQueue.slice(0, 5).map((order) => (
+                  <article key={order.id}>
+                    <strong>
+                      {normalizeQueue(clean(order.queue_no) || clean(order.order_number))}
+                    </strong>
+                    <div>
+                      <b>{order.customer_name || "KaSYP"}</b>
+                      <span>{order.status}</span>
+                    </div>
+                    <i className={clean(order.status).toLowerCase() === "ready" ? "ready" : ""}>
+                      {clean(order.status).toLowerCase() === "ready" ? "READY" : "IN PROGRESS"}
+                    </i>
+                  </article>
+                ))
               ) : (
-                <div className="tv-qr-placeholder">
-                  <span>SYP</span>
-                </div>
-              )}
-            </section>
-          )}
-        </aside>
-
-        <footer className="tv-footer">
-          <div>
-            <span>
-              {store.announcement ||
-                settings.footer_message ||
-                "Perfect weather for coffee."}
-            </span>
-
-            <b>
-              {store.free_delivery
-                ? "FREE DELIVERY ACTIVE"
-                : store.closing_time
-                  ? `OPEN UNTIL ${store.closing_time}`
-                  : "OPEN DAILY • 5PM–4AM"}
-            </b>
-          </div>
-
-          {settings.show_social && (
-            <div className="tv-order">
-              <span>ORDER ONLINE</span>
-              <b>syponcafe.shop</b>
-
-              {mounted && orderUrl ? (
-                <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&margin=4&format=png&data=${encodeURIComponent(
-                    orderUrl,
-                  )}`}
-                  alt="Order QR"
-                />
-              ) : (
-                <div className="tv-qr-placeholder small">
-                  <span>SYP</span>
+                <div className="tvx-empty">
+                  <strong>NO ACTIVE QUEUE</strong>
+                  <span>New orders will appear here.</span>
                 </div>
               )}
             </div>
-          )}
-        </footer>
+          </section>
+
+          <section className="tvx-side-card tvx-now-card">
+            <span>TONIGHT</span>
+            <h3>{topProducts[0]?.name || "Good coffee. Good moments."}</h3>
+            <p>{topProducts.length ? `${topProducts[0].qty} orders today` : "Freshly made for every KaSYP."}</p>
+          </section>
+
+          <section className="tvx-side-card tvx-community-card">
+            <span>EVENT ENGINE</span>
+            <h3>{livePriorityEvents.length} priority event{livePriorityEvents.length === 1 ? "" : "s"}</h3>
+            <p>Birthday, winner, new menu, and announcement scenes can interrupt the normal rotation.</p>
+          </section>
+        </aside>
       </section>
+
+      <footer className="tvx-footer">
+        <div>
+          <span>
+            {clean(store.announcement) ||
+              settings.footer_message ||
+              "Good coffee. Good moments. Made for you."}
+          </span>
+          <b>
+            {store.free_delivery
+              ? "FREE DELIVERY ACTIVE"
+              : store.closing_time
+                ? `OPEN UNTIL ${store.closing_time}`
+                : "OPEN DAILY • 5PM–4AM"}
+          </b>
+        </div>
+
+        <div className="tvx-footer-center">
+          <i />
+          <span>PRIORITY SCENE ENGINE</span>
+          <b>TV EXPERIENCE V2</b>
+        </div>
+
+        <div className="tvx-footer-right">
+          <span>ORDER ONLINE</span>
+          <b>syponcafe.shop</b>
+        </div>
+      </footer>
     </main>
   );
 }
