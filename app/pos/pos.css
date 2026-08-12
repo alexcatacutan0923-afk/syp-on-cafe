@@ -725,3 +725,47 @@ body:has(.live-orders-overlay) {
     width: 100% !important;
   }
 }
+
+
+
+/* =========================================================
+   DELIVERY ORDER — POS BUILD
+   Chat/page orders can be entered directly in the POS.
+   ========================================================= */
+.delivery-order-card {
+  border-color: rgba(239, 189, 73, 0.22) !important;
+}
+.delivery-order-card.active {
+  border-color: rgba(34, 197, 94, 0.55) !important;
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.08), 0 14px 36px rgba(0,0,0,.22);
+}
+.delivery-order-heading {
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+}
+.delivery-order-heading h3 { margin:0; color:#efbd49; }
+.delivery-order-heading small { display:block; margin-top:3px; color:rgba(255,255,255,.45); font-size:10px; }
+.delivery-order-heading > b { color:#67e88c; font-size:10px; letter-spacing:.08em; }
+.delivery-type-buttons { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:10px; }
+.delivery-type-buttons button {
+  min-height:42px; border:1px solid rgba(255,255,255,.12); border-radius:10px;
+  background:rgba(255,255,255,.035); color:#fff; font-weight:900; cursor:pointer;
+}
+.delivery-type-buttons button.active {
+  border-color:rgba(239,189,73,.7); background:rgba(239,189,73,.12); color:#ffd66d;
+}
+.delivery-fields {
+  display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;
+}
+.delivery-fields label { display:flex; flex-direction:column; gap:5px; min-width:0; }
+.delivery-fields label span { color:rgba(255,255,255,.58); font-size:9px; font-weight:900; text-transform:uppercase; letter-spacing:.08em; }
+.delivery-fields input, .delivery-fields textarea {
+  width:100%; box-sizing:border-box; border:1px solid rgba(255,255,255,.11); border-radius:9px;
+  background:rgba(0,0,0,.35); color:#fff; padding:9px 10px; outline:none; font:inherit;
+}
+.delivery-fields input:focus, .delivery-fields textarea:focus { border-color:rgba(239,189,73,.65); }
+.delivery-fields textarea { resize:vertical; min-height:58px; }
+.delivery-fields .delivery-wide { grid-column:1 / -1; }
+@media (max-width: 1180px) {
+  .delivery-fields { grid-template-columns:1fr; }
+  .delivery-fields .delivery-wide { grid-column:auto; }
+}

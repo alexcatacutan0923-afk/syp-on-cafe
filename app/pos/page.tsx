@@ -5,8 +5,6 @@ import "./pos.css";
 import { chooseReceiptQuote, getSeasonalReceiptTheme } from "@/lib/receipt-quotes";
 import { supabase } from "@/lib/supabase";
 import { addCloudStamp, claimCloudFreeDrink, CloudMember, listCloudMembers, searchCloudMembers } from "@/lib/member-cloud";
-import ActiveOrdersPanel from "./ActiveOrdersPanel";
-import "./active-orders.css";
 
 type Category = "All" | "Coffee" | "Matcha" | "Soda" | "Milky" | "Fries" | "Signature" | "ADDS";
 type Payment = "Cash" | "GCash" | "Maya";
@@ -30,6 +28,10 @@ type LiveOrderSnapshot = {
   cashReceived?: number;
   changeDue?: number;
   amountDue?: number;
+  orderType?: "WALK-IN" | "DELIVERY";
+  deliveryAddress?: string;
+  deliveryLandmark?: string;
+  deliveryFee?: number;
   stampAdded?: boolean;
   rewardClaimed?: boolean;
   updatedAt: string;
@@ -287,6 +289,11 @@ export default function PosPage() {
   const [search, setSearch] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [payment, setPayment] = useState<Payment>("Cash");
+  const [orderType, setOrderType] = useState<"WALK-IN" | "DELIVERY">("WALK-IN");
+  const [deliveryMobile, setDeliveryMobile] = useState("");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [deliveryLandmark, setDeliveryLandmark] = useState("");
+  const [deliveryFee, setDeliveryFee] = useState(30);
   const [cash, setCash] = useState(0);
   const [discount, setDiscount] = useState(0);
   const [discountReason, setDiscountReason] = useState<DiscountReason>("None");
@@ -367,7 +374,7 @@ export default function PosPage() {
   const subtotal = cart.reduce((sum, item) => sum + item.unitPrice * item.qty, 0);
   const eligibleRewardLine = cart.find((item) => item.size === "16oz" && !["Soda", "Fries", "ADDS"].includes(item.category));
   const loyaltyRewardDiscount = redeemFreeDrink && selectedMember && selectedMember.stamps >= 10 && eligibleRewardLine ? eligibleRewardLine.unitPrice : 0;
-  const total = Math.max(0, subtotal - discount - loyaltyRewardDiscount);
+  const total = Math.max(0, subtotal - discount - loyaltyRewardDiscount) + (orderType === "DELIVERY" ? Math.max(0, deliveryFee) : 0);
   const change = payment === "Cash" ? Math.max(0, cash - total) : 0;
   const checkoutReady = cart.length > 0 && (payment !== "Cash" || cash >= total);
 
@@ -513,11 +520,15 @@ export default function PosPage() {
       cashReceived: payment === "Cash" ? cash : undefined,
       changeDue: payment === "Cash" ? change : undefined,
       amountDue: payment === "Cash" ? Math.max(0, total - cash) : 0,
+      orderType,
+      deliveryAddress: orderType === "DELIVERY" ? deliveryAddress.trim() : undefined,
+      deliveryLandmark: orderType === "DELIVERY" ? deliveryLandmark.trim() : undefined,
+      deliveryFee: orderType === "DELIVERY" ? deliveryFee : 0,
       updatedAt: new Date().toISOString(),
     };
     window.localStorage.setItem(LIVE_ORDER_KEY, JSON.stringify(snapshot));
     publishCafeEvent("live-order", snapshot);
-  }, [cart, subtotal, discount, loyaltyRewardDiscount, total, selectedMember, customerQuery, payment, cash, change, displayRevision]);
+  }, [cart, subtotal, discount, loyaltyRewardDiscount, total, selectedMember, customerQuery, payment, cash, change, displayRevision, orderType, deliveryAddress, deliveryLandmark, deliveryFee]);
 
   const applyManualDiscount = (amount: number, reason: DiscountReason = discountReason) => {
     const safeAmount = Math.max(0, Math.min(subtotal, Math.round(amount)));
@@ -707,6 +718,11 @@ export default function PosPage() {
     setDiscountReason("None");
     setCustomDiscount("");
     setOrderNote("");
+    setOrderType("WALK-IN");
+    setDeliveryMobile("");
+    setDeliveryAddress("");
+    setDeliveryLandmark("");
+    setDeliveryFee(30);
     setNotice("Cart cleared");
     window.setTimeout(() => setNotice(""), 1200);
   };
@@ -731,6 +747,30 @@ export default function PosPage() {
     const completedAt = new Date();
     const receiptNo = createReceiptNumber(completedAt);
     const queueNo = makeQueueNumber(completedAt);
+
+    const deliveryName = customerQuery.trim() || selectedMember?.name?.trim() || "DELIVERY CUSTOMER";
+    const normalizedDeliveryMobile = deliveryMobile.replace(/\D/g, "").trim();
+    if (orderType === "DELIVERY") {
+      if (!deliveryName || deliveryName === "DELIVERY CUSTOMER") {
+        setNotice("Delivery order needs the customer name.");
+        setSavingSale(false);
+        if (reservedPrintWindow && !reservedPrintWindow.closed) reservedPrintWindow.close();
+        return;
+      }
+      if (!/^09\d{9}$/.test(normalizedDeliveryMobile)) {
+        setNotice("Enter a valid 11-digit delivery mobile number.");
+        setSavingSale(false);
+        if (reservedPrintWindow && !reservedPrintWindow.closed) reservedPrintWindow.close();
+        return;
+      }
+      if (!deliveryAddress.trim()) {
+        setNotice("Delivery address is required.");
+        setSavingSale(false);
+        if (reservedPrintWindow && !reservedPrintWindow.closed) reservedPrintWindow.close();
+        return;
+      }
+    }
+
     let memberForReceipt = selectedMember;
     let rewardWasClaimed = false;
 
@@ -761,16 +801,38 @@ export default function PosPage() {
               .join(" · "),
     }));
 
+    if (orderType === "DELIVERY" && deliveryFee > 0) {
+      saleItems.push({
+        productId: null,
+        name: "Delivery Fee",
+        size: "Delivery",
+        price: Number(deliveryFee),
+        quantity: 1,
+        temperature: "regular",
+        basePrice: Number(deliveryFee),
+        addOns: [],
+        details: "Delivery charge",
+      });
+    }
+
     try {
       const memberMobile =
         selectedMember?.mobile?.replace(/\s+/g, "").trim() || "";
-      const validMemberMobile = /^09\d{9}$/.test(memberMobile)
-        ? memberMobile
-        : "09999999999";
+      const validMemberMobile =
+        orderType === "DELIVERY"
+          ? normalizedDeliveryMobile
+          : (/^09\d{9}$/.test(memberMobile) ? memberMobile : "09999999999");
       const memberName =
         selectedMember?.name?.trim() ||
         customerQuery.trim() ||
-        "WALK-IN CUSTOMER";
+        (orderType === "DELIVERY" ? deliveryName : "WALK-IN CUSTOMER");
+      const saleNotes = [
+        orderNote.trim(),
+        orderType === "DELIVERY" ? `DELIVERY CUSTOMER: ${deliveryName}` : "",
+        orderType === "DELIVERY" ? `DELIVERY MOBILE: ${normalizedDeliveryMobile}` : "",
+        orderType === "DELIVERY" ? `DELIVERY ADDRESS: ${deliveryAddress.trim()}` : "",
+        orderType === "DELIVERY" && deliveryLandmark.trim() ? `LANDMARK: ${deliveryLandmark.trim()}` : "",
+      ].filter(Boolean).join("\n");
 
       const { data: savedRows, error: saveError } = await supabase.rpc(
         "create_pos_sale",
@@ -781,7 +843,7 @@ export default function PosPage() {
           p_mobile: validMemberMobile,
           p_member_code: selectedMember?.member_code || null,
           p_payment_method: payment.toLowerCase(),
-          p_subtotal: subtotal,
+          p_subtotal: subtotal + (orderType === "DELIVERY" ? deliveryFee : 0),
           p_discount: discount + loyaltyRewardDiscount,
           p_discount_reason: redeemFreeDrink
             ? discount > 0
@@ -792,7 +854,7 @@ export default function PosPage() {
           p_cash_received: payment === "Cash" ? cash : total,
           p_change_due: payment === "Cash" ? change : 0,
           p_cashier: cashierName.trim() || "Alex",
-          p_notes: orderNote.trim(),
+          p_notes: saleNotes,
           p_items: saleItems,
         },
       );
@@ -902,6 +964,11 @@ export default function PosPage() {
         stampWasAdded,
         rewardWasClaimed,
         rewardDiscount: loyaltyRewardDiscount,
+        orderType,
+        deliveryMobile: normalizedDeliveryMobile,
+        deliveryAddress: deliveryAddress.trim(),
+        deliveryLandmark: deliveryLandmark.trim(),
+        deliveryFee: orderType === "DELIVERY" ? deliveryFee : 0,
       });
 
       setLastReceiptHtml(receiptHtml);
@@ -942,6 +1009,10 @@ export default function PosPage() {
         cashReceived: payment === "Cash" ? cash : undefined,
         changeDue: payment === "Cash" ? change : undefined,
         amountDue: 0,
+        orderType,
+        deliveryAddress: orderType === "DELIVERY" ? deliveryAddress.trim() : undefined,
+        deliveryLandmark: orderType === "DELIVERY" ? deliveryLandmark.trim() : undefined,
+        deliveryFee: orderType === "DELIVERY" ? deliveryFee : 0,
         stampAdded: stampWasAdded,
         rewardClaimed: rewardWasClaimed,
         updatedAt: completedAt.toISOString(),
@@ -954,7 +1025,16 @@ export default function PosPage() {
         receiptNo,
         status: "new",
         createdAt: completedAt.toISOString(),
-        note: orderNote.trim() || undefined,
+        note: orderType === "DELIVERY"
+          ? [
+              "DELIVERY ORDER",
+              `Customer: ${deliveryName}`,
+              `Mobile: ${normalizedDeliveryMobile}`,
+              `Address: ${deliveryAddress.trim()}`,
+              deliveryLandmark.trim() ? `Landmark: ${deliveryLandmark.trim()}` : "",
+              orderNote.trim() ? `Notes: ${orderNote.trim()}` : "",
+            ].filter(Boolean).join("\n")
+          : orderNote.trim() || undefined,
       };
 
       const existingOrders: KitchenOrder[] = JSON.parse(
@@ -964,33 +1044,6 @@ export default function PosPage() {
         KITCHEN_ORDERS_KEY,
         JSON.stringify([kitchenOrder, ...existingOrders].slice(0, 100)),
       );
-
-      // Persist the paid preparation ticket in Supabase so it remains after
-      // refresh/restart and updates the extended customer display in realtime.
-      const { error: preparationQueueError } = await supabase
-        .from("pos_preparation_queue")
-        .insert({
-          source_order_id: String(savedSale.order_id),
-          receipt_no: receiptNo,
-          queue_no: queueNo,
-          customer_name:
-            memberForReceipt?.name || customerQuery.trim() || "WALK-IN CUSTOMER",
-          member_code: memberForReceipt?.member_code || null,
-          payment_method: payment.toLowerCase(),
-          total,
-          status: "waiting",
-          items: orderItems,
-          notes: orderNote.trim() || null,
-          cashier: cashierName.trim() || "Alex",
-          paid_at: completedAt.toISOString(),
-        });
-
-      if (preparationQueueError) {
-        console.error(
-          "Sale saved, but preparation ticket failed:",
-          preparationQueueError,
-        );
-      }
       // Lock the customer display before opening the print dialog so the
       // THANK YOU screen appears immediately after a successful checkout.
       holdThankYouRef.current = true;
@@ -1043,6 +1096,11 @@ export default function PosPage() {
         setDiscountReason("None");
         setCustomDiscount("");
         setOrderNote("");
+        setOrderType("WALK-IN");
+        setDeliveryMobile("");
+        setDeliveryAddress("");
+        setDeliveryLandmark("");
+        setDeliveryFee(30);
         setCustomerQuery("");
         setSelectedMember(null);
         setRedeemFreeDrink(false);
@@ -1067,44 +1125,20 @@ export default function PosPage() {
     <main className="pos-shell">
       {notice && <div className="pos-toast" role="status">✓ {notice}</div>}
       {liveOrdersOpen && (
-  <div
-    className="live-orders-overlay"
-    role="dialog"
-    aria-modal="true"
-    aria-label="Active paid orders"
-  >
-    <section className="live-orders-window preparation-orders-window">
-      <header>
-        <div>
-          <span>POS PREPARATION CENTER</span>
-          <strong>Active Paid Orders</strong>
-          <small>
-            Start preparing, mark ready, then mark served from this POS.
-          </small>
+        <div className="live-orders-overlay" role="dialog" aria-modal="true" aria-label="Live online orders">
+          <section className="live-orders-window">
+            <header>
+              <div><span>ONLINE ORDER CENTER</span><strong>Live Orders</strong><small>Manage orders without leaving the POS.</small></div>
+              <div className="live-orders-window-actions">
+                <button onClick={() => { const frame = document.getElementById("live-orders-frame") as HTMLIFrameElement | null; if (frame) frame.src = frame.src; }}>↻ Refresh</button>
+                <a href="/admin" target="_blank" rel="noreferrer">Open full screen</a>
+                <button className="close-live-orders" onClick={() => setLiveOrdersOpen(false)} aria-label="Close live orders">×</button>
+              </div>
+            </header>
+            <iframe id="live-orders-frame" src="/admin" title="SYP ON CAFÉ Live Orders" />
+          </section>
         </div>
-
-        <div className="live-orders-window-actions">
-          <a href="/admin" target="_blank" rel="noreferrer">
-            Open Admin
-          </a>
-
-          <button
-            className="close-live-orders"
-            type="button"
-            onClick={() => setLiveOrdersOpen(false)}
-            aria-label="Close active orders"
-          >
-            ×
-          </button>
-        </div>
-      </header>
-
-      <div className="preparation-orders-scroll">
-        <ActiveOrdersPanel />
-      </div>
-    </section>
-  </div>
-)}
+      )}
       {onlineOrderAlert && (
         <div className="online-order-alert" role="alert">
           <div><span>NEW ONLINE ORDER</span><strong>{onlineOrderAlert}</strong><small>Receipt sent to printer. Open Live Orders to accept.</small></div>
@@ -1287,13 +1321,51 @@ export default function PosPage() {
             {memberSearching && <small className="member-search-status">Loading members…</small>}
             {!memberSearching && memberSearchError && <div className="member-search-error"><b>Member loading failed</b><span>{memberSearchError}</span><button type="button" onClick={() => void showMemberDirectory()}>Retry</button></div>}
             {!selectedMember && memberResults.length > 0 && <div className="member-directory-label"><span>{customerQuery.trim() ? "SEARCH RESULTS" : "MEMBER DIRECTORY"}</span><b>{memberResults.length} shown</b></div>}
-            {!selectedMember && memberResults.length > 0 && <div className="member-search-results">{memberResults.map((member) => <button type="button" key={member.id} onClick={() => { setSelectedMember(member); setRedeemFreeDrink(false); setCustomerQuery(member.name); setMemberResults([]); }}><span><strong>{member.name}</strong><small>{member.member_code} · {member.mobile}</small></span><b>{member.stamps}/10</b></button>)}</div>}
+            {!selectedMember && memberResults.length > 0 && <div className="member-search-results">{memberResults.map((member) => <button type="button" key={member.id} onClick={() => { setSelectedMember(member); setRedeemFreeDrink(false); setCustomerQuery(member.name); setDeliveryMobile(member.mobile || ""); setMemberResults([]); }}><span><strong>{member.name}</strong><small>{member.member_code} · {member.mobile}</small></span><b>{member.stamps}/10</b></button>)}</div>}
             {selectedMember ? <>
               <div className="customer-preview"><div className="avatar small">{selectedMember.name.split(" ").filter(Boolean).slice(0,2).map((part) => part[0]).join("").toUpperCase()}</div><div><strong>{selectedMember.name}</strong><span>{selectedMember.member_code}</span></div><b>{selectedMember.stamps} / 10</b></div>
               <div className="stamps">{Array.from({ length: 10 }).map((_, index) => <i key={index} className={index < selectedMember.stamps ? "filled" : ""}>★</i>)}</div>
               <div className="customer-meta"><span><b>{selectedMember.total_visits}</b> Visits</span><span><b>{selectedMember.favorite_drink || "Not set"}</b> Favorite</span><span><b>{selectedMember.birthday ? new Date(`${selectedMember.birthday}T00:00:00`).toLocaleDateString("en-PH", { month: "short", day: "numeric" }) : "—"}</b> Birthday</span></div>
-              <button type="button" className="clear-member" onClick={() => { setSelectedMember(null); setRedeemFreeDrink(false); setCustomerQuery(""); }}>Remove member</button>
+              <button type="button" className="clear-member" onClick={() => { setSelectedMember(null); setRedeemFreeDrink(false); setCustomerQuery(""); if (orderType !== "DELIVERY") setDeliveryMobile(""); }}>Remove member</button>
             </> : <div className="customer-empty">Search and select a member to add loyalty automatically.</div>}
+          </div>
+
+          <div className={`checkout-card delivery-order-card ${orderType === "DELIVERY" ? "active" : ""}`}>
+            <div className="delivery-order-heading">
+              <div>
+                <h3>ORDER TYPE</h3>
+                <small>For chat / page orders, use Delivery.</small>
+              </div>
+              {orderType === "DELIVERY" && <b>🛵 DELIVERY</b>}
+            </div>
+            <div className="delivery-type-buttons">
+              <button type="button" className={orderType === "WALK-IN" ? "active" : ""} onClick={() => { setOrderType("WALK-IN"); setCash((value) => Math.max(value - deliveryFee, 0)); }}>🏪 WALK-IN</button>
+              <button type="button" className={orderType === "DELIVERY" ? "active" : ""} onClick={() => { setOrderType("DELIVERY"); if (selectedMember?.mobile) setDeliveryMobile(selectedMember.mobile); }}>🛵 DELIVERY</button>
+            </div>
+            {orderType === "DELIVERY" && (
+              <div className="delivery-fields">
+                <label>
+                  <span>Customer Name</span>
+                  <input value={customerQuery} onChange={(event) => { setCustomerQuery(event.target.value); setSelectedMember(null); }} placeholder="Customer name from Messenger / page" />
+                </label>
+                <label>
+                  <span>Mobile Number</span>
+                  <input value={deliveryMobile} onChange={(event) => setDeliveryMobile(event.target.value.replace(/[^0-9]/g, "").slice(0, 11))} inputMode="numeric" placeholder="09XXXXXXXXX" />
+                </label>
+                <label className="delivery-wide">
+                  <span>Complete Delivery Address</span>
+                  <textarea value={deliveryAddress} onChange={(event) => setDeliveryAddress(event.target.value)} rows={2} placeholder="House no., street, barangay, municipality" />
+                </label>
+                <label>
+                  <span>Landmark</span>
+                  <input value={deliveryLandmark} onChange={(event) => setDeliveryLandmark(event.target.value)} placeholder="Nearest landmark" />
+                </label>
+                <label>
+                  <span>Delivery Fee</span>
+                  <input value={deliveryFee} onChange={(event) => setDeliveryFee(Math.max(0, Number(event.target.value.replace(/[^0-9.]/g, "")) || 0))} inputMode="decimal" />
+                </label>
+              </div>
+            )}
           </div>
 
           <div className="checkout-card safe421-payment-card">
@@ -1459,8 +1531,6 @@ export default function PosPage() {
           </button>
         </aside>
       </section>
-
-      
 
       {selectedProduct && (
         <div className="customizer-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) closeCustomizer(); }}>
@@ -1644,6 +1714,11 @@ type ReceiptPayload = {
   stampWasAdded: boolean;
   rewardWasClaimed: boolean;
   rewardDiscount: number;
+  orderType: "WALK-IN" | "DELIVERY";
+  deliveryMobile: string;
+  deliveryAddress: string;
+  deliveryLandmark: string;
+  deliveryFee: number;
 };
 
 function createReceiptNumber(date: Date) {
@@ -1670,6 +1745,7 @@ function buildReceiptHtml(payload: ReceiptPayload) {
   const {
     receiptNo, completedAt, cart, subtotal, discount, discountReason, total, payment, cash, change,
     customerQuery, addStamp, orderNote, receiptStyle, quote, seasonalTheme, qrTarget, member, stampWasAdded, rewardWasClaimed, rewardDiscount,
+    orderType, deliveryMobile, deliveryAddress, deliveryLandmark, deliveryFee,
   } = payload;
   const isEco = receiptStyle === "eco";
   const isPremium = receiptStyle === "premium";
@@ -1697,6 +1773,9 @@ function buildReceiptHtml(payload: ReceiptPayload) {
     : customerQuery.trim() && !isEco
       ? `<div class="compact-line"><span>Customer</span><strong>${escapeReceiptText(customerQuery.trim())}</strong></div>`
       : "";
+  const deliverySection = orderType === "DELIVERY"
+    ? `<section class="delivery-box"><strong>🛵 DELIVERY ORDER</strong><div><span>Customer</span><b>${escapeReceiptText(customerQuery.trim() || member?.name || "Delivery Customer")}</b></div><div><span>Mobile</span><b>${escapeReceiptText(deliveryMobile)}</b></div><div><span>Address</span><b>${escapeReceiptText(deliveryAddress)}</b></div>${deliveryLandmark ? `<div><span>Landmark</span><b>${escapeReceiptText(deliveryLandmark)}</b></div>` : ""}</section>`
+    : "";
   const loyaltySection = member
     ? `<section class="loyalty"><strong>KaSYP Loyalty</strong><span>${rewardWasClaimed ? `✓ FREE DRINK CLAIMED · -${money(rewardDiscount)}` : stampWasAdded ? "✓ +1 STAMP ADDED" : "Member purchase recorded"}</span><b>${Number(member.stamps || 0)} / 10 STAMPS</b><small>${Number(member.stamps || 0) >= 10 ? "FREE DRINK READY — show this receipt at the counter." : `${Math.max(0, 10 - Number(member.stamps || 0))} stamp(s) before your free drink.`}</small></section>`
     : `<section class="loyalty"><strong>Join KaSYP Rewards</strong><span>No member account selected</span><small>Scan below to create your free account and start collecting stamps.</small></section>`;
@@ -1734,6 +1813,11 @@ function buildReceiptHtml(payload: ReceiptPayload) {
   .loyalty strong, .loyalty span, .loyalty b, .loyalty small { display: block; }
   .loyalty b { font-size: 16px; margin: 3px 0; }
   .order-note { font-size: 9.5px; margin: 5px 0; }
+  .delivery-box { border: 1.5px solid #000; padding: 6px; margin: 7px 0; font-size: 9.5px; }
+  .delivery-box > strong { display: block; text-align: center; font-size: 12px; margin-bottom: 4px; }
+  .delivery-box > div { display: flex; justify-content: space-between; gap: 8px; margin: 2px 0; align-items: flex-start; }
+  .delivery-box span { color: #444; flex: 0 0 23mm; }
+  .delivery-box b { text-align: right; flex: 1; word-break: break-word; }
   .qr-wrap { text-align: center; margin-top: 5px; page-break-inside: avoid; }
   .qr-wrap img { width: 38mm; height: 38mm; display: block; margin: 2px auto; image-rendering: pixelated; }
   .qr-title { font-size: 13px; font-weight: 900; letter-spacing: .5px; }
@@ -1760,6 +1844,7 @@ function buildReceiptHtml(payload: ReceiptPayload) {
     <span>Payment</span><strong>${payment}</strong>
   </section>
   ${customerSection}
+  ${deliverySection}
   <div class="rule"></div>
   <section>${itemRows}</section>
   ${orderNoteSection}
@@ -1767,6 +1852,7 @@ function buildReceiptHtml(payload: ReceiptPayload) {
   <section class="summary">
     ${discount > 0 || !isEco ? `<div class="total-row"><span>Subtotal</span><strong>${money(subtotal)}</strong></div>` : ""}
     ${discount > 0 ? `<div class="total-row"><span>Discount${discountReason && discountReason !== "None" ? ` · ${escapeReceiptText(discountReason)}` : ""}</span><strong>-${money(discount)}</strong></div>` : ""}
+    ${orderType === "DELIVERY" ? `<div class="total-row"><span>Delivery Fee</span><strong>${money(deliveryFee)}</strong></div>` : ""}
     <div class="total-row grand"><span>TOTAL</span><strong>${money(total)}</strong></div>
     ${payment === "Cash" ? `<div class="total-row"><span>Cash</span><strong>${money(cash)}</strong></div><div class="total-row"><span>Change</span><strong>${money(change)}</strong></div>` : ""}
   </section>
