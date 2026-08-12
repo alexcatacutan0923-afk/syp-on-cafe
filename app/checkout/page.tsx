@@ -1,35 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { getToken } from "firebase/messaging";
 import { messaging } from "@/lib/firebase-messaging";
 
 type Temperature = "iced" | "hot" | "regular";
-
-type StoreStatus = "open" | "busy" | "closing_early" | "temporarily_closed" | "closed";
-
-type StoreSettings = {
-  id: number;
-  store_status: StoreStatus;
-  announcement: string;
-  closing_time: string;
-  ordering_enabled: boolean;
-  free_delivery: boolean;
-  delivery_fee: number;
-  updated_at?: string;
-};
-
-const defaultStoreSettings: StoreSettings = {
-  id: 1,
-  store_status: "open",
-  announcement: "",
-  closing_time: "",
-  ordering_enabled: true,
-  free_delivery: false,
-  delivery_fee: 30,
-};
 
 type AddOn = {
   id: number;
@@ -54,6 +31,155 @@ type CartItem = {
 type OrderType = "pickup" | "delivery";
 type PaymentMethod = "cash" | "gcash";
 
+declare global {
+  interface Window {
+    L?: any;
+  }
+}
+
+type DeliveryLocationPickerProps = {
+  latitude: number | null;
+  longitude: number | null;
+  onChange: (latitude: number, longitude: number) => void;
+};
+
+function DeliveryLocationPicker({
+  latitude,
+  longitude,
+  onChange,
+}: DeliveryLocationPickerProps) {
+  const mapHostRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
+  const onChangeRef = useRef(onChange);
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadLeaflet() {
+      if (!document.getElementById("syp-leaflet-css")) {
+        const link = document.createElement("link");
+        link.id = "syp-leaflet-css";
+        link.rel = "stylesheet";
+        link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+        document.head.appendChild(link);
+      }
+
+      if (!window.L) {
+        await new Promise<void>((resolve, reject) => {
+          const script = document.createElement("script");
+          script.id = "syp-leaflet-js";
+
+          const existing = document.getElementById("syp-leaflet-js");
+          if (existing) {
+            existing.addEventListener("load", () => resolve(), { once: true });
+            existing.addEventListener("error", () => reject(), { once: true });
+            return;
+          }
+
+          script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+          script.async = true;
+          script.onload = () => resolve();
+          script.onerror = () => reject();
+          document.body.appendChild(script);
+        });
+      }
+
+      if (cancelled || !mapHostRef.current || !window.L || mapRef.current) {
+        return;
+      }
+
+      const L = window.L;
+      const defaultCenter: [number, number] = [14.8001, 120.5375];
+      const hasPin = latitude !== null && longitude !== null;
+      const center: [number, number] = hasPin
+        ? [latitude as number, longitude as number]
+        : defaultCenter;
+
+      const map = L.map(mapHostRef.current, {
+        zoomControl: true,
+        scrollWheelZoom: true,
+      }).setView(center, hasPin ? 17 : 15);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 20,
+        attribution: "&copy; OpenStreetMap contributors",
+      }).addTo(map);
+
+      const marker = L.marker(center, {
+        draggable: true,
+        autoPan: true,
+      }).addTo(map);
+
+      marker.on("dragend", () => {
+        const pos = marker.getLatLng();
+        onChangeRef.current(
+          Number(pos.lat.toFixed(7)),
+          Number(pos.lng.toFixed(7)),
+        );
+      });
+
+      map.on("click", (event: any) => {
+        marker.setLatLng(event.latlng);
+        onChangeRef.current(
+          Number(event.latlng.lat.toFixed(7)),
+          Number(event.latlng.lng.toFixed(7)),
+        );
+      });
+
+      mapRef.current = map;
+      markerRef.current = marker;
+
+      window.setTimeout(() => map.invalidateSize(), 100);
+    }
+
+    loadLeaflet().catch((error) => {
+      console.error("Unable to load delivery map.", error);
+    });
+
+    return () => {
+      cancelled = true;
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+        markerRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mapRef.current || !markerRef.current) return;
+
+    if (latitude !== null && longitude !== null) {
+      const next: [number, number] = [latitude, longitude];
+      markerRef.current.setLatLng(next);
+      mapRef.current.setView(
+        next,
+        Math.max(mapRef.current.getZoom(), 17),
+      );
+    }
+  }, [latitude, longitude]);
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-white/10 bg-black">
+      <div
+        ref={mapHostRef}
+        className="h-[320px] w-full"
+        aria-label="Delivery location map"
+      />
+      <div className="border-t border-white/10 px-4 py-3 text-xs text-neutral-400">
+        Tap anywhere on the map or <strong>drag the pin</strong> to the exact
+        delivery location.
+      </div>
+    </div>
+  );
+}
+
+
 function formatTemperature(value?: Temperature) {
   if (value === "hot") return "Hot";
   if (value === "iced") return "Iced";
@@ -62,6 +188,41 @@ function formatTemperature(value?: Temperature) {
 
 function cleanPublicEnv(value: string | undefined) {
   return (value || "").trim().replace(/^['"]|['"]$/g, "");
+}
+
+const SYP_ACCOUNT_API_URL =
+  cleanPublicEnv(process.env.NEXT_PUBLIC_SYP_ACCOUNT_API_URL) ||
+  "https://script.google.com/macros/s/AKfycbw8-313J5vT0eanrWTt52lGuzOO_AXs4jZxjuXz8Z5ic7gZS_vnZaUl7HxJQBYgpIs/exec";
+
+async function ensureLegacyMember(name: string, mobile: string) {
+  const payload = {
+    action: "ensureOnlineMember",
+    name,
+    mobile,
+  };
+
+  const url =
+    `${SYP_ACCOUNT_API_URL}?action=v3api&payload=` +
+    encodeURIComponent(JSON.stringify(payload)) +
+    `&_=${Date.now()}`;
+
+  const response = await fetch(url, {
+    method: "GET",
+    redirect: "follow",
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Member sync returned ${response.status}.`);
+  }
+
+  const result = await response.json();
+
+  if (!result?.success || !result?.customer?.id) {
+    throw new Error(result?.message || "Unable to create the member record.");
+  }
+
+  return result.customer;
 }
 
 
@@ -83,6 +244,11 @@ export default function CheckoutPage() {
   const [address, setAddress] = useState("");
   const [landmark, setLandmark] = useState("");
   const [notes, setNotes] = useState("");
+
+  const [deliveryLatitude, setDeliveryLatitude] = useState<number | null>(null);
+  const [deliveryLongitude, setDeliveryLongitude] = useState<number | null>(null);
+  const [locationStatus, setLocationStatus] = useState("");
+  const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [riderTip, setRiderTip] = useState(0);
   const [customTip, setCustomTip] = useState("");
 
@@ -95,7 +261,6 @@ export default function CheckoutPage() {
   const [copyNotice, setCopyNotice] = useState("");
   const [memberCode, setMemberCode] = useState("");
   const [memberQrTarget, setMemberQrTarget] = useState("");
-  const [storeSettings, setStoreSettings] = useState<StoreSettings>(defaultStoreSettings);
 
   const gcashAccountName = cleanPublicEnv(process.env.NEXT_PUBLIC_GCASH_ACCOUNT_NAME) || "SYP ON CAFÉ";
   const gcashAccountNumber = cleanPublicEnv(process.env.NEXT_PUBLIC_GCASH_ACCOUNT_NUMBER);
@@ -143,25 +308,14 @@ export default function CheckoutPage() {
         return;
       }
 
-      await navigator.serviceWorker.register(
-  "/firebase-messaging-sw.js",
-  { scope: "/" }
-);
+      const registration = await navigator.serviceWorker.register(
+        "/firebase-messaging-sw.js",
+      );
 
-// Hintayin maging active
-await navigator.serviceWorker.ready;
-
-const registration =
-  await navigator.serviceWorker.getRegistration("/");
-
-if (!registration || !registration.active) {
-  throw new Error("Service Worker is not active.");
-}
-
-const token = await getToken(messaging, {
-  vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY!,
-  serviceWorkerRegistration: registration,
-});
+      const token = await getToken(messaging, {
+        vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY!,
+        serviceWorkerRegistration: registration,
+      });
 
       if (!token) {
         alert("Unable to get a notification token.");
@@ -202,27 +356,6 @@ const token = await getToken(messaging, {
     setIsLoading(false);
   }, []);
 
-  useEffect(() => {
-    async function loadStoreSettings() {
-      const { data, error } = await supabase
-        .from("store_settings")
-        .select("id,store_status,announcement,closing_time,ordering_enabled,free_delivery,delivery_fee,updated_at")
-        .eq("id", 1)
-        .single();
-      if (!error && data) setStoreSettings({ ...(data as StoreSettings), delivery_fee: Number(data.delivery_fee ?? 30) });
-    }
-
-    void loadStoreSettings();
-    const channel = supabase.channel("checkout-store-settings").on(
-      "postgres_changes",
-      { event: "UPDATE", schema: "public", table: "store_settings", filter: "id=eq.1" },
-      (payload) => { const row = payload.new as StoreSettings; setStoreSettings({ ...row, delivery_fee: Number(row.delivery_fee ?? 0) }); },
-    ).subscribe();
-    return () => { void supabase.removeChannel(channel); };
-  }, []);
-
-  const orderingAvailable = storeSettings.ordering_enabled && !["closed", "temporarily_closed"].includes(storeSettings.store_status);
-
   const subtotal = useMemo(() => {
     return cart.reduce(
       (total, item) => total + item.price * item.quantity,
@@ -230,7 +363,7 @@ const token = await getToken(messaging, {
     );
   }, [cart]);
 
-  const deliveryFee = orderType === "delivery" ? (storeSettings.free_delivery ? 0 : Number(storeSettings.delivery_fee ?? 30)) : 0;
+  const deliveryFee = orderType === "delivery" ? 30 : 0;
   const tipAmount = orderType === "delivery" ? riderTip : 0;
   const total = subtotal + deliveryFee + tipAmount;
 
@@ -245,23 +378,48 @@ const token = await getToken(messaging, {
     setRiderTip(Number(digitsOnly || 0));
   }
 
+  function pinCurrentLocation() {
+    if (orderType !== "delivery") return;
+
+    if (!("geolocation" in navigator)) {
+      setLocationStatus("Location is not supported by this browser.");
+      return;
+    }
+
+    setIsGettingLocation(true);
+    setLocationStatus("Getting your location...");
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const latitude = Number(position.coords.latitude.toFixed(7));
+        const longitude = Number(position.coords.longitude.toFixed(7));
+        setDeliveryLatitude(latitude);
+        setDeliveryLongitude(longitude);
+        setLocationStatus("Location pinned successfully.");
+        setIsGettingLocation(false);
+      },
+      (error) => {
+        const message =
+          error.code === error.PERMISSION_DENIED
+            ? "Please allow location access in your browser."
+            : error.code === error.TIMEOUT
+              ? "Location request timed out. Please try again."
+              : "Unable to get your location.";
+        setLocationStatus(message);
+        setIsGettingLocation(false);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 },
+    );
+  }
+
+  function setDroppedLocation(latitude: number, longitude: number) {
+    setDeliveryLatitude(latitude);
+    setDeliveryLongitude(longitude);
+    setLocationStatus("Delivery pin placed. Drag it anytime to adjust.");
+  }
+
   async function submitOrder() {
     if (isSubmitting) return;
-
-    const { data: latestSettings, error: settingsError } = await supabase
-      .from("store_settings")
-      .select("id,store_status,announcement,closing_time,ordering_enabled,free_delivery,delivery_fee,updated_at")
-      .eq("id", 1)
-      .single();
-
-    if (settingsError) { setSubmitError("Unable to confirm store availability. Please try again."); return; }
-    const currentSettings = { ...(latestSettings as StoreSettings), delivery_fee: Number(latestSettings.delivery_fee ?? 30) };
-    setStoreSettings(currentSettings);
-    const currentlyAvailable = currentSettings.ordering_enabled && !["closed", "temporarily_closed"].includes(currentSettings.store_status);
-    if (!currentlyAvailable) { setSubmitError(currentSettings.announcement || "Online ordering is currently unavailable."); return; }
-
-    const finalDeliveryFee = orderType === "delivery" ? (currentSettings.free_delivery ? 0 : Number(currentSettings.delivery_fee ?? 30)) : 0;
-    const finalTotal = subtotal + finalDeliveryFee + tipAmount;
 
     const cleanName = customerName.trim();
     const cleanMobile = mobile.replace(/\s+/g, "").trim();
@@ -280,6 +438,14 @@ const token = await getToken(messaging, {
 
     if (orderType === "delivery" && !address.trim()) {
       alert("Please enter your complete delivery address.");
+      return;
+    }
+
+    if (
+      orderType === "delivery" &&
+      (deliveryLatitude === null || deliveryLongitude === null)
+    ) {
+      alert("Please pin your delivery location on the map.");
       return;
     }
 
@@ -321,9 +487,19 @@ const token = await getToken(messaging, {
             orderType === "delivery" ? landmark.trim() : "",
           p_notes: [
             notes.trim(),
+            orderType === "delivery" &&
+            deliveryLatitude !== null &&
+            deliveryLongitude !== null
+              ? `[DELIVERY PIN: ${deliveryLatitude}, ${deliveryLongitude}]`
+              : "",
+            orderType === "delivery" &&
+            deliveryLatitude !== null &&
+            deliveryLongitude !== null
+              ? `[MAP: https://www.google.com/maps?q=${deliveryLatitude},${deliveryLongitude}]`
+              : "",
             tipAmount > 0 ? `[RIDER TIP: ₱${tipAmount}]` : "",
             paymentMethod === "gcash"
-              ? `[GCASH PAYMENT: ₱${finalTotal} — verify before accepting]`
+              ? `[GCASH PAYMENT: ₱${total} — verify before accepting]`
               : "",
           ]
             .filter(Boolean)
@@ -332,8 +508,8 @@ const token = await getToken(messaging, {
           // Keep the RPC payload compatible with the existing database function.
           // Rider tips are recorded separately in the notes/local order and are
           // intentionally excluded from store sales totals and delivery-fee checks.
-          p_delivery_fee: finalDeliveryFee,
-          p_total: subtotal + finalDeliveryFee,
+          p_delivery_fee: deliveryFee,
+          p_total: subtotal + deliveryFee,
           p_items: orderItems,
         },
       );
@@ -348,35 +524,91 @@ const token = await getToken(messaging, {
         );
       }
 
+     try {
+  const { error: notificationError } = await supabase.functions.invoke(
+    "send-admin-push",
+    {
+      body: {
+        record: {
+          id: createdOrder.order_id,
+          order_number: createdOrder.order_number,
+          customer_name: cleanName,
+          mobile: cleanMobile,
+          order_type: orderType,
+          payment_method: paymentMethod,
+          address:
+            orderType === "delivery" ? address.trim() : "",
+          landmark:
+            orderType === "delivery" ? landmark.trim() : "",
+          deliveryLatitude:
+            orderType === "delivery" ? deliveryLatitude : null,
+          deliveryLongitude:
+            orderType === "delivery" ? deliveryLongitude : null,
+          deliveryMapUrl:
+            orderType === "delivery" &&
+            deliveryLatitude !== null &&
+            deliveryLongitude !== null
+              ? `https://www.google.com/maps?q=${deliveryLatitude},${deliveryLongitude}`
+              : "",
+          total,
+          items: orderItems,
+        },
+      },
+    },
+  );
 
-      // Create/find the real loyalty account before showing a member QR.
-      // The temporary PIN for online-order members is 1234 and can be changed
-      // later from the member dashboard.
+  if (notificationError) {
+    console.error("Order notification failed:", notificationError);
+  }
+} catch (notificationError) {
+  console.error("Order notification failed:", notificationError);
+}
+
+      // Keep the Supabase loyalty member and the legacy Apps Script
+      // member system on the same KaSYP ID. The member login/activation
+      // endpoint reads the legacy Customers sheet, so creating only a
+      // Supabase loyalty_members row can otherwise produce "Member not found".
       let resolvedMemberCode = "";
       let customerId: number | null = null;
       let currentCustomerCode: string | null = null;
 
-      const { data: memberData, error: memberError } = await supabase.rpc(
-        "register_loyalty_member",
-        {
-          p_name: cleanName,
-          p_mobile: cleanMobile,
-          p_birthday: null,
-          p_pin: "1234",
-        },
-      );
-
-      if (memberError) {
-        console.error(
-          "Automatic loyalty member creation failed:",
-          memberError,
+      try {
+        const legacyMember = await ensureLegacyMember(
+          cleanName,
+          cleanMobile,
         );
-      } else {
-        const loyaltyMember = Array.isArray(memberData)
-          ? memberData[0]
-          : memberData;
+        resolvedMemberCode = String(legacyMember.id || "").trim().toUpperCase();
+      } catch (legacyMemberError) {
+        console.error("Legacy member sync failed:", legacyMemberError);
+      }
 
-        resolvedMemberCode = loyaltyMember?.member_code || "";
+      // Keep the Supabase loyalty member as the primary cloud record too.
+      if (!resolvedMemberCode) {
+        const { data: memberData, error: memberError } = await supabase.rpc(
+          "register_loyalty_member",
+          {
+            p_name: cleanName,
+            p_mobile: cleanMobile,
+            p_birthday: null,
+            p_pin: "1234",
+          },
+        );
+
+        if (memberError) {
+          console.error(
+            "Automatic loyalty member creation failed:",
+            memberError,
+          );
+        } else {
+          const loyaltyMember = Array.isArray(memberData)
+            ? memberData[0]
+            : memberData;
+          resolvedMemberCode = String(
+            loyaltyMember?.member_code || "",
+          )
+            .trim()
+            .toUpperCase();
+        }
       }
 
       const { data: foundCustomer, error: customerLookupError } =
@@ -395,11 +627,9 @@ const token = await getToken(messaging, {
         );
       } else if (foundCustomer) {
         customerId = Number(foundCustomer.id);
-        currentCustomerCode =
-          foundCustomer.customer_code ?? null;
+        currentCustomerCode = foundCustomer.customer_code ?? null;
       }
 
-      // Keep the legacy customers table aligned with the real loyalty member ID.
       if (
         customerId !== null &&
         resolvedMemberCode &&
@@ -421,37 +651,31 @@ const token = await getToken(messaging, {
       }
 
       if (fcmToken) {
-        const { data: savedPushToken, error: pushTokenError } =
-          await supabase
-            .from("customer_push_tokens")
-            .insert({
-              customer_id: customerId,
-              order_id: createdOrder.order_id,
-              mobile: cleanMobile,
-              fcm_token: fcmToken,
-              platform: navigator.platform || "unknown",
-              browser: navigator.userAgent,
-              is_active: true,
-            })
-            .select()
-            .single();
+        const { error: pushTokenError } = await supabase
+          .from("customer_push_tokens")
+          .insert({
+            customer_id: customerId,
+            order_id: createdOrder.order_id,
+            mobile: cleanMobile,
+            fcm_token: fcmToken,
+            platform: navigator.platform || "unknown",
+            browser: navigator.userAgent,
+            is_active: true,
+          });
 
         if (pushTokenError) {
           console.error(
             "Customer push token insert failed:",
             pushTokenError,
           );
-          alert(`Push token save failed: ${pushTokenError.message}`);
-        } else {
-          console.log(
-            "Customer push token saved:",
-            savedPushToken,
-          );
         }
       }
 
       if (resolvedMemberCode) {
-        const target = `${window.location.origin}/member-login?identity=${encodeURIComponent(resolvedMemberCode)}&source=online-order`;
+        const target =
+          `${window.location.origin}/member-login?identity=` +
+          `${encodeURIComponent(resolvedMemberCode)}&source=online-order`;
+
         setMemberCode(resolvedMemberCode);
         setMemberQrTarget(target);
       }
@@ -467,12 +691,22 @@ const token = await getToken(messaging, {
           orderType === "delivery" ? address.trim() : "",
         landmark:
           orderType === "delivery" ? landmark.trim() : "",
+        deliveryLatitude:
+          orderType === "delivery" ? deliveryLatitude : null,
+        deliveryLongitude:
+          orderType === "delivery" ? deliveryLongitude : null,
+        deliveryMapUrl:
+          orderType === "delivery" &&
+          deliveryLatitude !== null &&
+          deliveryLongitude !== null
+            ? `https://www.google.com/maps?q=${deliveryLatitude},${deliveryLongitude}`
+            : "",
         notes: notes.trim(),
         riderTip: tipAmount,
         items: cart,
         subtotal,
-        deliveryFee: finalDeliveryFee,
-        total: finalTotal,
+        deliveryFee,
+        total,
         status: "pending",
         createdAt: new Date().toISOString(),
       };
@@ -483,7 +717,7 @@ const token = await getToken(messaging, {
       );
 
       // Preserve the final payment details before clearing the cart.
-      setSubmittedTotal(finalTotal);
+      setSubmittedTotal(total);
       setSubmittedPaymentMethod(paymentMethod);
       setSubmittedOrderNumber(createdOrder.order_number);
       localStorage.removeItem("sypCart");
@@ -762,19 +996,6 @@ const token = await getToken(messaging, {
         </div>
       </header>
 
-      <section className={orderingAvailable ? "border-b border-emerald-500/20 bg-emerald-500/10" : "border-b border-red-500/20 bg-red-500/10"}>
-        <div className="mx-auto max-w-7xl px-5 py-4">
-          <p className={orderingAvailable ? "font-black text-emerald-300" : "font-black text-red-300"}>
-            {storeSettings.store_status === "closing_early" ? "🟠 Early Closing Today" : orderingAvailable ? "🟢 Online Ordering Available" : "🔴 Online Ordering Closed"}
-          </p>
-          <p className="mt-1 text-sm text-neutral-300">{storeSettings.announcement || (orderingAvailable ? "Complete your order below." : "Please check again later.")}</p>
-          <div className="mt-1 flex flex-wrap gap-4 text-xs font-bold text-neutral-400">
-            {storeSettings.closing_time && <span>Last order: {storeSettings.closing_time}</span>}
-            {storeSettings.free_delivery && orderingAvailable && <span className="text-amber-300">FREE DELIVERY</span>}
-          </div>
-        </div>
-      </section>
-
       <div className="mx-auto grid max-w-7xl gap-8 px-5 py-10 lg:grid-cols-[1fr_420px]">
         <section>
           <Link href="/menu" className="text-sm font-medium text-amber-400">
@@ -881,6 +1102,68 @@ const token = await getToken(messaging, {
                       className="mt-2 w-full rounded-2xl border border-white/10 bg-black px-4 py-3 outline-none transition focus:border-amber-400"
                     />
                   </label>
+
+                  <div className="rounded-2xl border border-amber-400/20 bg-amber-400/5 p-4">
+                    <div className="mb-3">
+                      <p className="font-semibold">📍 Drop Your Delivery Pin</p>
+                      <p className="mt-1 text-sm text-neutral-400">
+                        Drag the pin or tap the exact spot on the map. You can
+                        adjust it before placing the order.
+                      </p>
+                    </div>
+
+                    <DeliveryLocationPicker
+                      latitude={deliveryLatitude}
+                      longitude={deliveryLongitude}
+                      onChange={setDroppedLocation}
+                    />
+
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={pinCurrentLocation}
+                        disabled={isGettingLocation}
+                        className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold transition hover:bg-white/10 disabled:opacity-50"
+                      >
+                        {isGettingLocation
+                          ? "Getting GPS..."
+                          : "📡 Use My Current Location"}
+                      </button>
+
+                      {deliveryLatitude !== null &&
+                        deliveryLongitude !== null && (
+                          <span className="rounded-full bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-300">
+                            ✓ Pin placed
+                          </span>
+                        )}
+                    </div>
+
+                    {deliveryLatitude !== null &&
+                      deliveryLongitude !== null && (
+                        <div className="mt-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-sm">
+                          <p className="font-semibold text-emerald-300">
+                            Exact delivery pin
+                          </p>
+                          <p className="mt-1 text-neutral-300">
+                            {deliveryLatitude}, {deliveryLongitude}
+                          </p>
+                          <a
+                            href={`https://www.google.com/maps?q=${deliveryLatitude},${deliveryLongitude}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-2 inline-block font-semibold text-amber-300 underline"
+                          >
+                            Open in Google Maps
+                          </a>
+                        </div>
+                      )}
+
+                    {locationStatus && (
+                      <p className="mt-2 text-xs text-neutral-400" aria-live="polite">
+                        {locationStatus}
+                      </p>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -1086,14 +1369,12 @@ const token = await getToken(messaging, {
             <button
               type="button"
               onClick={submitOrder}
-              disabled={isSubmitting || !orderingAvailable}
+              disabled={isSubmitting}
               className="mt-7 w-full rounded-full bg-amber-400 px-6 py-4 font-semibold text-black transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {!orderingAvailable
-                ? "Online Ordering Closed"
-                : isSubmitting
-                  ? "Submitting Order..."
-                  : `Place Order • ₱${total}`}
+              {isSubmitting
+                ? "Submitting Order..."
+                : `Place Order • ₱${total}`}
             </button>
 
             {submitError && (

@@ -28,6 +28,19 @@ type QueueTicket = {
   preparing_at?: string | null;
   ready_at?: string | null;
   served_at?: string | null;
+
+  // DELIVERY
+  order_type?: string | null;
+  delivery_address?: string | null;
+  address?: string | null;
+  delivery_lat?: number | null;
+  delivery_lng?: number | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  pin_lat?: number | null;
+  pin_lng?: number | null;
+  location_url?: string | null;
+  maps_url?: string | null;
 };
 
 const money = (value: number) =>
@@ -35,12 +48,56 @@ const money = (value: number) =>
 
 function elapsed(from?: string | null) {
   if (!from) return "00:00";
+
   const seconds = Math.max(
     0,
     Math.floor((Date.now() - new Date(from).getTime()) / 1000),
   );
+
   const minutes = Math.floor(seconds / 60);
-  return `${String(minutes).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
+
+  return `${String(minutes).padStart(2, "0")}:${String(
+    seconds % 60,
+  ).padStart(2, "0")}`;
+}
+
+function getDeliveryInfo(ticket: QueueTicket) {
+  const address =
+    ticket.delivery_address ||
+    ticket.address ||
+    "";
+
+  const lat =
+    ticket.delivery_lat ??
+    ticket.latitude ??
+    ticket.pin_lat ??
+    null;
+
+  const lng =
+    ticket.delivery_lng ??
+    ticket.longitude ??
+    ticket.pin_lng ??
+    null;
+
+  const locationUrl =
+    ticket.location_url ||
+    ticket.maps_url ||
+    (lat !== null && lng !== null
+      ? `https://www.google.com/maps?q=${lat},${lng}`
+      : "");
+
+  const isDelivery =
+    String(ticket.order_type || "").toLowerCase() === "delivery" ||
+    Boolean(address) ||
+    (lat !== null && lng !== null);
+
+  return {
+    isDelivery,
+    address,
+    lat,
+    lng,
+    locationUrl,
+  };
 }
 
 export default function ActiveOrdersPanel() {
@@ -71,14 +128,25 @@ export default function ActiveOrdersPanel() {
   useEffect(() => {
     void load();
 
-    const timer = window.setInterval(() => setClockTick((value) => value + 1), 1000);
-    const refreshTimer = window.setInterval(() => void load(), 10000);
+    const timer = window.setInterval(
+      () => setClockTick((value) => value + 1),
+      1000,
+    );
+
+    const refreshTimer = window.setInterval(
+      () => void load(),
+      10000,
+    );
 
     const channel = supabase
       .channel("pos-preparation-panel")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "pos_preparation_queue" },
+        {
+          event: "*",
+          schema: "public",
+          table: "pos_preparation_queue",
+        },
         () => void load(),
       )
       .subscribe();
@@ -92,9 +160,17 @@ export default function ActiveOrdersPanel() {
 
   const counts = useMemo(
     () => ({
-      waiting: tickets.filter((ticket) => ticket.status === "waiting").length,
-      preparing: tickets.filter((ticket) => ticket.status === "preparing").length,
-      ready: tickets.filter((ticket) => ticket.status === "ready").length,
+      waiting: tickets.filter(
+        (ticket) => ticket.status === "waiting",
+      ).length,
+
+      preparing: tickets.filter(
+        (ticket) => ticket.status === "preparing",
+      ).length,
+
+      ready: tickets.filter(
+        (ticket) => ticket.status === "ready",
+      ).length,
     }),
     [tickets],
   );
@@ -107,6 +183,7 @@ export default function ActiveOrdersPanel() {
     setMessage("");
 
     const now = new Date().toISOString();
+
     const timestampPatch =
       nextStatus === "preparing"
         ? { preparing_at: now }
@@ -135,6 +212,7 @@ export default function ActiveOrdersPanel() {
             ? `${ticket.queue_no} is ready for pickup.`
             : `${ticket.queue_no} marked served.`,
       );
+
       await load();
     }
 
@@ -146,75 +224,190 @@ export default function ActiveOrdersPanel() {
       <header className="pos-active-orders-head">
         <div>
           <span>PAID PREPARATION QUEUE</span>
+
           <h2>Active Orders</h2>
+
           <p>
-            Controls stay on this POS monitor. The extended customer display is
-            view-only.
+            Controls stay on this POS monitor. The extended customer
+            display is view-only.
           </p>
         </div>
 
         <div className="pos-order-counts">
-          <b><i className="waiting" />{counts.waiting} Waiting</b>
-          <b><i className="preparing" />{counts.preparing} Preparing</b>
-          <b><i className="ready" />{counts.ready} Ready</b>
+          <b>
+            <i className="waiting" />
+            {counts.waiting} Waiting
+          </b>
+
+          <b>
+            <i className="preparing" />
+            {counts.preparing} Preparing
+          </b>
+
+          <b>
+            <i className="ready" />
+            {counts.ready} Ready
+          </b>
         </div>
       </header>
 
-      {message && <div className="pos-queue-message">{message}</div>}
+      {message && (
+        <div className="pos-queue-message">
+          {message}
+        </div>
+      )}
 
       {loading ? (
-        <div className="pos-queue-empty">Loading paid orders…</div>
+        <div className="pos-queue-empty">
+          Loading paid orders…
+        </div>
       ) : tickets.length === 0 ? (
         <div className="pos-queue-empty">
           <strong>No active paid orders</strong>
-          <span>New checkout tickets will stay here until marked served.</span>
+
+          <span>
+            New checkout tickets will stay here until marked served.
+          </span>
         </div>
       ) : (
         <div className="pos-ticket-grid">
           {tickets.map((ticket) => {
-            const startedAt = ticket.preparing_at || ticket.paid_at;
+            const startedAt =
+              ticket.preparing_at || ticket.paid_at;
+
             const firstItems = Array.isArray(ticket.items)
               ? ticket.items.slice(0, 3)
               : [];
+
+            const delivery = getDeliveryInfo(ticket);
 
             return (
               <article
                 key={ticket.id}
                 className={`pos-ticket status-${ticket.status}`}
               >
+                {/* TOP */}
                 <div className="pos-ticket-top">
                   <div>
-                    <span>{ticket.status.toUpperCase()}</span>
+                    <span>
+                      {ticket.status.toUpperCase()}
+                    </span>
+
                     <strong>{ticket.queue_no}</strong>
                   </div>
 
                   <div className="pos-ticket-time">
                     <small>
-                      {ticket.status === "waiting" ? "Wait time" : "Production"}
+                      {ticket.status === "waiting"
+                        ? "Wait time"
+                        : "Production"}
                     </small>
+
                     <b>{elapsed(startedAt)}</b>
                   </div>
                 </div>
 
+                {/* CUSTOMER */}
                 <div className="pos-ticket-customer">
-                  <h3>{ticket.customer_name || "WALK-IN CUSTOMER"}</h3>
+                  <h3>
+                    {ticket.customer_name ||
+                      "WALK-IN CUSTOMER"}
+                  </h3>
+
                   <p>
-                    {ticket.receipt_no} · PAID · {money(ticket.total)}
+                    {ticket.receipt_no} · PAID ·{" "}
+                    {money(ticket.total)}
                   </p>
                 </div>
 
+                {/* DELIVERY */}
+                {delivery.isDelivery && (
+                  <div className="pos-ticket-delivery">
+                    <div className="pos-ticket-delivery-title">
+                      <span>🛵</span>
+
+                      <div>
+                        <strong>DELIVERY ORDER</strong>
+
+                        <small>
+                          Customer delivery location
+                        </small>
+                      </div>
+                    </div>
+
+                    {delivery.address && (
+                      <div className="pos-ticket-address">
+                        <span>📍</span>
+
+                        <div>
+                          <small>ADDRESS</small>
+
+                          <p>{delivery.address}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {delivery.lat !== null &&
+                      delivery.lng !== null && (
+                        <div className="pos-ticket-coordinates">
+                          <span>
+                            📌 PIN LOCATION
+                          </span>
+
+                          <small>
+                            {Number(
+                              delivery.lat,
+                            ).toFixed(6)}
+                            ,{" "}
+                            {Number(
+                              delivery.lng,
+                            ).toFixed(6)}
+                          </small>
+                        </div>
+                      )}
+
+                    {delivery.locationUrl && (
+                      <a
+                        href={delivery.locationUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="pos-ticket-map-button"
+                      >
+                        📍 OPEN PIN LOCATION
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                {/* ITEMS */}
                 <div className="pos-ticket-items">
                   {firstItems.map((item, index) => (
-                    <div key={`${ticket.id}-${item.name}-${index}`}>
+                    <div
+                      key={`${ticket.id}-${item.name}-${index}`}
+                    >
                       {item.image ? (
-                        <img src={item.image} alt="" />
+                        <img
+                          src={item.image}
+                          alt=""
+                        />
                       ) : (
-                        <span className="pos-ticket-image-fallback">☕</span>
+                        <span className="pos-ticket-image-fallback">
+                          ☕
+                        </span>
                       )}
+
                       <p>
-                        <b>{item.qty}× {item.name}</b>
+                        <b>
+                          {item.qty}× {item.name}
+                        </b>
+
                         <small>
-                          {[item.size, item.details].filter(Boolean).join(" · ")}
+                          {[
+                            item.size,
+                            item.details,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
                         </small>
                       </p>
                     </div>
@@ -222,23 +415,35 @@ export default function ActiveOrdersPanel() {
 
                   {ticket.items.length > 3 && (
                     <small className="pos-more-items">
-                      +{ticket.items.length - 3} more item(s)
+                      +
+                      {ticket.items.length - 3} more
+                      item(s)
                     </small>
                   )}
                 </div>
 
+                {/* NOTE */}
                 {ticket.notes && (
                   <div className="pos-ticket-note">
-                    <b>Note:</b> {ticket.notes}
+                    <b>Note:</b>{" "}
+                    {ticket.notes}
                   </div>
                 )}
 
+                {/* ACTIONS */}
                 <div className="pos-ticket-actions">
                   {ticket.status === "waiting" && (
                     <button
                       type="button"
-                      disabled={updatingId === ticket.id}
-                      onClick={() => void updateStatus(ticket, "preparing")}
+                      disabled={
+                        updatingId === ticket.id
+                      }
+                      onClick={() =>
+                        void updateStatus(
+                          ticket,
+                          "preparing",
+                        )
+                      }
                       className="start"
                     >
                       {updatingId === ticket.id
@@ -250,8 +455,15 @@ export default function ActiveOrdersPanel() {
                   {ticket.status === "preparing" && (
                     <button
                       type="button"
-                      disabled={updatingId === ticket.id}
-                      onClick={() => void updateStatus(ticket, "ready")}
+                      disabled={
+                        updatingId === ticket.id
+                      }
+                      onClick={() =>
+                        void updateStatus(
+                          ticket,
+                          "ready",
+                        )
+                      }
                       className="ready"
                     >
                       {updatingId === ticket.id
@@ -263,8 +475,15 @@ export default function ActiveOrdersPanel() {
                   {ticket.status === "ready" && (
                     <button
                       type="button"
-                      disabled={updatingId === ticket.id}
-                      onClick={() => void updateStatus(ticket, "served")}
+                      disabled={
+                        updatingId === ticket.id
+                      }
+                      onClick={() =>
+                        void updateStatus(
+                          ticket,
+                          "served",
+                        )
+                      }
                       className="served"
                     >
                       {updatingId === ticket.id
