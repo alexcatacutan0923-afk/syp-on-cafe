@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-const LOGO_URL = "/logo.png"; // Upload the actual SYP logo to public/logo.png
+const LOGO_URL = "/IMG_5996.jpeg"; // Upload the actual SYP logo to public/logo.png
 const QR_TARGET = "https://syponcafe.shop";
 
 type Sticker = {
