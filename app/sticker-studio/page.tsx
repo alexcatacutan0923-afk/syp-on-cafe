@@ -138,7 +138,7 @@ export default function StickerStudioPage() {
         .sticker-thumb { width: 100%; max-width: 560px; aspect-ratio: 80 / 50; background: #fff; overflow: hidden; }
         .sticker-row-actions { display: flex; flex-direction: column; gap: 7px; }
         .small-action { border: 1px solid #d8c4ad; background: white; color: #67472f; padding: 8px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; }
-        .sticker-sheet { display: none; width: 80mm; height: 52mm; padding: 0; margin: 0 auto; background: #fff; color: #000; overflow: hidden; page-break-after: always; break-after: page; }
+        .sticker-sheet { display: none; width: 80mm; height: 50mm; padding: 0; margin: 0 auto; background: #fff; color: #000; overflow: hidden; page-break-after: always; break-after: page; }
         /* Premium label frame: real vector artwork is rendered by ThemeArtwork below. */
         .sticker-art { position: relative; isolation: isolate; width: 80mm; height: 50mm; display: flex; flex-direction: column; padding: 0; overflow: hidden; background: #fff; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; text-align: left; }
         .sticker-art.theme-horror { --theme-ink: #111; --theme-paper: #fff; }
@@ -166,7 +166,7 @@ export default function StickerStudioPage() {
         .sticker-sheet.print-selected { display: block; }
         @media (max-width: 900px) { .studio-layout { grid-template-columns: 1fr; } .studio-top { align-items: flex-start; } }
         @media (max-width: 520px) { .studio-shell { padding: 18px 12px 30px; } .studio-panel { padding: 17px; border-radius: 16px; } .studio-brand img { width: 46px; height: 46px; } .studio-brand p { font-size: 8px; letter-spacing: .12em; } .studio-back { padding: 9px 11px; font-size: 11px; } .sticker-row { grid-template-columns: 1fr; } .sticker-row-actions { flex-direction: row; } }
-        @page { size: 80mm 52mm; margin: 0; }
+        @page { size: 80mm 50mm; margin: 0; }
         @media print {
           html, body { width: 80mm !important; margin: 0 !important; padding: 0 !important; background: #fff !important; }
           body * { visibility: hidden !important; }
@@ -175,7 +175,7 @@ export default function StickerStudioPage() {
           .studio-top, .studio-form-panel, .studio-preview-head, .studio-empty, .sticker-row-actions, .studio-notice { display: none !important; }
           .sticker-row { display: block !important; width: 80mm !important; margin: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: #fff !important; break-inside: avoid !important; }
           .sticker-thumb { display: none !important; }
-          .sticker-sheet { display: block !important; width: 80mm !important; height: 52mm !important; margin: 0 !important; padding: 0 !important; page-break-after: always !important; break-after: page !important; overflow: hidden !important; }
+          .sticker-sheet { display: block !important; width: 80mm !important; height: 50mm !important; margin: 0 !important; padding: 0 !important; page-break-after: always !important; break-after: page !important; overflow: hidden !important; }
           body.printing-one .sticker-sheet:not(.print-selected) { display: none !important; }
           .sticker-art { width: 80mm !important; height: 50mm !important; }
         }
@@ -212,7 +212,7 @@ export default function StickerStudioPage() {
         </section>
 
         <section className="studio-panel">
-          <div className="studio-preview-head"><div><h2>Print queue</h2><p className="studio-muted" style={{ marginBottom: 0 }}>Each sticker is 80 × 50 mm, landscape, with a 2 mm feed gap (52 mm print step).</p></div><span className="studio-count">{stickers.length} sticker{stickers.length === 1 ? "" : "s"}</span></div>
+          <div className="studio-preview-head"><div><h2>Print queue</h2><p className="studio-muted" style={{ marginBottom: 0 }}>Each sticker is 80 × 50 mm, landscape, with no extra blank gap (50 mm print step).</p></div><span className="studio-count">{stickers.length} sticker{stickers.length === 1 ? "" : "s"}</span></div>
           {!stickers.length ? <div className="studio-empty">Your sticker preview will appear here.<br />Add a drink on the left to get started.</div> : <div className="sticker-list">{stickers.map((sticker) => <div className="sticker-row" key={sticker.id}>
             <div className="sticker-thumb"><StickerArt sticker={sticker} qrUrl={qrUrl} /></div>
             <div className="sticker-row-actions"><button className="small-action" type="button" onClick={() => printOne(sticker.id)}>Print / reprint</button><button className="small-action" type="button" onClick={() => removeSticker(sticker.id)}>Remove</button></div>
