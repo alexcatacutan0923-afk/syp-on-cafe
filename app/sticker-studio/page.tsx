@@ -797,8 +797,8 @@ export default function StickerStudioPage() {
         .sticker-copy { grid-column: 2; grid-row: 1; min-width: 0; overflow: hidden; }
         .sticker-wordmark { font-size: 8pt; font-weight: 900; letter-spacing: -.03em; line-height: 1; white-space: nowrap; }
         .sticker-tagline { font-size: 5pt; font-weight: 800; margin-top: .8mm; letter-spacing: .03em; white-space: nowrap; }
-        .sticker-drink { font-family: Georgia, 'Times New Roman', serif; font-size: 19pt; font-weight: 900; font-style: italic; line-height: 1; letter-spacing: -.035em; overflow-wrap: anywhere; margin-top: 1.5mm; -webkit-text-stroke: .25px #000; }
-        .sticker-price { display: inline-block; margin-top: 1mm; font-family: Arial, Helvetica, sans-serif; font-size: 15pt; line-height: 1; font-weight: 1000; letter-spacing: -.03em; border: .45mm solid #000; padding: .6mm 1.4mm; }
+        .sticker-drink { font-family: Arial, Helvetica, sans-serif; font-size: 25pt; font-weight: 1000; font-style: normal; line-height: .98; letter-spacing: -.045em; overflow-wrap: anywhere; margin-top: 3mm; -webkit-text-stroke: .35px #000; }
+        .sticker-price { display: block; margin-top: 2mm; font-family: Arial, Helvetica, sans-serif; font-size: 13pt; line-height: 1; font-weight: 800; letter-spacing: -.02em; border: 0; padding: 0; }
         .sticker-pills { display: flex; flex-wrap: wrap; gap: .8mm; margin-top: 1.5mm; }
         .sticker-pill { border: .35mm solid #000; padding: .6mm 1mm; font-size: 6pt; font-weight: 800; line-height: 1.1; }
         .sticker-customer, .sticker-notes { font-size: 6pt; font-weight: 700; margin-top: 1mm; overflow-wrap: anywhere; }
@@ -1014,11 +1014,6 @@ function StickerArt({ sticker, qrUrl }: { sticker: Sticker; qrUrl: string }) {
         {sticker.customer && <div className="sticker-customer">FOR: {sticker.customer}</div>}
         <div className="sticker-drink">{sticker.drink}</div>
         {typeof sticker.price === "number" && <div className="sticker-price">₱{sticker.price}</div>}
-        <div className="sticker-pills">
-          <span className="sticker-pill">{sticker.size}</span>
-          <span className="sticker-pill">{sticker.ice}</span>
-          <span className="sticker-pill">{sticker.sugar}</span>
-        </div>
         {sticker.notes && <div className="sticker-notes">NOTE: {sticker.notes}</div>}
       </div>
       <div className="sticker-qr">
