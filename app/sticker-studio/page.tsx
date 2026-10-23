@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -49,13 +50,14 @@ export default function StickerStudioPage() {
     update();
 
     const timer = window.setInterval(update, 30_000);
-
     return () => window.clearInterval(timer);
   }, []);
 
   const qrUrl = useMemo(
     () =>
-      `https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=2&ecc=H&data=${encodeURIComponent(QR_TARGET)}`,
+      `https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=2&ecc=H&data=${encodeURIComponent(
+        QR_TARGET,
+      )}`,
     [],
   );
 
@@ -85,13 +87,11 @@ export default function StickerStudioPage() {
 
     setStickers((current) => [...current, ...added]);
     setNextId((current) => current + added.length);
-
     setNotice(
       `${added.length} sticker${added.length > 1 ? "s" : ""} added to the print queue.`,
     );
   }
 
-  // FIXED: Correct Promise resolution for requestAnimationFrame.
   async function prepareStickerPrint() {
     if ("fonts" in document) {
       await document.fonts.ready;
@@ -106,7 +106,6 @@ export default function StickerStudioPage() {
         if (!img.complete) {
           await new Promise<void>((resolve) => {
             const finish = () => resolve();
-
             img.addEventListener("load", finish, { once: true });
             img.addEventListener("error", finish, { once: true });
           });
@@ -122,7 +121,6 @@ export default function StickerStudioPage() {
       }),
     );
 
-    // Do not pass resolve directly as a FrameRequestCallback.
     await new Promise<void>((resolve) => {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
@@ -150,11 +148,8 @@ export default function StickerStudioPage() {
   async function printAll() {
     if (!stickers.length || printing) {
       if (!stickers.length) {
-        setNotice(
-          "Wala pang stickers sa print queue. Gumawa muna ng sticker.",
-        );
+        setNotice("Wala pang stickers sa print queue. Gumawa muna ng sticker.");
       }
-
       return;
     }
 
@@ -164,8 +159,8 @@ export default function StickerStudioPage() {
 
     try {
       await prepareStickerPrint();
-
       setNotice("");
+
       window.addEventListener("afterprint", handleAfterPrint, {
         once: true,
       });
@@ -199,8 +194,8 @@ export default function StickerStudioPage() {
 
     try {
       await prepareStickerPrint();
-
       setNotice("");
+
       window.addEventListener("afterprint", handleAfterPrint, {
         once: true,
       });
@@ -216,7 +211,6 @@ export default function StickerStudioPage() {
     setStickers((current) =>
       current.filter((sticker) => sticker.id !== id),
     );
-
     setNotice("Sticker removed from queue.");
   }
 
@@ -329,6 +323,7 @@ export default function StickerStudioPage() {
           border-radius: 22px;
           padding: 23px;
           box-shadow: 0 14px 38px #482f1b0e;
+          min-width: 0;
         }
 
         .studio-panel h2 {
@@ -472,14 +467,16 @@ export default function StickerStudioPage() {
           border: 1px solid #e8d9c6;
           border-radius: 14px;
           background: #fffaf3;
+          min-width: 0;
         }
 
         .sticker-thumb {
           width: 100%;
           max-width: 560px;
-          aspect-ratio: 80 / 50;
+          aspect-ratio: 50 / 80;
           background: #fff;
           overflow: hidden;
+          margin-inline: auto;
         }
 
         .sticker-row-actions {
@@ -499,12 +496,18 @@ export default function StickerStudioPage() {
           cursor: pointer;
         }
 
+        .small-action:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+
+        /* PORTRAIT STICKER: 50 mm wide x 80 mm high */
         .sticker-sheet {
           display: none;
-          width: 80mm;
-          height: 50mm;
-          min-height: 50mm;
-          max-height: 50mm;
+          width: 50mm;
+          height: 80mm;
+          min-height: 80mm;
+          max-height: 80mm;
           padding: 0;
           margin: 0;
           background: #fff;
@@ -515,12 +518,12 @@ export default function StickerStudioPage() {
         .sticker-art {
           position: relative;
           isolation: isolate;
-          width: 80mm;
-          height: 50mm;
-          min-width: 80mm;
-          min-height: 50mm;
-          max-width: 80mm;
-          max-height: 50mm;
+          width: 50mm;
+          height: 80mm;
+          min-width: 50mm;
+          min-height: 80mm;
+          max-width: 50mm;
+          max-height: 80mm;
           display: flex;
           flex-direction: column;
           padding: 0;
@@ -562,21 +565,22 @@ export default function StickerStudioPage() {
           border: 0.45mm solid var(--theme-ink, #000);
           outline: 0.25mm solid var(--theme-ink, #000);
           outline-offset: -1.25mm;
-          padding: 1.4mm;
-          margin: 3mm;
-          width: calc(100% - 6mm);
-          height: calc(100% - 6mm);
+          padding: 1.5mm;
+          margin: 2.5mm;
+          width: calc(100% - 5mm);
+          height: calc(100% - 5mm);
           min-height: 0;
           box-shadow: 0 0 0 0.7mm #fff;
           display: grid;
-          grid-template-columns: 12mm minmax(0, 1fr) 15mm;
-          grid-template-rows: auto minmax(0, 1fr) auto;
-          column-gap: 1.4mm;
+          grid-template-columns: minmax(0, 1fr) 12mm;
+          grid-template-rows: auto auto minmax(0, 1fr) auto;
+          column-gap: 1.2mm;
+          row-gap: 1mm;
           overflow: hidden;
         }
 
         .sticker-head {
-          grid-column: 2;
+          grid-column: 1 / span 2;
           grid-row: 1;
           display: flex;
           align-items: center;
@@ -622,19 +626,20 @@ export default function StickerStudioPage() {
         }
 
         .sticker-qr {
-          grid-column: 3;
-          grid-row: 1 / span 2;
+          grid-column: 2;
+          grid-row: 2 / span 2;
           display: flex;
           flex-direction: column;
           align-items: center;
           justify-content: flex-start;
           padding-top: 1mm;
+          min-width: 0;
         }
 
         .sticker-qr img {
           display: block;
-          width: 12mm;
-          height: 12mm;
+          width: 11mm;
+          height: 11mm;
           object-fit: contain;
         }
 
@@ -642,11 +647,12 @@ export default function StickerStudioPage() {
           font-size: 4.5pt;
           margin-top: 0.5mm;
           font-weight: 900;
+          white-space: nowrap;
         }
 
         .sticker-details {
-          grid-column: 2;
-          grid-row: 2;
+          grid-column: 1;
+          grid-row: 2 / span 2;
           min-width: 0;
           min-height: 0;
           display: flex;
@@ -656,14 +662,15 @@ export default function StickerStudioPage() {
         }
 
         .horror-mascot {
-          grid-column: 1;
-          grid-row: 1 / span 2;
+          grid-column: 1 / span 2;
+          grid-row: 2;
           align-self: stretch;
           display: flex;
           align-items: center;
           justify-content: center;
           min-width: 0;
           min-height: 0;
+          height: 19mm;
           overflow: hidden;
           background: #111;
           border: 0.5mm solid #111;
@@ -677,6 +684,23 @@ export default function StickerStudioPage() {
           height: 100%;
         }
 
+        .theme-horror .sticker-details {
+          grid-column: 1 / span 2;
+          grid-row: 3;
+          padding-top: 0;
+        }
+
+        .theme-horror .sticker-qr {
+          grid-column: 2;
+          grid-row: 3;
+          justify-content: flex-end;
+          padding-bottom: 1mm;
+        }
+
+        .theme-horror .sticker-details {
+          padding-right: 13mm;
+        }
+
         .theme-regular .horror-mascot,
         .theme-christmas .horror-mascot,
         .theme-valentines .horror-mascot {
@@ -686,16 +710,32 @@ export default function StickerStudioPage() {
         .theme-regular .sticker-main,
         .theme-christmas .sticker-main,
         .theme-valentines .sticker-main {
-          grid-template-columns: minmax(0, 1fr) 15mm;
+          grid-template-columns: minmax(0, 1fr) 12mm;
+          grid-template-rows: auto minmax(0, 1fr) auto;
         }
 
         .theme-regular .sticker-head,
-        .theme-regular .sticker-details,
         .theme-christmas .sticker-head,
+        .theme-valentines .sticker-head {
+          grid-column: 1 / span 2;
+          grid-row: 1;
+        }
+
+        .theme-regular .sticker-details,
         .theme-christmas .sticker-details,
-        .theme-valentines .sticker-head,
         .theme-valentines .sticker-details {
           grid-column: 1;
+          grid-row: 2;
+          padding-right: 0;
+        }
+
+        .theme-regular .sticker-qr,
+        .theme-christmas .sticker-qr,
+        .theme-valentines .sticker-qr {
+          grid-column: 2;
+          grid-row: 2;
+          justify-content: flex-start;
+          padding-bottom: 0;
         }
 
         .sticker-customer {
@@ -708,7 +748,7 @@ export default function StickerStudioPage() {
 
         .sticker-drink {
           font-family: Arial, Helvetica, sans-serif;
-          font-size: 14pt;
+          font-size: 12pt;
           line-height: 1.05;
           font-weight: 900;
           letter-spacing: -0.035em;
@@ -741,27 +781,32 @@ export default function StickerStudioPage() {
         }
 
         .sticker-footer {
-          grid-column: 1 / span 3;
-          grid-row: 3;
+          grid-column: 1 / span 2;
+          grid-row: 4;
           border-top: 0.6mm double #000;
           margin-top: 1mm;
           padding-top: 0.8mm;
           display: flex;
-          flex-direction: row;
-          justify-content: space-between;
-          align-items: center;
-          gap: 1mm;
+          flex-direction: column;
+          justify-content: center;
+          align-items: flex-start;
+          gap: 0.8mm;
           font-size: 4.5pt;
-          line-height: 1;
+          line-height: 1.1;
           font-weight: 800;
           color: #000;
-          white-space: nowrap;
+          overflow-wrap: anywhere;
+        }
+
+        .theme-horror .sticker-footer {
+          grid-row: 4;
         }
 
         .theme-regular .sticker-footer,
         .theme-christmas .sticker-footer,
         .theme-valentines .sticker-footer {
           grid-column: 1 / span 2;
+          grid-row: 3;
         }
 
         @media (max-width: 900px) {
@@ -809,14 +854,14 @@ export default function StickerStudioPage() {
         }
 
         @page {
-          size: 80mm 50mm;
+          size: 50mm 80mm;
           margin: 0;
         }
 
         @media print {
           html,
           body {
-            width: 80mm !important;
+            width: 50mm !important;
             min-width: 0 !important;
             margin: 0 !important;
             padding: 0 !important;
@@ -843,7 +888,7 @@ export default function StickerStudioPage() {
           .studio-panel,
           .sticker-list {
             display: block !important;
-            width: 80mm !important;
+            width: 50mm !important;
             min-width: 0 !important;
             max-width: none !important;
             margin: 0 !important;
@@ -871,7 +916,7 @@ export default function StickerStudioPage() {
 
           .sticker-row {
             display: block !important;
-            width: 80mm !important;
+            width: 50mm !important;
             min-width: 0 !important;
             max-width: none !important;
             margin: 0 !important;
@@ -890,12 +935,12 @@ export default function StickerStudioPage() {
           .sticker-sheet {
             display: block !important;
             position: relative !important;
-            width: 80mm !important;
-            height: 50mm !important;
+            width: 50mm !important;
+            height: 80mm !important;
             min-width: 0 !important;
-            min-height: 50mm !important;
+            min-height: 80mm !important;
             max-width: none !important;
-            max-height: 50mm !important;
+            max-height: 80mm !important;
             margin: 0 !important;
             padding: 0 !important;
             border: 0 !important;
@@ -926,8 +971,8 @@ export default function StickerStudioPage() {
           .sticker-art {
             display: flex !important;
             position: relative !important;
-            width: 80mm !important;
-            height: 50mm !important;
+            width: 50mm !important;
+            height: 80mm !important;
             min-width: 0 !important;
             min-height: 0 !important;
             max-width: none !important;
@@ -950,10 +995,10 @@ export default function StickerStudioPage() {
           }
 
           .sticker-main {
-            width: calc(100% - 6mm) !important;
-            height: calc(100% - 6mm) !important;
+            width: calc(100% - 5mm) !important;
+            height: calc(100% - 5mm) !important;
             min-height: 0 !important;
-            margin: 3mm !important;
+            margin: 2.5mm !important;
             overflow: hidden !important;
           }
 
@@ -1000,7 +1045,6 @@ export default function StickerStudioPage() {
               event.currentTarget.style.display = "none";
             }}
           />
-
           <div>
             <h1>SYP Sticker Studio</h1>
             <p>STREET • ICED • BREWED</p>
@@ -1015,10 +1059,9 @@ export default function StickerStudioPage() {
       <div className="studio-layout">
         <section className="studio-panel studio-form-panel">
           <h2>Create drink stickers</h2>
-
           <p className="studio-muted">
-            High-contrast labels designed for thermal printing. Each quantity
-            creates a separate sticker.
+            Portrait 50 × 80 mm labels designed for thermal printing. Each
+            quantity creates a separate sticker.
           </p>
 
           <div className="studio-field">
@@ -1055,7 +1098,6 @@ export default function StickerStudioPage() {
               <option value="christmas">Christmas</option>
               <option value="valentines">Valentine’s</option>
             </select>
-
             <p className="studio-muted" style={{ margin: 0 }}>
               Theme applies to new stickers added to the queue.
             </p>
@@ -1184,10 +1226,9 @@ export default function StickerStudioPage() {
           <div className="studio-preview-head">
             <div>
               <h2>Print queue</h2>
-
               <p className="studio-muted" style={{ marginBottom: 0 }}>
-                Each sticker is 80 × 50 mm, landscape. Check printer settings
-                for the correct label feed and spacing.
+                Each sticker is 50 × 80 mm, portrait. Check printer settings
+                for the correct label size and feed direction.
               </p>
             </div>
 
@@ -1265,9 +1306,9 @@ export default function StickerStudioPage() {
             className="studio-muted"
             style={{ marginTop: 15, marginBottom: 0 }}
           >
-            Print at 100% / Actual size, set margins to None, disable headers
-            and footers, and test one sticker first. Printer printable width
-            and label-gap handling depend on the driver and sticker stock.
+            Print at 100% / Actual size, set margins to None, and disable
+            headers and footers. Select the correct 50 × 80 mm portrait label
+            size in your printer driver. Test one sticker first.
           </p>
         </section>
       </div>
@@ -1299,9 +1340,7 @@ function StickerArt({
                 strokeWidth="3"
                 strokeLinejoin="round"
               />
-
               <path d="M21 49 L43 59 L29 70Z M79 49 L57 59 L71 70Z" fill="#111" />
-
               <path
                 d="M39 77 L45 84 L50 76 L55 84 L61 77"
                 fill="none"
@@ -1309,7 +1348,6 @@ function StickerArt({
                 strokeWidth="5"
                 strokeLinecap="round"
               />
-
               <path
                 d="M34 94 L39 104 L45 94 L50 104 L55 94 L61 104 L66 94"
                 fill="none"
@@ -1317,7 +1355,6 @@ function StickerArt({
                 strokeWidth="4"
                 strokeLinejoin="round"
               />
-
               <path
                 d="M50 8 Q45 0 55 2 Q63 4 58 14"
                 fill="none"
@@ -1325,7 +1362,6 @@ function StickerArt({
                 strokeWidth="4"
                 strokeLinecap="round"
               />
-
               <text
                 x="50"
                 y="151"
