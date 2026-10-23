@@ -300,8 +300,7 @@ export default function StickerStudioPage() {
     );
 
     await new Promise<void>((resolve) => {
-      requestAnimationFrame(() => requestAnimationFrame(resolve));
-    });
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
   }
 
   function cleanupPrint() {
