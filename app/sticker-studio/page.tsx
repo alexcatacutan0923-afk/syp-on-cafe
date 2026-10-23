@@ -9,7 +9,6 @@ type Sticker = {
   id: number;
   customer: string;
   drink: string;
-  price?: number;
   size: string;
   ice: string;
   sugar: string;
@@ -68,6 +67,20 @@ const QUOTES = [
   "Walang pressure, piliin mo rin ang sarili mo.",
   "Kahit puyat, may bagong chance bukas.",
   "Ang kape, hindi nang-iiwan.",
+  "Kape ang sagot. Ano ulit ang tanong?",
+  "Hindi tamad, naka-power saving mode.",
+  "Kung may problema, may kape muna.",
+  "Busy kunwari, nagkakape talaga.",
+  "Petsa de peligro pero may iced coffee.",
+  "Kape ang love language ko.",
+  "Puyat responsibly.",
+  "Minsan, kailangan mo lang ng space at kape.",
+  "Ang pahinga ay hindi pagsuko.",
+  "Hindi lahat ng miss mo ay dapat balikan.",
+  "Okay lang hindi okay araw-araw.",
+  "May peace sa pagbitaw.",
+  "Hindi ka mahina dahil napagod ka.",
+  "May bagong kwento pagkatapos ng dulo.",
   "Kape muna, saka na ang overthinking.",
 "One sip at a time.",
 "You deserve this little break.",
@@ -291,21 +304,7 @@ const QUOTES = [
 "Pahinga, recharge, repeat.",
 "Better things are on the way.",
 "Keep your dreams bigger than your doubts.",
-  "Kape ang sagot. Ano ulit ang tanong?",
-  "Hindi tamad, naka-power saving mode.",
-  "Kung may problema, may kape muna.",
-  "Busy kunwari, nagkakape talaga.",
-  "Petsa de peligro pero may iced coffee.",
-  "Kape ang love language ko.",
-  "Puyat responsibly.",
-  "Minsan, kailangan mo lang ng space at kape.",
-  "Ang pahinga ay hindi pagsuko.",
-  "Hindi lahat ng miss mo ay dapat balikan.",
-  "Okay lang hindi okay araw-araw.",
-  "May peace sa pagbitaw.",
-  "Hindi ka mahina dahil napagod ka.",
-  "May bagong kwento pagkatapos ng dulo.",
-  "Esmeringhoy, kape muna bago magkalat.",
+"Esmeringhoy, kape muna bago magkalat.",
 "Awit sa buhay, iced coffee sa kamay.",
 "Luh, bakit mahal ang bilihin pero mura ang peace of mind ko?",
 "Kape na lang, wala namang tayo.",
@@ -405,7 +404,6 @@ const QUOTES = [
 "Basta may kape, may pag-asa. Basta may pera, may extra shot.",
 "Tambay muna, baka sakaling may plot twist.",
 "Kape muna, baka sakaling gumanda ang desisyon ko."
-
 ];
 
 function manilaDateTime() {
@@ -454,7 +452,7 @@ export default function StickerStudioPage() {
   const [orders, setOrders] = useState<PosOrder[]>([]);
   const [searching, setSearching] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<PosOrder | null>(null);
-  const [history, setHistory] = useState<string[]>([]);
+  const [history, setHistory] = useState<{ sticker: Sticker; printedAt: string }[]>([]);
 
   const qrUrl = useMemo(
     () =>
@@ -539,7 +537,7 @@ export default function StickerStudioPage() {
     if (!drink.trim()) { setNotice("Ilagay muna ang drink name."); return; }
     if (!Number.isFinite(unitPrice) || unitPrice < 0) { setNotice("Ilagay ang valid na presyo."); return; }
     const count = Math.max(1, Math.min(100, quantity));
-    const orderId = `STK-${String(manualOrderCounter).padStart(4, "0")}`;
+    const orderId = `SYP-${String(manualOrderCounter).padStart(4, "0")}`;
     const total = count * unitPrice;
     const now = manilaDateTime();
     const order: ManualOrder = { orderId, customer: customer.trim(), drink: drink.trim(), size, quantity: count, unitPrice, total, dateTime: now };
@@ -547,7 +545,7 @@ export default function StickerStudioPage() {
     const added: Sticker[] = [];
     for (let i = 0; i < count; i++) {
       const quote = randomQuote(used); used.add(quote);
-      added.push({ id: nextId + i, customer: customer.trim(), drink: drink.trim(), price: unitPrice, size, ice, sugar, notes: notes.trim(), dateTime: now, quote, orderId, orderNumber: orderId, source: "manual" });
+      added.push({ id: nextId + i, customer: customer.trim(), drink: drink.trim(), size, ice, sugar, notes: notes.trim(), dateTime: now, quote, orderId, orderNumber: orderId, source: "manual" });
     }
     setStickers((current) => [...current, ...added]);
     setNextId((current) => current + added.length);
@@ -570,7 +568,6 @@ export default function StickerStudioPage() {
         id: nextId + i,
         customer: order.customer_name || "",
         drink: drinkName,
-        price: typeof item.price === "number" ? item.price : (typeof item.line_total === "number" ? item.line_total / count : undefined),
         size: item.size || "22 oz",
         ice: item.ice || (item.temperature === "Hot" ? "Hot" : "Regular ice"),
         sugar: item.sugar || "Regular sugar",
@@ -672,7 +669,7 @@ export default function StickerStudioPage() {
     if (!selected.length) return;
 
     setPrinting(true);
-    setNotice("Inihahanda ang sticker para sa pag-print...");
+    setNotice("Inihahanda ang print at itinatala ang print job...");
 
     try {
       document.body.classList.remove("printing-one");
@@ -688,14 +685,20 @@ export default function StickerStudioPage() {
       await preparePrint();
       setNotice("Buksan ang print dialog. Suriin ang paper size bago mag-print.");
 
-      window.addEventListener("afterprint", cleanupPrint, { once: true });
+      // Keep a snapshot for reprinting. Remove from active queue when the
+      // browser closes the print dialog; physical printer success cannot be
+      // verified reliably by window.print().
+      window.addEventListener("afterprint", () => {
+        setHistory((current) => [
+          ...selected.map((sticker) => ({ sticker, printedAt: manilaDateTime() })),
+          ...current,
+        ].slice(0, 100));
+        setStickers((current) => current.filter((sticker) => !selected.some((done) => done.id === sticker.id)));
+        setPrintedCount((current) => current + selected.length);
+        cleanupPrint();
+        setNotice(`Print dialog closed. ${selected.length} sticker(s) moved to print history; puwede silang i-reprint.`);
+      }, { once: true });
       window.print();
-
-      setPrintedCount((current) => current + selected.length);
-      setHistory((current) => [
-        `${manilaDateTime()} — ${selected.length} sticker(s) — ${selected[0].orderNumber || selected[0].source}`,
-        ...current,
-      ].slice(0, 30));
     } catch (error) {
       cleanupPrint();
       setNotice(
@@ -704,6 +707,14 @@ export default function StickerStudioPage() {
           : "Hindi naihanda o naitala ang print job.",
       );
     }
+  }
+
+  function requeueForReprint(sticker: Sticker) {
+    const copy = { ...sticker, id: nextId };
+    setStickers((current) => [...current, copy]);
+    setNextId((current) => current + 1);
+    setNotice(`${sticker.orderNumber || sticker.orderId || "Sticker"} added back to queue. Pindutin ang Print / reprint.`);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function removeSticker(id: number) {
@@ -784,8 +795,7 @@ export default function StickerStudioPage() {
         .sticker-copy { grid-column: 2; grid-row: 1; min-width: 0; overflow: hidden; }
         .sticker-wordmark { font-size: 7pt; font-weight: 900; letter-spacing: -.03em; line-height: 1; white-space: nowrap; }
         .sticker-tagline { font-size: 4.5pt; font-weight: 800; margin-top: .8mm; letter-spacing: .03em; white-space: nowrap; }
-        .sticker-drink { font-size: 15pt; font-weight: 900; line-height: 1; letter-spacing: -.045em; overflow-wrap: anywhere; margin-top: 1.5mm; }
-        .sticker-price { font-size: 10pt; font-weight: 900; line-height: 1; margin-top: 1mm; }
+        .sticker-drink { font-size: 17pt; font-weight: 900; line-height: 1; letter-spacing: -.045em; overflow-wrap: anywhere; margin-top: 2mm; }
         .sticker-pills { display: flex; flex-wrap: wrap; gap: .8mm; margin-top: 1.5mm; }
         .sticker-pill { border: .25mm solid #000; padding: .5mm .8mm; font-size: 5.5pt; font-weight: 800; line-height: 1.1; }
         .sticker-customer, .sticker-notes { font-size: 6pt; font-weight: 700; margin-top: 1mm; overflow-wrap: anywhere; }
@@ -975,7 +985,12 @@ export default function StickerStudioPage() {
 
           <h2 style={{ marginTop: 24 }}>Recent print actions</h2>
           <p className="studio-muted">Temporary list for this browser session. Ang permanent history ay dapat manggaling sa database API.</p>
-          {!history.length ? <div className="studio-empty">Wala pang print action sa session na ito.</div> : history.map((entry, index) => <p key={`${entry}-${index}`} className="studio-muted">{entry}</p>)}
+          {!history.length ? <div className="studio-empty">Wala pang print action sa session na ito.</div> : history.map((entry, index) => (
+            <div className="manual-order-item" key={`${entry.sticker.id}-${entry.printedAt}-${index}`}>
+              <div><strong>{entry.sticker.orderNumber || entry.sticker.orderId || entry.sticker.source} · {entry.sticker.drink}</strong><small>{entry.sticker.customer || "Walk-in"} · {entry.printedAt}</small></div>
+              <button className="small-action" type="button" disabled={printing} onClick={() => requeueForReprint(entry.sticker)}>Reprint</button>
+            </div>
+          ))}
 
           <p className="studio-muted" style={{ marginTop: 14, marginBottom: 0 }}>
             Set paper to 80 × 52 mm, print at 100% / Actual size, margins 0, headers and footers off. Calibrate the gap sensor if needed.
@@ -995,7 +1010,6 @@ function StickerArt({ sticker, qrUrl }: { sticker: Sticker; qrUrl: string }) {
         <div className="sticker-tagline">STREET • ICED • BREWED</div>
         {sticker.customer && <div className="sticker-customer">FOR: {sticker.customer}</div>}
         <div className="sticker-drink">{sticker.drink}</div>
-        {typeof sticker.price === "number" && <div className="sticker-price">₱{sticker.price.toFixed(2)}</div>}
         <div className="sticker-pills">
           <span className="sticker-pill">{sticker.size}</span>
           <span className="sticker-pill">{sticker.ice}</span>
