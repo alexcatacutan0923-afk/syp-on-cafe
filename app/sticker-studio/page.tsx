@@ -9,6 +9,7 @@ type Sticker = {
   id: number;
   customer: string;
   drink: string;
+  price?: number;
   size: string;
   ice: string;
   sugar: string;
@@ -545,7 +546,7 @@ export default function StickerStudioPage() {
     const added: Sticker[] = [];
     for (let i = 0; i < count; i++) {
       const quote = randomQuote(used); used.add(quote);
-      added.push({ id: nextId + i, customer: customer.trim(), drink: drink.trim(), size, ice, sugar, notes: notes.trim(), dateTime: now, quote, orderId, orderNumber: orderId, source: "manual" });
+      added.push({ id: nextId + i, customer: customer.trim(), drink: drink.trim(), price: unitPrice, size, ice, sugar, notes: notes.trim(), dateTime: now, quote, orderId, orderNumber: orderId, source: "manual" });
     }
     setStickers((current) => [...current, ...added]);
     setNextId((current) => current + added.length);
@@ -568,6 +569,7 @@ export default function StickerStudioPage() {
         id: nextId + i,
         customer: order.customer_name || "",
         drink: drinkName,
+        price: typeof item.price === "number" ? item.price : (typeof item.line_total === "number" ? item.line_total / count : undefined),
         size: item.size || "22 oz",
         ice: item.ice || (item.temperature === "Hot" ? "Hot" : "Regular ice"),
         sugar: item.sugar || "Regular sugar",
