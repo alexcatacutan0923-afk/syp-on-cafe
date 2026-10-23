@@ -101,6 +101,7 @@ export default function StickerStudioPage() {
   return (
     <main className="studio-shell">
       <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Creepster&family=Montserrat:wght@700;800;900&family=Special+Elite&display=swap');
         :root { --syp-ink: #2f2118; --syp-brown: #68452f; --syp-gold: #c59a58; --syp-cream: #f8f1e6; --syp-line: #e8d9c6; }
         * { box-sizing: border-box; }
         body { margin: 0; background: #f4eee5; color: var(--syp-ink); font-family: Arial, Helvetica, sans-serif; }
@@ -136,23 +137,23 @@ export default function StickerStudioPage() {
         .small-action { border: 1px solid #d8c4ad; background: white; color: #67472f; padding: 8px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; }
         .sticker-sheet { display: none; width: 80mm; height: 52mm; padding: 0; margin: 0 auto; background: #fff; color: #000; overflow: hidden; page-break-after: always; break-after: page; }
         .sticker-art { position: relative; width: 80mm; height: 50mm; display: flex; flex-direction: column; padding: 2.2mm 2.5mm 1.5mm; gap: 0; overflow: hidden; background: #fff; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; text-align: left; border: .6mm solid #000; }
-        .sticker-art:before { content: "☠  •  ☾  •  ☠"; position: absolute; top: 0.5mm; right: 2mm; font-size: 5pt; font-weight: 900; letter-spacing: .5mm; }
-        .sticker-art:after { content: "†  •  SYP UNDEAD EDITION  •  †"; position: absolute; bottom: .5mm; left: 0; width: 100%; text-align: center; font-size: 4.2pt; font-weight: 900; letter-spacing: .6mm; }
+        .sticker-art:before { content: "☠  •  ☾  •  ☠"; position: absolute; top: 0.5mm; right: 2mm; font-family: Georgia, serif; font-size: 5pt; font-weight: 900; letter-spacing: .5mm; }
+        .sticker-art:after { content: "†  •  UNDEAD EDITION  •  †"; position: absolute; bottom: .5mm; left: 0; width: 100%; text-align: center; font-family: Montserrat, Arial, sans-serif; font-size: 4.2pt; font-weight: 900; letter-spacing: .6mm; }
         .sticker-main { display: grid; grid-template-columns: minmax(0, 1fr) 15mm; grid-template-rows: auto 1fr auto; column-gap: 2mm; height: 100%; min-height: 0; }
         .sticker-head { grid-column: 1; display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 1.5mm; min-width: 0; border-bottom: .45mm solid #000; padding: 0 0 1.2mm; }
         .sticker-logo { width: 11mm; height: 11mm; object-fit: contain; flex: 0 0 auto; background: #fff; }
         .sticker-wordmark { min-width: 0; width: 100%; }
-        .sticker-wordmark strong { display: block; font-size: 13pt; line-height: 1; font-weight: 1000; letter-spacing: -.045em; white-space: nowrap; color: #000; }
-        .sticker-wordmark span { display: block; margin-top: .7mm; font-size: 4.5pt; font-weight: 900; letter-spacing: .12em; white-space: nowrap; color: #000; }
+        .sticker-wordmark strong { display: block; font-family: Montserrat, Impact, sans-serif; font-size: 13pt; line-height: 1; font-weight: 900; letter-spacing: -.045em; white-space: nowrap; color: #000; }
+        .sticker-wordmark span { display: block; margin-top: .7mm; font-family: Montserrat, Arial, sans-serif; font-size: 4.5pt; font-weight: 900; letter-spacing: .12em; white-space: nowrap; color: #000; }
         .sticker-qr { grid-column: 2; grid-row: 1 / span 2; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding-top: 2mm; }
         .sticker-qr img { width: 12mm; height: 12mm; object-fit: contain; image-rendering: pixelated; }
         .sticker-qr span { font-size: 4.2pt; margin-top: .5mm; font-weight: 900; }
         .sticker-details { grid-column: 1; min-width: 0; display: flex; flex-direction: column; padding-top: 1mm; }
-        .sticker-customer { width: 100%; font-size: 6pt; font-weight: 900; line-height: 1.05; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #000; }
-        .sticker-drink { width: 100%; font-family: Impact, Haettenschweiler, "Arial Narrow Bold", sans-serif; font-size: 23pt; font-weight: 1000; line-height: .88; letter-spacing: -.025em; margin-top: 1mm; overflow-wrap: anywhere; max-height: 15mm; overflow: hidden; color: #000; text-transform: uppercase; }
+        .sticker-customer { width: 100%; font-family: Special Elite, Courier, monospace; font-size: 6pt; font-weight: 900; line-height: 1.05; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #000; }
+        .sticker-drink { width: 100%; font-family: Creepster, Impact, Haettenschweiler, "Arial Narrow Bold", fantasy, sans-serif; font-size: 27pt; font-weight: 900; line-height: .88; letter-spacing: .005em; margin-top: 1mm; overflow-wrap: anywhere; max-height: 15mm; overflow: hidden; color: #000; text-transform: uppercase; -webkit-text-stroke: .12px #000; }
         .sticker-meta { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: .8mm; margin-top: 1.5mm; width: 100%; }
         .sticker-pill { display: inline-block; border: .35mm solid #000; border-radius: 1mm; padding: .7mm 1mm; font-size: 4.8pt; line-height: 1; font-weight: 900; color: #000; }
-        .sticker-notes { width: 100%; font-size: 5pt; line-height: 1.05; font-weight: 800; margin-top: 1mm; max-height: 4mm; overflow: hidden; overflow-wrap: anywhere; color: #000; }
+        .sticker-notes { width: 100%; font-family: Special Elite, Courier, monospace; font-size: 5pt; line-height: 1.05; font-weight: 800; margin-top: 1mm; max-height: 4mm; overflow: hidden; overflow-wrap: anywhere; color: #000; }
         .sticker-footer { grid-column: 1 / span 2; border-top: .35mm solid #000; margin-top: 1mm; padding-top: .8mm; display: flex; flex-direction: row; justify-content: space-between; align-items: center; gap: 1mm; font-size: 4.5pt; line-height: 1; font-weight: 800; color: #000; white-space: nowrap; }
         .sticker-sheet.print-selected { display: block; }
         @media (max-width: 900px) { .studio-layout { grid-template-columns: 1fr; } .studio-top { align-items: flex-start; } }
