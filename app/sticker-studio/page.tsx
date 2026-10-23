@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -19,6 +18,11 @@ type Sticker = {
   orderId?: string | number;
   orderNumber?: string;
   source: "manual" | "pos_order";
+};
+
+type ManualOrder = {
+  orderId: string; customer: string; drink: string; size: string; quantity: number;
+  unitPrice: number; total: number; dateTime: string;
 };
 
 type PosItem = {
@@ -111,6 +115,10 @@ export default function StickerStudioPage() {
   const [sugar, setSugar] = useState("Regular sugar");
   const [notes, setNotes] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [unitPrice, setUnitPrice] = useState(0);
+  const [manualOrders, setManualOrders] = useState<ManualOrder[]>([]);
+  const [printedCount, setPrintedCount] = useState(0);
+  const [manualOrderCounter, setManualOrderCounter] = useState(1);
   const [dateTime, setDateTime] = useState(manilaDateTime);
   const [stickers, setStickers] = useState<Sticker[]>([]);
   const [nextId, setNextId] = useState(1);
@@ -128,6 +136,29 @@ export default function StickerStudioPage() {
       `https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=2&ecc=H&data=${encodeURIComponent(QR_TARGET)}`,
     [],
   );
+
+  useEffect(() => {
+    try {
+      const savedOrders = localStorage.getItem("sypStickerManualOrders");
+      const savedCounter = localStorage.getItem("sypStickerManualOrderCounter");
+      const savedPrinted = localStorage.getItem("sypStickerPrintedCount");
+      if (savedOrders) setManualOrders(JSON.parse(savedOrders));
+      if (savedCounter) setManualOrderCounter(Math.max(1, Number(savedCounter) || 1));
+      if (savedPrinted) setPrintedCount(Math.max(0, Number(savedPrinted) || 0));
+    } catch { /* ignore invalid local browser data */ }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("sypStickerManualOrders", JSON.stringify(manualOrders));
+  }, [manualOrders]);
+
+  useEffect(() => {
+    localStorage.setItem("sypStickerManualOrderCounter", String(manualOrderCounter));
+  }, [manualOrderCounter]);
+
+  useEffect(() => {
+    localStorage.setItem("sypStickerPrintedCount", String(printedCount));
+  }, [printedCount]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setDateTime(manilaDateTime()), 30000);
@@ -180,36 +211,24 @@ export default function StickerStudioPage() {
   }
 
   function addManualStickers() {
-    if (!drink.trim()) {
-      setNotice("Ilagay muna ang drink name.");
-      return;
-    }
-
+    if (!drink.trim()) { setNotice("Ilagay muna ang drink name."); return; }
+    if (!Number.isFinite(unitPrice) || unitPrice < 0) { setNotice("Ilagay ang valid na presyo."); return; }
     const count = Math.max(1, Math.min(100, quantity));
+    const orderId = `STK-${String(manualOrderCounter).padStart(4, "0")}`;
+    const total = count * unitPrice;
+    const now = manilaDateTime();
+    const order: ManualOrder = { orderId, customer: customer.trim(), drink: drink.trim(), size, quantity: count, unitPrice, total, dateTime: now };
     const used = new Set(stickers.map((item) => item.quote));
     const added: Sticker[] = [];
-
     for (let i = 0; i < count; i++) {
-      const quote = randomQuote(used);
-      used.add(quote);
-
-      added.push({
-        id: nextId + i,
-        customer: customer.trim(),
-        drink: drink.trim(),
-        size,
-        ice,
-        sugar,
-        notes: notes.trim(),
-        dateTime: manilaDateTime(),
-        quote,
-        source: "manual",
-      });
+      const quote = randomQuote(used); used.add(quote);
+      added.push({ id: nextId + i, customer: customer.trim(), drink: drink.trim(), size, ice, sugar, notes: notes.trim(), dateTime: now, quote, orderId, orderNumber: orderId, source: "manual" });
     }
-
     setStickers((current) => [...current, ...added]);
     setNextId((current) => current + added.length);
-    setNotice(`${added.length} manual sticker(s) added.`);
+    setManualOrders((current) => [order, ...current]);
+    setManualOrderCounter((current) => current + 1);
+    setNotice(`${orderId} created · ${count} sticker(s) · Total ₱${total.toFixed(2)}. Note: local browser record only.`);
   }
 
   function addOrderItem(order: PosOrder, item: PosItem) {
@@ -350,6 +369,7 @@ export default function StickerStudioPage() {
       window.addEventListener("afterprint", cleanupPrint, { once: true });
       window.print();
 
+      setPrintedCount((current) => current + selected.length);
       setHistory((current) => [
         `${manilaDateTime()} — ${selected.length} sticker(s) — ${selected[0].orderNumber || selected[0].source}`,
         ...current,
@@ -401,6 +421,13 @@ export default function StickerStudioPage() {
         .studio-brand h1 { margin: 0; font-size: clamp(22px,3vw,30px); letter-spacing: -.04em; }
         .studio-brand p { margin: 5px 0 0; font-size: 10px; letter-spacing: .16em; font-weight: 800; color: #80654d; }
         .studio-back { color: #62442e; text-decoration: none; font-size: 12px; font-weight: 800; border: 1px solid #d8c5af; border-radius: 30px; padding: 10px 14px; white-space: nowrap; }
+        .sales-grid { max-width: 1280px; margin: 0 auto 20px; display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; }
+        .sales-card { background: #fffdf9; border: 1px solid #e8d9c6; border-radius: 14px; padding: 16px; }
+        .sales-card span { display:block; color:#80644c; font-size:10px; font-weight:850; letter-spacing:.08em; text-transform:uppercase; }
+        .sales-card strong { display:block; margin-top:8px; font-size:clamp(19px,2.5vw,26px); color:#62442e; overflow-wrap:anywhere; }
+        .manual-order-list { margin-top:20px; border-top:1px solid #eadbc9; padding-top:16px; }
+        .manual-order-item { padding:10px 0; border-bottom:1px solid #eee2d5; font-size:11px; display:flex; justify-content:space-between; gap:8px; }
+        .manual-order-item small { display:block; color:#877461; margin-top:4px; }
         .studio-layout { max-width: 1280px; margin: auto; display: grid; grid-template-columns: minmax(280px,360px) minmax(0,1fr); gap: 20px; align-items: start; }
         .studio-panel { background: #fffdf9; border: 1px solid #e8d9c6; border-radius: 18px; padding: 20px; box-shadow: 0 12px 30px #482f1b0b; min-width: 0; }
         .studio-panel h2 { font-size: 17px; margin: 0 0 6px; }
@@ -446,8 +473,8 @@ export default function StickerStudioPage() {
         .quote-mark { font-size: 15pt; line-height: .8; font-weight: 900; flex: 0 0 auto; }
         .quote-text { font-size: 7pt; font-weight: 800; line-height: 1.15; overflow-wrap: anywhere; }
         .sticker-footer { font-size: 4pt; font-weight: 700; margin-top: .5mm; display: flex; justify-content: space-between; gap: 2mm; }
-        @media (max-width: 900px) { .studio-layout { grid-template-columns: 1fr; } .studio-top { align-items: flex-start; } }
-        @media (max-width: 520px) { .studio-shell { padding: 16px 10px 28px; } .studio-panel { padding: 15px; } .studio-brand img { width: 44px; height: 44px; } .studio-brand p { font-size: 8px; letter-spacing: .1em; } .studio-back { padding: 8px 10px; font-size: 10px; } .sticker-row { grid-template-columns: 1fr; } .sticker-row-actions { flex-direction: row; flex-wrap: wrap; } }
+        @media (max-width: 900px) { .sales-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } .studio-layout { grid-template-columns: 1fr; } .studio-top { align-items: flex-start; } }
+        @media (max-width: 520px) { .sales-grid { gap:8px; } .sales-card { padding:12px; } .studio-shell { padding: 16px 10px 28px; } .studio-panel { padding: 15px; } .studio-brand img { width: 44px; height: 44px; } .studio-brand p { font-size: 8px; letter-spacing: .1em; } .studio-back { padding: 8px 10px; font-size: 10px; } .sticker-row { grid-template-columns: 1fr; } .sticker-row-actions { flex-direction: row; flex-wrap: wrap; } }
         @page { size: 80mm 52mm; margin: 0; }
         @media print {
           html, body { width: 80mm !important; margin: 0 !important; padding: 0 !important; background: white !important; overflow: visible !important; }
@@ -475,6 +502,13 @@ export default function StickerStudioPage() {
         </div>
         <a className="studio-back" href="/">← Back to website</a>
       </header>
+
+      <section className="sales-grid">
+        <div className="sales-card"><span>Manual sales recorded</span><strong>₱{manualOrders.reduce((sum, order) => sum + order.total, 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></div>
+        <div className="sales-card"><span>Manual orders</span><strong>{manualOrders.length}</strong></div>
+        <div className="sales-card"><span>Stickers in queue</span><strong>{stickers.length}</strong></div>
+        <div className="sales-card"><span>Stickers printed</span><strong>{printedCount}</strong></div>
+      </section>
 
       <div className="studio-layout">
         <section className="studio-panel studio-form-panel">
@@ -534,6 +568,11 @@ export default function StickerStudioPage() {
               <input id="quantity" type="number" min={1} max={100} value={quantity} onChange={(e) => setQuantity(Math.max(1, Math.min(100, Number(e.target.value) || 1)))} />
             </div>
           </div>
+          <div className="studio-field">
+            <label htmlFor="unitPrice">Price per drink (₱)</label>
+            <input id="unitPrice" type="number" min={0} step="0.01" value={unitPrice} onChange={(e) => setUnitPrice(Math.max(0, Number(e.target.value) || 0))} placeholder="e.g. 109" />
+            <small style={{ color: "#877461", fontSize: 11 }}>Order total: <strong>₱{(Math.max(1, Math.min(100, quantity)) * unitPrice).toFixed(2)}</strong></small>
+          </div>
           <div className="studio-two">
             <div className="studio-field">
               <label htmlFor="ice">Ice preference</label>
@@ -556,12 +595,12 @@ export default function StickerStudioPage() {
             <label htmlFor="dateTime">Manila date &amp; time</label>
             <input id="dateTime" value={dateTime} readOnly />
           </div>
-          <button className="studio-button" type="button" onClick={addManualStickers}>＋ Add manual stickers</button>
+          <button className="studio-button" type="button" onClick={addManualStickers}>＋ Add manual order & create stickers</button>
 
           {notice && <div className="studio-notice" role="status">{notice}</div>}
           <div className="studio-actions">
             <button className="studio-button secondary" type="button" onClick={() => {
-              setCustomer(""); setDrink(""); setSize("22 oz"); setIce("Regular ice"); setSugar("Regular sugar"); setNotes(""); setQuantity(1); setSelectedOrder(null); setNotice("Form cleared.");
+              setCustomer(""); setDrink(""); setSize("22 oz"); setIce("Regular ice"); setSugar("Regular sugar"); setNotes(""); setQuantity(1); setUnitPrice(0); setSelectedOrder(null); setNotice("Form cleared.");
             }}>Clear form</button>
             <button className="studio-button secondary" type="button" onClick={clearQueue}>Clear queue</button>
           </div>
@@ -598,6 +637,17 @@ export default function StickerStudioPage() {
             <button className="studio-button" type="button" disabled={!stickers.length || printing} onClick={() => printStickers()}>
               {printing ? "Preparing print..." : "Print all stickers"}
             </button>
+          </div>
+
+          <div className="manual-order-list">
+            <h2>Recent manual orders</h2>
+            <p className="studio-muted">Saved in this browser only. These totals do not include POS orders.</p>
+            {!manualOrders.length ? <div className="studio-empty">Wala pang manual order na na-record.</div> : manualOrders.slice(0, 8).map((order) => (
+              <div className="manual-order-item" key={order.orderId}>
+                <div><strong>{order.orderId} · {order.drink}</strong><small>{order.customer || "Walk-in"} · {order.quantity} × ₱{order.unitPrice.toFixed(2)} · {order.dateTime}</small></div>
+                <strong>₱{order.total.toFixed(2)}</strong>
+              </div>
+            ))}
           </div>
 
           <h2 style={{ marginTop: 24 }}>Recent print actions</h2>
@@ -638,7 +688,7 @@ function StickerArt({ sticker, qrUrl }: { sticker: Sticker; qrUrl: string }) {
         <div style={{ minWidth: 0, flex: 1 }}>
           <div className="quote-text">{sticker.quote}</div>
           <div className="sticker-footer">
-            <span>{sticker.dateTime}</span>
+            <span>{sticker.orderNumber ? `${sticker.orderNumber} · ` : ""}{sticker.dateTime}</span>
             <span>syponcafe.shop</span>
           </div>
         </div>
