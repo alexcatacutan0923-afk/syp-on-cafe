@@ -790,18 +790,19 @@ export default function StickerStudioPage() {
         .sticker-row-actions { display: flex; flex-direction: column; gap: 6px; }
         .small-action { border: 1px solid #d8c4ad; background: white; color: #67472f; padding: 8px 9px; border-radius: 7px; font-size: 10px; font-weight: 800; cursor: pointer; white-space: nowrap; }
         .sticker-sheet { display: none; width: 80mm; height: 52mm; margin: 0; padding: 0; overflow: hidden; background: white; color: black; }
-        .sticker-art { width: 80mm; height: 50mm; overflow: hidden; background: white; color: black; display: grid; grid-template-columns: 17mm minmax(0,1fr) 13mm; grid-template-rows: minmax(0,1fr) auto; column-gap: 1.5mm; row-gap: 1mm; padding: 2mm 3mm 1.5mm 2mm; font-family: Arial, Helvetica, sans-serif; position: relative; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        .sticker-brand-logo { grid-column: 1; grid-row: 1; width: 16mm; height: 16mm; object-fit: contain; align-self: start; justify-self: start; }
+        .sticker-art { width: 80mm; height: 50mm; overflow: hidden; background: white; color: black; display: grid; grid-template-columns: 22mm minmax(0,1fr) 17mm; grid-template-rows: minmax(0,1fr) auto; column-gap: 1.5mm; row-gap: 1mm; padding: 2mm 3mm 1.5mm 2mm; font-family: Arial, Helvetica, sans-serif; position: relative; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .sticker-brand-logo { grid-column: 1; grid-row: 1; width: 21mm; height: 21mm; object-fit: contain; align-self: start; justify-self: start; }
         .sticker-copy { grid-column: 2; grid-row: 1; min-width: 0; overflow: hidden; }
-        .sticker-wordmark { font-size: 7pt; font-weight: 900; letter-spacing: -.03em; line-height: 1; white-space: nowrap; }
-        .sticker-tagline { font-size: 4.5pt; font-weight: 800; margin-top: .8mm; letter-spacing: .03em; white-space: nowrap; }
-        .sticker-drink { font-size: 17pt; font-weight: 900; line-height: 1; letter-spacing: -.045em; overflow-wrap: anywhere; margin-top: 2mm; }
+        .sticker-wordmark { font-size: 8pt; font-weight: 900; letter-spacing: -.03em; line-height: 1; white-space: nowrap; }
+        .sticker-tagline { font-size: 5pt; font-weight: 800; margin-top: .8mm; letter-spacing: .03em; white-space: nowrap; }
+        .sticker-drink { font-family: Georgia, 'Times New Roman', serif; font-size: 19pt; font-weight: 900; font-style: italic; line-height: 1; letter-spacing: -.035em; overflow-wrap: anywhere; margin-top: 1.5mm; -webkit-text-stroke: .25px #000; }
+        .sticker-price { display: inline-block; margin-top: 1mm; font-family: Arial, Helvetica, sans-serif; font-size: 15pt; line-height: 1; font-weight: 1000; letter-spacing: -.03em; border: .45mm solid #000; padding: .6mm 1.4mm; }
         .sticker-pills { display: flex; flex-wrap: wrap; gap: .8mm; margin-top: 1.5mm; }
-        .sticker-pill { border: .25mm solid #000; padding: .5mm .8mm; font-size: 5.5pt; font-weight: 800; line-height: 1.1; }
+        .sticker-pill { border: .35mm solid #000; padding: .6mm 1mm; font-size: 6pt; font-weight: 800; line-height: 1.1; }
         .sticker-customer, .sticker-notes { font-size: 6pt; font-weight: 700; margin-top: 1mm; overflow-wrap: anywhere; }
-        .sticker-qr { grid-column: 3; grid-row: 1; width: 13mm; display: flex; flex-direction: column; align-items: center; justify-content: start; }
-        .sticker-qr img { display: block; width: 11mm; height: 11mm; object-fit: contain; }
-        .sticker-qr span { font-size: 4pt; font-weight: 900; margin-top: .5mm; white-space: nowrap; }
+        .sticker-qr { grid-column: 3; grid-row: 1; width: 17mm; display: flex; flex-direction: column; align-items: center; justify-content: start; }
+        .sticker-qr img { display: block; width: 16mm; height: 16mm; object-fit: contain; }
+        .sticker-qr span { font-size: 5pt; font-weight: 900; margin-top: .5mm; white-space: nowrap; }
         .sticker-quote { grid-column: 1 / 4; grid-row: 2; border-top: .45mm solid #000; padding-top: 1mm; min-width: 0; display: flex; gap: 1.5mm; align-items: center; overflow: hidden; }
         .quote-mark { font-size: 15pt; line-height: .8; font-weight: 900; flex: 0 0 auto; }
         .quote-text { font-size: 7pt; font-weight: 800; line-height: 1.15; overflow-wrap: anywhere; }
@@ -1010,6 +1011,7 @@ function StickerArt({ sticker, qrUrl }: { sticker: Sticker; qrUrl: string }) {
         <div className="sticker-tagline">STREET • ICED • BREWED</div>
         {sticker.customer && <div className="sticker-customer">FOR: {sticker.customer}</div>}
         <div className="sticker-drink">{sticker.drink}</div>
+        {typeof sticker.price === "number" && <div className="sticker-price">₱{sticker.price}</div>}
         <div className="sticker-pills">
           <span className="sticker-pill">{sticker.size}</span>
           <span className="sticker-pill">{sticker.ice}</span>
