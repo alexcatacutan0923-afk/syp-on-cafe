@@ -139,27 +139,14 @@ export default function StickerStudioPage() {
         .sticker-row-actions { display: flex; flex-direction: column; gap: 7px; }
         .small-action { border: 1px solid #d8c4ad; background: white; color: #67472f; padding: 8px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; }
         .sticker-sheet { display: none; width: 80mm; height: 52mm; padding: 0; margin: 0 auto; background: #fff; color: #000; overflow: hidden; page-break-after: always; break-after: page; }
-        /* Theme-specific dense label patterns; monochrome for thermal printing. */
-        .sticker-art { position: relative; isolation: isolate; width: 80mm; height: 50mm; display: flex; flex-direction: column; padding: 2.8mm 3mm 2mm; gap: 0; overflow: hidden; background-color: #fff; background-image: repeating-linear-gradient(45deg, transparent 0 3mm, #000 3mm 3.15mm, transparent 3.15mm 5mm); background-size: 9mm 9mm; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; text-align: left; border: 1mm double #000; outline: .35mm solid #000; outline-offset: -2mm; }
-        .sticker-art:before { content: "SYP • STREET • ICED • BREWED"; position: absolute; z-index: -1; inset: 1mm; display: flex; align-items: flex-start; justify-content: center; padding: .2mm 1mm; font-family: Georgia, serif; font-size: 5.5pt; font-weight: 900; letter-spacing: .25mm; border-bottom: .5mm double #000; background: repeating-linear-gradient(90deg, #fff 0 1.6mm, #ddd 1.6mm 1.9mm); }
-        .sticker-art:after { content: "SYP ON CAFÉ • THANK YOU, KASYP!"; position: absolute; z-index: -1; bottom: 1mm; left: 1.5mm; width: calc(100% - 3mm); text-align: center; padding: .5mm 0; font-family: Arial, sans-serif; font-size: 4.2pt; font-weight: 900; letter-spacing: .25mm; border-top: .5mm double #000; background: repeating-linear-gradient(-45deg, #fff 0 1.6mm, #ddd 1.6mm 1.9mm); }
-        /* Horror: web spokes + repeating spider/pumpkin silhouettes. */
-        .sticker-art.theme-horror { background-image: radial-gradient(circle at 50% 50%, transparent 0 1.5mm, #000 1.6mm 1.75mm, transparent 1.85mm 3mm, #000 3.1mm 3.25mm, transparent 3.35mm), repeating-conic-gradient(from 0deg at 0 0, transparent 0deg 13deg, #000 13deg 14deg, transparent 14deg 45deg); background-size: 10mm 10mm, 10mm 10mm; }
-        .sticker-art.theme-horror:before { content: "PUMPKIN  •  SPIDERWEB  •  SPIDER  •  PUMPKIN"; background: repeating-linear-gradient(45deg, #fff 0 1mm, #bbb 1mm 1.35mm); }
-        .sticker-art.theme-horror:after { content: "SYP HAUNTED BREW • CREEPY SIPS TONIGHT"; background: repeating-linear-gradient(-45deg, #fff 0 1mm, #bbb 1mm 1.35mm); }
-        /* Regular: coffee-bean ovals and leaf-like diagonal veins. */
-        .sticker-art.theme-regular { background-image: radial-gradient(ellipse 1.1mm 1.7mm at center, transparent 35%, #000 42% 53%, transparent 60%), linear-gradient(55deg, transparent 46%, #000 48% 51%, transparent 53%), repeating-linear-gradient(0deg, transparent 0 5mm, #000 5mm 5.15mm, transparent 5.15mm 7mm); background-size: 7mm 7mm, 7mm 7mm, 14mm 14mm; }
-        .sticker-art.theme-regular:before { content: "COFFEE BEANS  •  FRESHLY BREWED  •  COFFEE BEANS"; background: repeating-linear-gradient(90deg, #fff 0 2mm, #bbb 2mm 2.25mm); }
-        .sticker-art.theme-regular:after { content: "KAPE + TAMBAY • THANK YOU, KASYP!"; }
-        /* Christmas: layered fir-tree zigzags, snowflakes and ornament dots. */
-        .sticker-art.theme-christmas { background-image: radial-gradient(circle, #000 0 .45mm, transparent .55mm), repeating-linear-gradient(135deg, transparent 0 2.5mm, #000 2.5mm 2.7mm, transparent 2.7mm 5mm), repeating-linear-gradient(45deg, transparent 0 2.5mm, #000 2.5mm 2.7mm, transparent 2.7mm 5mm); background-size: 5mm 5mm, 10mm 10mm, 10mm 10mm; }
-        .sticker-art.theme-christmas:before { content: "SNOWFLAKES  •  HOLLY  •  ORNAMENTS  •  SNOWFLAKES"; font-size: 4.8pt; background: repeating-linear-gradient(45deg, #fff 0 1mm, #bbb 1mm 1.35mm); }
-        .sticker-art.theme-christmas:after { content: "SYP HOLIDAY BREW • MERRY & BRIGHT"; }
-        /* Valentine's: repeated hearts, lace-like diamond grid and floral dots. */
-        .sticker-art.theme-valentines { background-image: radial-gradient(circle, #000 0 .35mm, transparent .5mm), repeating-linear-gradient(45deg, transparent 0 2.8mm, #000 2.8mm 2.95mm, transparent 2.95mm 5.6mm), repeating-linear-gradient(-45deg, transparent 0 2.8mm, #000 2.8mm 2.95mm, transparent 2.95mm 5.6mm); background-size: 5mm 5mm, 8mm 8mm, 8mm 8mm; }
-        .sticker-art.theme-valentines:before { content: "HEARTS  •  ROSES  •  LOVE NOTES  •  HEARTS"; background: repeating-linear-gradient(-45deg, #fff 0 1mm, #bbb 1mm 1.35mm); }
-        .sticker-art.theme-valentines:after { content: "BREWED WITH LOVE • A LITTLE SIP OF JOY"; }
-        .sticker-main { position: relative; z-index: 1; background: #fff; border: .65mm solid #000; outline: .35mm dashed #000; outline-offset: -1.1mm; padding: 1.4mm; box-shadow: 0 0 0 1mm #fff; }
+        /* Premium label frame: real vector artwork is rendered by ThemeArtwork below. */
+        .sticker-art { position: relative; isolation: isolate; width: 80mm; height: 50mm; display: flex; flex-direction: column; padding: 0; overflow: hidden; background: #fff; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; text-align: left; }
+        .sticker-art.theme-horror { --theme-ink: #111; --theme-paper: #fff; }
+        .sticker-art.theme-regular { --theme-ink: #38271b; --theme-paper: #fff; }
+        .sticker-art.theme-christmas { --theme-ink: #111; --theme-paper: #fff; }
+        .sticker-art.theme-valentines { --theme-ink: #222; --theme-paper: #fff; }
+        .theme-artwork { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+        .sticker-main { position: relative; z-index: 1; background: #fff; border: .45mm solid var(--theme-ink, #000); outline: .25mm solid var(--theme-ink, #000); outline-offset: -1.25mm; padding: 1.4mm; margin: 3mm; width: calc(100% - 6mm); height: calc(100% - 6mm); box-shadow: 0 0 0 .7mm #fff; }
         .sticker-main { display: grid; grid-template-columns: minmax(0, 1fr) 15mm; grid-template-rows: auto 1fr auto; column-gap: 2mm; height: 100%; min-height: 0; }
         .sticker-head { grid-column: 1; display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 1.5mm; min-width: 0; border-bottom: .45mm solid #000; padding: 0 0 1.2mm; }
         .sticker-logo { width: 11mm; height: 11mm; object-fit: contain; flex: 0 0 auto; background: #fff; }
@@ -240,7 +227,7 @@ export default function StickerStudioPage() {
 }
 
 function StickerArt({ sticker, qrUrl }: { sticker: Sticker; qrUrl: string }) {
-  return <div className={`sticker-art theme-${sticker.theme || "horror"}`}>
+  return <div className={`sticker-art theme-${sticker.theme || "horror"}`}><ThemeArtwork theme={sticker.theme || "horror"} />
     <div className="sticker-main">
       <div className="sticker-head"><img className="sticker-logo" src={LOGO_URL} alt="SYP logo" onError={(event) => { event.currentTarget.style.display = "none"; }} /><div className="sticker-wordmark"><strong>SYP ON CAFÉ</strong><span>STREET • ICED • BREWED</span></div></div>
       <div className="sticker-qr"><img src={qrUrl} alt="QR code to syponcafe.shop" /><span>SCAN SYP</span></div>
@@ -253,4 +240,32 @@ function StickerArt({ sticker, qrUrl }: { sticker: Sticker; qrUrl: string }) {
       <div className="sticker-footer"><span>{sticker.dateTime}</span><span>syponcafe.shop</span></div>
     </div>
   </div>;
+}
+
+
+function ThemeArtwork({ theme }: { theme: string }) {
+  const ink = theme === "regular" ? "#38271b" : "#111111";
+  const common = { fill: "none", stroke: ink, strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  return <svg className="theme-artwork" viewBox="0 0 320 200" preserveAspectRatio="none" aria-hidden="true">
+    <defs>
+      <pattern id={`pattern-${theme}`} width={theme === "regular" ? 28 : 30} height={theme === "regular" ? 28 : 30} patternUnits="userSpaceOnUse">
+        {theme === "horror" && <g {...common}><path d="M0 0 Q15 6 30 0 M0 0 Q6 15 0 30 M30 0 Q24 15 30 30 M0 30 Q15 24 30 30"/><circle cx="15" cy="15" r="2"/><path d="M15 15 L0 0 M15 15 L30 0 M15 15 L0 30 M15 15 L30 30"/></g>}
+        {theme === "regular" && <g {...common}><ellipse cx="14" cy="14" rx="5" ry="9" transform="rotate(-35 14 14)"/><path d="M9 7 Q14 14 19 21"/><path d="M22 3 Q27 8 22 13 Q17 8 22 3Z"/></g>}
+        {theme === "christmas" && <g {...common}><path d="M15 3 V27 M3 15 H27 M6.5 6.5 L23.5 23.5 M23.5 6.5 L6.5 23.5"/><circle cx="15" cy="15" r="3"/><path d="M2 27 L7 23 L12 27"/></g>}
+        {theme === "valentines" && <g {...common}><path d="M14 23 C10 19 3 14 5 9 C7 4 12 6 14 10 C17 5 23 5 24 10 C26 15 18 20 14 23Z"/><path d="M2 27 Q14 22 27 27"/></g>}
+      </pattern>
+      <g id="pumpkin" {...common}><path d="M0 7 C-9 -1 -16 7 -14 16 C-12 25 -3 27 0 22 C5 28 14 24 15 16 C17 7 9 0 0 7Z"/><path d="M0 7 Q-4 15 0 22 M0 7 Q5 15 0 22 M0 6 Q-1 0 4 -3"/><path d="M-8 12 L-3 14 L-7 18 M8 12 L3 14 L7 18"/></g>
+      <g id="spider" {...common}><ellipse cx="0" cy="0" rx="4" ry="5"/><circle cx="0" cy="-5" r="2.5"/><path d="M-3 -2 L-9 -7 M-4 0 L-11 -1 M-3 2 L-9 7 M3 -2 L9 -7 M4 0 L11 -1 M3 2 L9 7"/><path d="M0 -8 V-12"/></g>
+      <g id="bean" {...common}><ellipse cx="0" cy="0" rx="5" ry="8" transform="rotate(35)"/><path d="M-3 -6 Q3 0 3 6"/></g>
+      <g id="holly" {...common}><path d="M0 0 Q-12 -12 -14 -2 Q-8 2 -14 8 Q-4 10 0 0 Q7 -12 14 -5 Q8 2 14 7 Q3 10 0 0Z"/><circle cx="-2" cy="2" r="2"/><circle cx="3" cy="3" r="2"/></g>
+      <g id="rose" {...common}><circle cx="0" cy="0" r="8"/><path d="M0 -7 Q8 -5 3 0 Q-4 4 -5 -2 Q-6 -7 0 -7Z M0 8 Q-3 15 -9 13 M3 8 Q10 14 13 8"/></g>
+    </defs>
+    <rect x="0" y="0" width="320" height="200" fill={`url(#pattern-${theme})`} opacity=".65"/>
+    <rect x="3" y="3" width="314" height="194" rx="5" fill="none" stroke={ink} strokeWidth="2.5"/>
+    <rect x="7" y="7" width="306" height="186" rx="3" fill="none" stroke={ink} strokeWidth=".8" strokeDasharray="2 3"/>
+    {theme === "horror" && <g><use href="#pumpkin" transform="translate(20 25) scale(.8)"/><use href="#spider" transform="translate(300 25) scale(.9)"/><use href="#spider" transform="translate(20 175) scale(.7)"/><use href="#pumpkin" transform="translate(300 175) scale(.75)"/><path d="M0 0 L42 0 L0 42 M320 0 L278 0 L320 42 M0 200 L42 200 L0 158 M320 200 L278 200 L320 158" {...common}/></g>}
+    {theme === "regular" && <g><use href="#bean" transform="translate(18 22) scale(.85)"/><use href="#bean" transform="translate(302 22) scale(.85)"/><use href="#bean" transform="translate(18 178) scale(.85)"/><use href="#bean" transform="translate(302 178) scale(.85)"/><path d="M0 40 Q18 30 32 45 M320 40 Q302 30 288 45 M0 160 Q18 170 32 155 M320 160 Q302 170 288 155" {...common}/></g>}
+    {theme === "christmas" && <g><use href="#holly" transform="translate(20 22) scale(.85)"/><use href="#holly" transform="translate(300 22) scale(-.85 .85)"/><use href="#holly" transform="translate(20 178) scale(.85)"/><use href="#holly" transform="translate(300 178) scale(-.85 .85)"/><path d="M0 38 L7 31 L14 38 L21 31 L28 38 M292 38 L299 31 L306 38 L313 31 L320 38 M0 162 L7 169 L14 162 L21 169 L28 162 M292 162 L299 169 L306 162 L313 169 L320 162" {...common}/></g>}
+    {theme === "valentines" && <g><use href="#rose" transform="translate(20 22) scale(.8)"/><use href="#rose" transform="translate(300 22) scale(.8)"/><use href="#rose" transform="translate(20 178) scale(.8)"/><use href="#rose" transform="translate(300 178) scale(.8)"/><path d="M0 40 Q10 30 20 40 T40 40 M280 40 Q290 30 300 40 T320 40 M0 160 Q10 170 20 160 T40 160 M280 160 Q290 170 300 160 T320 160" {...common}/></g>}
+  </svg>;
 }
