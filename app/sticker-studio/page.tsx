@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-const LOGO_URL = "https://i.ibb.co/zHrnzxgf/IMG-3220.jpg";
+const LOGO_URL = "/logo.png"; // Upload the actual SYP logo to public/logo.png
 const QR_TARGET = "https://syponcafe.shop";
 
 type Sticker = {
@@ -131,46 +131,46 @@ export default function StickerStudioPage() {
         .studio-empty { min-height: 230px; border: 1px dashed #d7c4ae; border-radius: 16px; display: grid; place-items: center; padding: 30px; text-align: center; color: #927a64; font-size: 13px; line-height: 1.6; }
         .sticker-list { display: grid; gap: 13px; }
         .sticker-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 12px; border: 1px solid #e8d9c6; border-radius: 14px; background: #fffaf3; }
-        .sticker-thumb { width: 100%; max-width: 560px; aspect-ratio: 70 / 50; background: #fff; overflow: hidden; }
+        .sticker-thumb { width: 100%; max-width: 560px; aspect-ratio: 50 / 80; background: #fff; overflow: hidden; }
         .sticker-row-actions { display: flex; flex-direction: column; gap: 7px; }
         .small-action { border: 1px solid #d8c4ad; background: white; color: #67472f; padding: 8px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; }
-        .sticker-sheet { display: none; width: 70mm; height: 52mm; padding: 0; margin: 0 auto; background: #fff; color: #23180f; overflow: hidden; page-break-after: always; break-after: page; }
-        .sticker-art { width: 70mm; height: 50mm; display: grid; grid-template-columns: 1fr 14mm; grid-template-rows: 9mm 1fr 5mm; padding: 2.3mm 2.5mm 1.7mm; gap: 0 1.5mm; overflow: hidden; background: white; }
-        .sticker-head { grid-column: 1; display: flex; align-items: center; gap: 1.8mm; min-width: 0; border-bottom: .25mm solid #d9c7b4; padding-bottom: 1mm; }
-        .sticker-logo { width: 8mm; height: 8mm; object-fit: cover; flex: 0 0 auto; }
-        .sticker-wordmark { min-width: 0; }
-        .sticker-wordmark strong { display: block; font-size: 7.5pt; line-height: 1.05; letter-spacing: -.03em; white-space: nowrap; }
-        .sticker-wordmark span { display: block; margin-top: .7mm; font-size: 4.4pt; letter-spacing: .13em; white-space: nowrap; }
-        .sticker-customer { font-size: 6.5pt; font-weight: 800; margin-top: 1.2mm; line-height: 1.1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-        .sticker-drink { font-size: 11pt; font-weight: 900; line-height: 1.05; letter-spacing: -.035em; margin-top: 1mm; overflow-wrap: anywhere; max-height: 9mm; overflow: hidden; }
-        .sticker-meta { display: flex; flex-wrap: wrap; gap: 1mm; margin-top: 1.2mm; }
-        .sticker-pill { display: inline-block; border: .25mm solid #b9a18a; border-radius: 1mm; padding: .5mm 1mm; font-size: 5pt; line-height: 1.1; font-weight: 800; }
-        .sticker-notes { font-size: 5pt; line-height: 1.1; margin-top: 1mm; max-height: 5mm; overflow: hidden; overflow-wrap: anywhere; }
-        .sticker-qr { grid-column: 2; grid-row: 1 / 3; display: flex; flex-direction: column; align-items: center; justify-content: center; border-left: .25mm solid #d9c7b4; padding-left: 1.2mm; }
-        .sticker-qr img { width: 12mm; height: 12mm; object-fit: contain; image-rendering: pixelated; }
-        .sticker-qr span { font-size: 4pt; margin-top: .5mm; font-weight: 800; }
-        .sticker-footer { grid-column: 1 / 3; border-top: .25mm solid #d9c7b4; align-self: end; padding-top: .8mm; display: flex; justify-content: space-between; gap: 2mm; font-size: 4.4pt; line-height: 1; color: #665343; white-space: nowrap; }
+        .sticker-sheet { display: none; width: 50mm; height: 82mm; padding: 0; margin: 0 auto; background: #fff; color: #23180f; overflow: hidden; page-break-after: always; break-after: page; }
+        .sticker-art { width: 50mm; height: 80mm; display: flex; flex-direction: column; align-items: center; padding: 3mm 3mm 2mm; gap: 0; overflow: hidden; background: #fff; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; text-align: center; }
+        .sticker-head { width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1mm; min-width: 0; border-bottom: .5mm solid #000; padding-bottom: 2mm; }
+        .sticker-logo { width: 17mm; height: 17mm; object-fit: contain; flex: 0 0 auto; background: #fff; }
+        .sticker-wordmark { min-width: 0; width: 100%; }
+        .sticker-wordmark strong { display: block; font-size: 15pt; line-height: 1; font-weight: 1000; letter-spacing: -.045em; white-space: nowrap; color: #000; }
+        .sticker-wordmark span { display: block; margin-top: 1mm; font-size: 5.5pt; font-weight: 900; letter-spacing: .12em; white-space: nowrap; color: #000; }
+        .sticker-customer { width: 100%; font-size: 7pt; font-weight: 900; margin-top: 2mm; line-height: 1.1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; color: #000; }
+        .sticker-drink { width: 100%; font-size: 20pt; font-weight: 1000; line-height: .98; letter-spacing: -.035em; margin-top: 3mm; overflow-wrap: anywhere; max-height: 20mm; overflow: hidden; color: #000; text-transform: uppercase; }
+        .sticker-meta { display: flex; flex-wrap: wrap; justify-content: center; gap: 1mm; margin-top: 2.5mm; width: 100%; }
+        .sticker-pill { display: inline-block; border: .4mm solid #000; border-radius: 1mm; padding: 1mm 1.4mm; font-size: 5.5pt; line-height: 1.1; font-weight: 900; color: #000; }
+        .sticker-notes { width: 100%; font-size: 6pt; line-height: 1.15; font-weight: 800; margin-top: 2mm; max-height: 7mm; overflow: hidden; overflow-wrap: anywhere; color: #000; }
+        .sticker-qr { margin-top: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 2mm; }
+        .sticker-qr img { width: 13mm; height: 13mm; object-fit: contain; image-rendering: pixelated; }
+        .sticker-qr span { font-size: 4.5pt; margin-top: .6mm; font-weight: 900; }
+        .sticker-footer { width: 100%; border-top: .35mm solid #000; margin-top: 2mm; padding-top: 1mm; display: flex; flex-direction: column; align-items: center; gap: .6mm; font-size: 4.8pt; line-height: 1; font-weight: 800; color: #000; white-space: nowrap; }
         .sticker-sheet.print-selected { display: block; }
         @media (max-width: 900px) { .studio-layout { grid-template-columns: 1fr; } .studio-top { align-items: flex-start; } }
         @media (max-width: 520px) { .studio-shell { padding: 18px 12px 30px; } .studio-panel { padding: 17px; border-radius: 16px; } .studio-brand img { width: 46px; height: 46px; } .studio-brand p { font-size: 8px; letter-spacing: .12em; } .studio-back { padding: 9px 11px; font-size: 11px; } .sticker-row { grid-template-columns: 1fr; } .sticker-row-actions { flex-direction: row; } }
-        @page { size: 70mm 52mm; margin: 0; }
+        @page { size: 50mm 82mm; margin: 0; }
         @media print {
-          html, body { width: 70mm !important; margin: 0 !important; padding: 0 !important; background: #fff !important; }
+          html, body { width: 50mm !important; margin: 0 !important; padding: 0 !important; background: #fff !important; }
           body * { visibility: hidden !important; }
           .sticker-sheet, .sticker-sheet * { visibility: visible !important; }
-          .studio-shell, .studio-layout, .studio-panel, .sticker-list { display: block !important; width: 70mm !important; margin: 0 !important; padding: 0 !important; border: 0 !important; box-shadow: none !important; background: #fff !important; }
+          .studio-shell, .studio-layout, .studio-panel, .sticker-list { display: block !important; width: 50mm !important; margin: 0 !important; padding: 0 !important; border: 0 !important; box-shadow: none !important; background: #fff !important; }
           .studio-top, .studio-form-panel, .studio-preview-head, .studio-empty, .sticker-row-actions, .studio-notice { display: none !important; }
-          .sticker-row { display: block !important; width: 70mm !important; margin: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: #fff !important; break-inside: avoid !important; }
+          .sticker-row { display: block !important; width: 50mm !important; margin: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 0 !important; background: #fff !important; break-inside: avoid !important; }
           .sticker-thumb { display: none !important; }
-          .sticker-sheet { display: block !important; width: 70mm !important; height: 52mm !important; margin: 0 !important; padding: 0 !important; page-break-after: always !important; break-after: page !important; overflow: hidden !important; }
+          .sticker-sheet { display: block !important; width: 50mm !important; height: 82mm !important; margin: 0 !important; padding: 0 !important; page-break-after: always !important; break-after: page !important; overflow: hidden !important; }
           body.printing-one .sticker-sheet:not(.print-selected) { display: none !important; }
-          .sticker-art { width: 70mm !important; height: 50mm !important; }
+          .sticker-art { width: 50mm !important; height: 80mm !important; }
         }
       `}</style>
 
       <header className="studio-top">
         <div className="studio-brand">
-          <img src={LOGO_URL} alt="SYP ON CAFÉ logo" />
+          <img src={LOGO_URL} alt="SYP ON CAFÉ logo" onError={(event) => { event.currentTarget.style.display = "none"; }} />
           <div><h1>SYP Sticker Studio</h1><p>STREET • ICED • BREWED</p></div>
         </div>
         <a className="studio-back" href="/">← Back to website</a>
@@ -179,7 +179,7 @@ export default function StickerStudioPage() {
       <div className="studio-layout">
         <section className="studio-panel studio-form-panel">
           <h2>Create drink stickers</h2>
-          <p className="studio-muted">Enter the exact order details. Each quantity creates a separate sticker for the roll.</p>
+          <p className="studio-muted">Bold, high-contrast labels for clearer thermal printing. Each quantity creates a separate sticker.</p>
           <div className="studio-field"><label htmlFor="customer">Customer name (optional)</label><input id="customer" value={customer} onChange={(e) => setCustomer(e.target.value)} placeholder="e.g. Alex" maxLength={42} /></div>
           <div className="studio-field"><label htmlFor="drink">Drink name *</label><input id="drink" value={drink} onChange={(e) => setDrink(e.target.value)} placeholder="e.g. Oreo Matcha" maxLength={42} /></div>
           <div className="studio-two">
@@ -198,7 +198,7 @@ export default function StickerStudioPage() {
         </section>
 
         <section className="studio-panel">
-          <div className="studio-preview-head"><div><h2>Print queue</h2><p className="studio-muted" style={{ marginBottom: 0 }}>Each sticker is 70 × 50 mm with a 2 mm feed gap (52 mm print step).</p></div><span className="studio-count">{stickers.length} sticker{stickers.length === 1 ? "" : "s"}</span></div>
+          <div className="studio-preview-head"><div><h2>Print queue</h2><p className="studio-muted" style={{ marginBottom: 0 }}>Each sticker is 50 × 80 mm, portrait, with a 2 mm feed gap (82 mm print step).</p></div><span className="studio-count">{stickers.length} sticker{stickers.length === 1 ? "" : "s"}</span></div>
           {!stickers.length ? <div className="studio-empty">Your sticker preview will appear here.<br />Add a drink on the left to get started.</div> : <div className="sticker-list">{stickers.map((sticker) => <div className="sticker-row" key={sticker.id}>
             <div className="sticker-thumb"><StickerArt sticker={sticker} qrUrl={qrUrl} /></div>
             <div className="sticker-row-actions"><button className="small-action" type="button" onClick={() => printOne(sticker.id)}>Print / reprint</button><button className="small-action" type="button" onClick={() => removeSticker(sticker.id)}>Remove</button></div>
@@ -215,7 +215,7 @@ export default function StickerStudioPage() {
 function StickerArt({ sticker, qrUrl }: { sticker: Sticker; qrUrl: string }) {
   return <div className="sticker-art">
     <div>
-      <div className="sticker-head"><img className="sticker-logo" src={LOGO_URL} alt="SYP" /><div className="sticker-wordmark"><strong>SYP ON CAFÉ</strong><span>STREET • ICED • BREWED</span></div></div>
+      <div className="sticker-head"><img className="sticker-logo" src={LOGO_URL} alt="SYP logo" onError={(event) => { event.currentTarget.style.display = "none"; }} /><div className="sticker-wordmark"><strong>SYP ON CAFÉ</strong><span>STREET • ICED • BREWED</span></div></div>
       {sticker.customer && <div className="sticker-customer">FOR: {sticker.customer}</div>}
       <div className="sticker-drink">{sticker.drink}</div>
       <div className="sticker-meta"><span className="sticker-pill">{sticker.size}</span><span className="sticker-pill">{sticker.ice}</span><span className="sticker-pill">{sticker.sugar}</span></div>
