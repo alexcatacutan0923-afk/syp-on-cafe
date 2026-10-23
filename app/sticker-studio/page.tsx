@@ -53,7 +53,7 @@ export default function StickerStudioPage() {
 
   const qrUrl = useMemo(
     () =>
-      `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=1&ecc=H&data=${encodeURIComponent(
+      `https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=1&ecc=H&data=${encodeURIComponent(
         QR_TARGET,
       )}`,
     [],
@@ -106,7 +106,7 @@ export default function StickerStudioPage() {
           try {
             await img.decode();
           } catch {
-            // Continue printing if image decoding fails.
+            // Continue if image decoding fails.
           }
         }
       }),
@@ -192,8 +192,15 @@ export default function StickerStudioPage() {
       window.print();
     } catch {
       cleanupPrint();
-      setNotice("Hindi naihanda ang print. Subukan ulit.");
+      setNotice("Hindi naihanda ang sticker. Subukan ulit.");
     }
+  }
+
+  function removeSticker(id: number) {
+    setStickers((current) =>
+      current.filter((sticker) => sticker.id !== id),
+    );
+    setNotice("Sticker removed.");
   }
 
   function clearForm() {
@@ -212,21 +219,14 @@ export default function StickerStudioPage() {
     setNotice("Sticker queue cleared.");
   }
 
-  function removeSticker(id: number) {
-    setStickers((current) =>
-      current.filter((sticker) => sticker.id !== id),
-    );
-    setNotice("Sticker removed.");
-  }
-
   return (
     <main className="studio-shell">
       <style jsx global>{`
         :root {
-          --syp-brown: #463629;
-          --syp-muted: #88796b;
+          --syp-brown: #49372a;
+          --syp-muted: #817365;
+          --syp-border: #e5ddd2;
           --syp-cream: #f8f5ef;
-          --syp-border: #e7e0d5;
         }
 
         * {
@@ -249,8 +249,8 @@ export default function StickerStudioPage() {
           max-width: 1280px;
           margin: 0 auto 26px;
           display: flex;
-          align-items: center;
           justify-content: space-between;
+          align-items: center;
           gap: 16px;
         }
 
@@ -264,8 +264,8 @@ export default function StickerStudioPage() {
           width: 52px;
           height: 52px;
           object-fit: contain;
-          background: #fff;
           border-radius: 50%;
+          background: #fff;
         }
 
         .studio-brand h1 {
@@ -278,7 +278,7 @@ export default function StickerStudioPage() {
           margin: 5px 0 0;
           color: var(--syp-muted);
           font-size: 10px;
-          letter-spacing: 0.16em;
+          letter-spacing: 0.15em;
           font-weight: 700;
         }
 
@@ -457,10 +457,10 @@ export default function StickerStudioPage() {
 
         .sticker-thumb {
           width: 100%;
-          max-width: 220px;
-          aspect-ratio: 50 / 80;
+          max-width: 400px;
+          aspect-ratio: 80 / 50;
           margin-inline: auto;
-          background: var(--syp-cream);
+          background: #fff;
           overflow: hidden;
         }
 
@@ -486,10 +486,14 @@ export default function StickerStudioPage() {
           cursor: not-allowed;
         }
 
+        /* LANDSCAPE STICKER: 80 mm wide x 50 mm high */
+
         .sticker-sheet {
           display: none;
-          width: 50mm;
-          height: 80mm;
+          width: 80mm;
+          height: 50mm;
+          min-height: 50mm;
+          max-height: 50mm;
           margin: 0;
           padding: 0;
           background: #fff;
@@ -497,127 +501,174 @@ export default function StickerStudioPage() {
         }
 
         .sticker-art {
-          width: 50mm;
-          height: 80mm;
-          min-width: 50mm;
-          min-height: 80mm;
-          max-width: 50mm;
-          max-height: 80mm;
+          width: 80mm;
+          height: 50mm;
+          min-width: 80mm;
+          min-height: 50mm;
+          max-width: 80mm;
+          max-height: 50mm;
+          display: grid;
+          grid-template-columns: 21mm minmax(0, 1fr) 15mm;
+          grid-template-rows: minmax(0, 1fr) auto;
+          column-gap: 2.5mm;
+          align-items: center;
           padding: 3mm;
+          overflow: hidden;
           background: #fff;
           color: #30271f;
-          overflow: hidden;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          text-align: center;
           font-family: Arial, Helvetica, sans-serif;
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
         }
 
+        .sticker-logo-area {
+          grid-column: 1;
+          grid-row: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-width: 0;
+          text-align: center;
+        }
+
         .sticker-logo {
           display: block;
-          width: 15mm;
-          height: 15mm;
+          width: 19mm;
+          height: 19mm;
           object-fit: contain;
-          margin: 0 auto 2mm;
+          margin: 0 auto 1.5mm;
         }
 
         .sticker-brand-name {
-          font-size: 10pt;
-          line-height: 1.1;
-          font-weight: 800;
-          letter-spacing: 0.06em;
+          width: 100%;
+          font-size: 7pt;
+          line-height: 1.05;
+          font-weight: 900;
+          letter-spacing: -0.025em;
           white-space: nowrap;
         }
 
         .sticker-tagline {
-          margin-top: 1.2mm;
-          font-size: 5pt;
-          letter-spacing: 0.12em;
+          margin-top: 1mm;
+          font-size: 3.7pt;
+          line-height: 1.1;
+          letter-spacing: 0.04em;
           color: #786b5d;
           font-weight: 700;
           white-space: nowrap;
         }
 
-        .sticker-divider {
-          flex: 0 0 auto;
-          width: 18mm;
-          border: 0;
-          border-top: 0.3mm solid #c9bca9;
-          margin: 3mm auto;
+        .sticker-details {
+          grid-column: 2;
+          grid-row: 1;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: flex-start;
+          overflow: hidden;
+          padding-left: 2mm;
+          border-left: 0.35mm solid #d9d0c4;
         }
 
         .sticker-customer {
-          max-width: 100%;
+          width: 100%;
           font-size: 6pt;
-          line-height: 1.2;
+          line-height: 1.15;
           font-weight: 700;
+          margin-bottom: 1.5mm;
           overflow-wrap: anywhere;
-          margin-bottom: 2mm;
         }
 
         .sticker-drink {
           width: 100%;
-          margin: 0 0 2.5mm;
-          font-size: 15pt;
-          line-height: 1.08;
-          font-weight: 800;
-          letter-spacing: -0.035em;
+          margin: 0 0 2mm;
+          font-size: 18pt;
+          line-height: 1.02;
+          font-weight: 900;
+          letter-spacing: -0.045em;
           overflow-wrap: anywhere;
         }
 
         .sticker-size {
+          display: inline-block;
+          margin-bottom: 1.5mm;
+          padding: 1mm 1.5mm;
+          border: 0.35mm solid #49372a;
+          border-radius: 1mm;
           font-size: 7pt;
-          font-weight: 700;
-          letter-spacing: 0.05em;
-          margin-bottom: 2mm;
+          line-height: 1;
+          font-weight: 900;
         }
 
         .sticker-options {
           width: 100%;
-          font-size: 6pt;
-          line-height: 1.6;
+          font-size: 7pt;
+          line-height: 1.35;
+          font-weight: 700;
           color: #51463a;
           overflow-wrap: anywhere;
         }
 
         .sticker-notes {
           width: 100%;
-          margin-top: 2mm;
+          margin-top: 1.5mm;
           font-size: 6pt;
-          line-height: 1.3;
+          line-height: 1.2;
           font-weight: 700;
           overflow-wrap: anywhere;
         }
 
-        .sticker-bottom {
-          margin-top: auto;
-          width: 100%;
+        .sticker-qr-area {
+          grid-column: 3;
+          grid-row: 1;
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 1.5mm;
-          padding-top: 2mm;
+          justify-content: center;
+          min-width: 0;
+          text-align: center;
         }
 
         .sticker-qr {
-          width: 12mm;
-          height: 12mm;
+          display: block;
+          width: 13mm;
+          height: 13mm;
           object-fit: contain;
         }
 
-        .sticker-website {
+        .sticker-scan {
+          margin-top: 1mm;
           font-size: 5pt;
-          color: #786b5d;
-          font-weight: 700;
+          font-weight: 900;
+          letter-spacing: 0.04em;
           white-space: nowrap;
         }
 
-        .sticker-date {
-          font-size: 4.5pt;
-          color: #88796b;
+        .sticker-website {
+          margin-top: 1mm;
+          font-size: 4.2pt;
+          color: #786b5d;
+          font-weight: 700;
+          overflow-wrap: anywhere;
+        }
+
+        .sticker-footer {
+          grid-column: 1 / span 3;
+          grid-row: 2;
+          width: 100%;
+          border-top: 0.3mm solid #d9d0c4;
+          padding-top: 1.5mm;
+          margin-top: 1.5mm;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 2mm;
+          font-size: 5pt;
+          line-height: 1.1;
+          color: #786b5d;
+          font-weight: 700;
           white-space: nowrap;
         }
 
@@ -666,19 +717,24 @@ export default function StickerStudioPage() {
         }
 
         @page {
-          size: 50mm 80mm;
+          size: 80mm 50mm;
           margin: 0;
         }
 
         @media print {
           html,
           body {
-            width: 50mm !important;
+            width: 80mm !important;
             min-width: 0 !important;
             margin: 0 !important;
             padding: 0 !important;
             background: #fff !important;
             overflow: visible !important;
+          }
+
+          body {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
 
           body * {
@@ -695,7 +751,7 @@ export default function StickerStudioPage() {
           .studio-panel,
           .sticker-list {
             display: block !important;
-            width: 50mm !important;
+            width: 80mm !important;
             min-width: 0 !important;
             max-width: none !important;
             margin: 0 !important;
@@ -723,7 +779,7 @@ export default function StickerStudioPage() {
 
           .sticker-row {
             display: block !important;
-            width: 50mm !important;
+            width: 80mm !important;
             min-width: 0 !important;
             max-width: none !important;
             margin: 0 !important;
@@ -742,12 +798,12 @@ export default function StickerStudioPage() {
           .sticker-sheet {
             display: block !important;
             position: relative !important;
-            width: 50mm !important;
-            height: 80mm !important;
+            width: 80mm !important;
+            height: 50mm !important;
             min-width: 0 !important;
-            min-height: 80mm !important;
+            min-height: 50mm !important;
             max-width: none !important;
-            max-height: 80mm !important;
+            max-height: 50mm !important;
             margin: 0 !important;
             padding: 0 !important;
             border: 0 !important;
@@ -776,9 +832,11 @@ export default function StickerStudioPage() {
           }
 
           .sticker-art {
-            display: flex !important;
-            width: 50mm !important;
-            height: 80mm !important;
+            display: grid !important;
+            grid-template-columns: 21mm minmax(0, 1fr) 15mm !important;
+            grid-template-rows: minmax(0, 1fr) auto !important;
+            width: 80mm !important;
+            height: 50mm !important;
             min-width: 0 !important;
             min-height: 0 !important;
             max-width: none !important;
@@ -827,7 +885,8 @@ export default function StickerStudioPage() {
         <section className="studio-panel studio-form-panel">
           <h2>Create drink stickers</h2>
           <p className="studio-muted">
-            Simple, clean café labels. Portrait size: 50 × 80 mm.
+            Clean landscape labels with a large logo and easy-to-read drink
+            details. Sticker size: 80 × 50 mm.
           </p>
 
           <div className="studio-field">
@@ -971,7 +1030,7 @@ export default function StickerStudioPage() {
             <div>
               <h2>Print queue</h2>
               <p className="studio-muted" style={{ marginBottom: 0 }}>
-                Minimalist design • 50 × 80 mm • Portrait
+                80 × 50 mm landscape • Large logo • Clear text
               </p>
             </div>
 
@@ -1049,8 +1108,9 @@ export default function StickerStudioPage() {
             className="studio-muted"
             style={{ marginTop: 15, marginBottom: 0 }}
           >
-            Set printer paper size to 50 × 80 mm, Portrait, 100% / Actual Size,
-            and margins to None. Test one sticker first.
+            Set printer paper size to 80 × 50 mm, Landscape, 100% / Actual Size,
+            and margins to None. Disable headers and footers. Test one sticker
+            first.
           </p>
         </section>
       </div>
@@ -1067,42 +1127,51 @@ function StickerArt({
 }) {
   return (
     <div className="sticker-art">
-      <img
-        className="sticker-logo"
-        src={LOGO_URL}
-        alt="SYP ON CAFÉ logo"
-        onError={(event) => {
-          event.currentTarget.style.display = "none";
-        }}
-      />
+      <div className="sticker-logo-area">
+        <img
+          className="sticker-logo"
+          src={LOGO_URL}
+          alt="SYP ON CAFÉ logo"
+          onError={(event) => {
+            event.currentTarget.style.display = "none";
+          }}
+        />
 
-      <div className="sticker-brand-name">SYP ON CAFÉ</div>
-      <div className="sticker-tagline">STREET • ICED • BREWED</div>
-
-      <hr className="sticker-divider" />
-
-      {sticker.customer && (
-        <div className="sticker-customer">FOR: {sticker.customer}</div>
-      )}
-
-      <div className="sticker-drink">{sticker.drink}</div>
-
-      <div className="sticker-size">{sticker.size}</div>
-
-      <div className="sticker-options">
-        {sticker.ice}
-        <br />
-        {sticker.sugar}
+        <div className="sticker-brand-name">SYP ON CAFÉ</div>
+        <div className="sticker-tagline">STREET • ICED • BREWED</div>
       </div>
 
-      {sticker.notes && (
-        <div className="sticker-notes">Note: {sticker.notes}</div>
-      )}
+      <div className="sticker-details">
+        {sticker.customer && (
+          <div className="sticker-customer">
+            FOR: {sticker.customer}
+          </div>
+        )}
 
-      <div className="sticker-bottom">
+        <div className="sticker-drink">{sticker.drink}</div>
+
+        <div className="sticker-size">{sticker.size}</div>
+
+        <div className="sticker-options">
+          {sticker.ice}
+          <br />
+          {sticker.sugar}
+        </div>
+
+        {sticker.notes && (
+          <div className="sticker-notes">NOTE: {sticker.notes}</div>
+        )}
+      </div>
+
+      <div className="sticker-qr-area">
         <img className="sticker-qr" src={qrUrl} alt="SYP ON CAFÉ QR code" />
+        <div className="sticker-scan">SCAN HERE</div>
         <div className="sticker-website">syponcafe.shop</div>
-        <div className="sticker-date">{sticker.dateTime}</div>
+      </div>
+
+      <div className="sticker-footer">
+        <span>{sticker.dateTime}</span>
+        <span>SYP ON CAFÉ • STREET • ICED • BREWED</span>
       </div>
     </div>
   );
