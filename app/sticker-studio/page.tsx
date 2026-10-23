@@ -9,6 +9,7 @@ type Sticker = {
   id: number;
   customer: string;
   drink: string;
+  price?: number;
   size: string;
   ice: string;
   sugar: string;
@@ -67,20 +68,6 @@ const QUOTES = [
   "Walang pressure, piliin mo rin ang sarili mo.",
   "Kahit puyat, may bagong chance bukas.",
   "Ang kape, hindi nang-iiwan.",
-  "Kape ang sagot. Ano ulit ang tanong?",
-  "Hindi tamad, naka-power saving mode.",
-  "Kung may problema, may kape muna.",
-  "Busy kunwari, nagkakape talaga.",
-  "Petsa de peligro pero may iced coffee.",
-  "Kape ang love language ko.",
-  "Puyat responsibly.",
-  "Minsan, kailangan mo lang ng space at kape.",
-  "Ang pahinga ay hindi pagsuko.",
-  "Hindi lahat ng miss mo ay dapat balikan.",
-  "Okay lang hindi okay araw-araw.",
-  "May peace sa pagbitaw.",
-  "Hindi ka mahina dahil napagod ka.",
-  "May bagong kwento pagkatapos ng dulo.",
   "Kape muna, saka na ang overthinking.",
 "One sip at a time.",
 "You deserve this little break.",
@@ -304,7 +291,22 @@ const QUOTES = [
 "Pahinga, recharge, repeat.",
 "Better things are on the way.",
 "Keep your dreams bigger than your doubts."
-"Esmeringhoy, kape muna bago magkalat.",
+
+  "Kape ang sagot. Ano ulit ang tanong?",
+  "Hindi tamad, naka-power saving mode.",
+  "Kung may problema, may kape muna.",
+  "Busy kunwari, nagkakape talaga.",
+  "Petsa de peligro pero may iced coffee.",
+  "Kape ang love language ko.",
+  "Puyat responsibly.",
+  "Minsan, kailangan mo lang ng space at kape.",
+  "Ang pahinga ay hindi pagsuko.",
+  "Hindi lahat ng miss mo ay dapat balikan.",
+  "Okay lang hindi okay araw-araw.",
+  "May peace sa pagbitaw.",
+  "Hindi ka mahina dahil napagod ka.",
+  "May bagong kwento pagkatapos ng dulo.",
+  "Esmeringhoy, kape muna bago magkalat.",
 "Awit sa buhay, iced coffee sa kamay.",
 "Luh, bakit mahal ang bilihin pero mura ang peace of mind ko?",
 "Kape na lang, wala namang tayo.",
@@ -404,6 +406,7 @@ const QUOTES = [
 "Basta may kape, may pag-asa. Basta may pera, may extra shot.",
 "Tambay muna, baka sakaling may plot twist.",
 "Kape muna, baka sakaling gumanda ang desisyon ko."
+
 ];
 
 function manilaDateTime() {
@@ -545,7 +548,7 @@ export default function StickerStudioPage() {
     const added: Sticker[] = [];
     for (let i = 0; i < count; i++) {
       const quote = randomQuote(used); used.add(quote);
-      added.push({ id: nextId + i, customer: customer.trim(), drink: drink.trim(), size, ice, sugar, notes: notes.trim(), dateTime: now, quote, orderId, orderNumber: orderId, source: "manual" });
+      added.push({ id: nextId + i, customer: customer.trim(), drink: drink.trim(), price: unitPrice, size, ice, sugar, notes: notes.trim(), dateTime: now, quote, orderId, orderNumber: orderId, source: "manual" });
     }
     setStickers((current) => [...current, ...added]);
     setNextId((current) => current + added.length);
@@ -568,6 +571,7 @@ export default function StickerStudioPage() {
         id: nextId + i,
         customer: order.customer_name || "",
         drink: drinkName,
+        price: typeof item.price === "number" ? item.price : (typeof item.line_total === "number" ? item.line_total / count : undefined),
         size: item.size || "22 oz",
         ice: item.ice || (item.temperature === "Hot" ? "Hot" : "Regular ice"),
         sugar: item.sugar || "Regular sugar",
@@ -669,13 +673,9 @@ export default function StickerStudioPage() {
     if (!selected.length) return;
 
     setPrinting(true);
-    setNotice("Inihahanda ang print at itinatala ang print job...");
+    setNotice("Inihahanda ang sticker para sa pag-print...");
 
     try {
-      for (const sticker of selected) {
-        await recordPrint(sticker);
-      }
-
       document.body.classList.remove("printing-one");
       document.querySelectorAll<HTMLElement>(".sticker-sheet").forEach((node) => {
         node.classList.toggle(
@@ -785,7 +785,8 @@ export default function StickerStudioPage() {
         .sticker-copy { grid-column: 2; grid-row: 1; min-width: 0; overflow: hidden; }
         .sticker-wordmark { font-size: 7pt; font-weight: 900; letter-spacing: -.03em; line-height: 1; white-space: nowrap; }
         .sticker-tagline { font-size: 4.5pt; font-weight: 800; margin-top: .8mm; letter-spacing: .03em; white-space: nowrap; }
-        .sticker-drink { font-size: 17pt; font-weight: 900; line-height: 1; letter-spacing: -.045em; overflow-wrap: anywhere; margin-top: 2mm; }
+        .sticker-drink { font-size: 15pt; font-weight: 900; line-height: 1; letter-spacing: -.045em; overflow-wrap: anywhere; margin-top: 1.5mm; }
+        .sticker-price { font-size: 10pt; font-weight: 900; line-height: 1; margin-top: 1mm; }
         .sticker-pills { display: flex; flex-wrap: wrap; gap: .8mm; margin-top: 1.5mm; }
         .sticker-pill { border: .25mm solid #000; padding: .5mm .8mm; font-size: 5.5pt; font-weight: 800; line-height: 1.1; }
         .sticker-customer, .sticker-notes { font-size: 6pt; font-weight: 700; margin-top: 1mm; overflow-wrap: anywhere; }
@@ -995,6 +996,7 @@ function StickerArt({ sticker, qrUrl }: { sticker: Sticker; qrUrl: string }) {
         <div className="sticker-tagline">STREET • ICED • BREWED</div>
         {sticker.customer && <div className="sticker-customer">FOR: {sticker.customer}</div>}
         <div className="sticker-drink">{sticker.drink}</div>
+        {typeof sticker.price === "number" && <div className="sticker-price">₱{sticker.price.toFixed(2)}</div>}
         <div className="sticker-pills">
           <span className="sticker-pill">{sticker.size}</span>
           <span className="sticker-pill">{sticker.ice}</span>
