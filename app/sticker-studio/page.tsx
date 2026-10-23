@@ -290,8 +290,7 @@ const QUOTES = [
 "Don't quit on a difficult day.",
 "Pahinga, recharge, repeat.",
 "Better things are on the way.",
-"Keep your dreams bigger than your doubts."
-
+"Keep your dreams bigger than your doubts.",
   "Kape ang sagot. Ano ulit ang tanong?",
   "Hindi tamad, naka-power saving mode.",
   "Kung may problema, may kape muna.",
