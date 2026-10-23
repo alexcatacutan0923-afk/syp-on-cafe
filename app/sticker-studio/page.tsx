@@ -14,6 +14,7 @@ type Sticker = {
   sugar: string;
   notes: string;
   dateTime: string;
+  theme: string;
 };
 
 function manilaDateTime() {
@@ -36,6 +37,7 @@ export default function StickerStudioPage() {
   const [sugar, setSugar] = useState("Regular sugar");
   const [notes, setNotes] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [theme, setTheme] = useState("horror");
   const [dateTime, setDateTime] = useState(manilaDateTime);
   const [stickers, setStickers] = useState<Sticker[]>([]);
   const [nextId, setNextId] = useState(1);
@@ -68,6 +70,7 @@ export default function StickerStudioPage() {
       sugar,
       notes: notes.trim(),
       dateTime: createdAt,
+      theme,
     }));
     setStickers((current) => [...current, ...added]);
     setNextId((current) => current + added.length);
@@ -136,9 +139,20 @@ export default function StickerStudioPage() {
         .sticker-row-actions { display: flex; flex-direction: column; gap: 7px; }
         .small-action { border: 1px solid #d8c4ad; background: white; color: #67472f; padding: 8px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; }
         .sticker-sheet { display: none; width: 80mm; height: 52mm; padding: 0; margin: 0 auto; background: #fff; color: #000; overflow: hidden; page-break-after: always; break-after: page; }
-        .sticker-art { position: relative; width: 80mm; height: 50mm; display: flex; flex-direction: column; padding: 2.2mm 2.5mm 1.5mm; gap: 0; overflow: hidden; background: #fff; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; text-align: left; border: .6mm solid #000; }
-        .sticker-art:before { content: "☠  •  ☾  •  ☠"; position: absolute; top: 0.5mm; right: 2mm; font-family: Georgia, serif; font-size: 5pt; font-weight: 900; letter-spacing: .5mm; }
-        .sticker-art:after { content: "†  •  UNDEAD EDITION  •  †"; position: absolute; bottom: .5mm; left: 0; width: 100%; text-align: center; font-family: Montserrat, Arial, sans-serif; font-size: 4.2pt; font-weight: 900; letter-spacing: .6mm; }
+        /* Dense full-bleed ornamental label art; kept monochrome for thermal printers. */
+        .sticker-art { position: relative; isolation: isolate; width: 80mm; height: 50mm; display: flex; flex-direction: column; padding: 2.8mm 3mm 2mm; gap: 0; overflow: hidden; background-color: #fff; background-image: radial-gradient(circle, #000 0.28mm, transparent 0.42mm), repeating-linear-gradient(135deg, transparent 0 3mm, #000 3mm 3.18mm, transparent 3.18mm 5.8mm); background-size: 4mm 4mm, 100% 100%; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; text-align: left; border: 1mm double #000; outline: .35mm solid #000; outline-offset: -2mm; }
+        .sticker-art:before { content: "☠  ✦  ☾  ✦  ☠"; position: absolute; z-index: -1; inset: 1mm; display: flex; align-items: flex-start; justify-content: space-between; padding: .2mm 1mm; font-family: Georgia, serif; font-size: 6pt; font-weight: 900; letter-spacing: .6mm; border-bottom: .5mm dashed #000; background: repeating-linear-gradient(45deg, #fff 0 1.5mm, #ddd 1.5mm 1.8mm); }
+        .sticker-art:after { content: "†  •  UNDEAD EDITION  •  †"; position: absolute; z-index: -1; bottom: 1mm; left: 1.5mm; width: calc(100% - 3mm); text-align: center; padding: .5mm 0; font-family: Montserrat, Arial, sans-serif; font-size: 4.2pt; font-weight: 900; letter-spacing: .6mm; border-top: .5mm dashed #000; background: repeating-linear-gradient(-45deg, #fff 0 1.5mm, #ddd 1.5mm 1.8mm); }
+        .sticker-art.theme-regular { background-image: radial-gradient(circle, #000 0.35mm, transparent .5mm), repeating-linear-gradient(45deg, transparent 0 4mm, #000 4mm 4.18mm, transparent 4.18mm 7mm); }
+        .sticker-art.theme-regular:before { content: "SYP • STREET • ICED • BREWED  ✦  ☕"; font-family: Montserrat, Arial, sans-serif; font-size: 4.2pt; letter-spacing: .15mm; background: repeating-linear-gradient(90deg, #fff 0 2mm, #ddd 2mm 2.3mm); }
+        .sticker-art.theme-regular:after { content: "THANK YOU, KASYP!  •  FRESHLY BREWED"; letter-spacing: .25mm; }
+        .sticker-art.theme-christmas { background-image: radial-gradient(circle, #000 0.35mm, transparent .5mm), repeating-linear-gradient(135deg, transparent 0 3.5mm, #000 3.5mm 3.7mm, transparent 3.7mm 6mm); }
+        .sticker-art.theme-christmas:before { content: "✦  ❄  ✦  ❄  ✦  ❄  ✦"; font-size: 6pt; background: repeating-linear-gradient(45deg, #fff 0 1mm, #ddd 1mm 1.4mm); }
+        .sticker-art.theme-christmas:after { content: "SYP HOLIDAY BREW  •  MERRY & BRIGHT"; letter-spacing: .3mm; }
+        .sticker-art.theme-valentines { background-image: radial-gradient(circle, #000 0.35mm, transparent .5mm), repeating-linear-gradient(-45deg, transparent 0 3.5mm, #000 3.5mm 3.7mm, transparent 3.7mm 6mm); }
+        .sticker-art.theme-valentines:before { content: "♥  ♡  ♥  ♡  ♥  ♡  ♥"; font-size: 6pt; background: repeating-linear-gradient(-45deg, #fff 0 1mm, #ddd 1mm 1.4mm); }
+        .sticker-art.theme-valentines:after { content: "BREWED WITH LOVE  ♥  A LITTLE SIP OF JOY"; letter-spacing: .25mm; }
+        .sticker-main { position: relative; z-index: 1; background: #fff; border: .65mm solid #000; outline: .35mm dashed #000; outline-offset: -1.1mm; padding: 1.4mm; box-shadow: 0 0 0 1mm #fff; }
         .sticker-main { display: grid; grid-template-columns: minmax(0, 1fr) 15mm; grid-template-rows: auto 1fr auto; column-gap: 2mm; height: 100%; min-height: 0; }
         .sticker-head { grid-column: 1; display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 1.5mm; min-width: 0; border-bottom: .45mm solid #000; padding: 0 0 1.2mm; }
         .sticker-logo { width: 11mm; height: 11mm; object-fit: contain; flex: 0 0 auto; background: #fff; }
@@ -154,7 +168,7 @@ export default function StickerStudioPage() {
         .sticker-meta { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: .8mm; margin-top: 1.5mm; width: 100%; }
         .sticker-pill { display: inline-block; border: .35mm solid #000; border-radius: 1mm; padding: .7mm 1mm; font-size: 4.8pt; line-height: 1; font-weight: 900; color: #000; }
         .sticker-notes { width: 100%; font-family: Special Elite, Courier, monospace; font-size: 5pt; line-height: 1.05; font-weight: 800; margin-top: 1mm; max-height: 4mm; overflow: hidden; overflow-wrap: anywhere; color: #000; }
-        .sticker-footer { grid-column: 1 / span 2; border-top: .35mm solid #000; margin-top: 1mm; padding-top: .8mm; display: flex; flex-direction: row; justify-content: space-between; align-items: center; gap: 1mm; font-size: 4.5pt; line-height: 1; font-weight: 800; color: #000; white-space: nowrap; }
+        .sticker-footer { grid-column: 1 / span 2; border-top: .6mm double #000; margin-top: 1mm; padding-top: .8mm; display: flex; flex-direction: row; justify-content: space-between; align-items: center; gap: 1mm; font-size: 4.5pt; line-height: 1; font-weight: 800; color: #000; white-space: nowrap; }
         .sticker-sheet.print-selected { display: block; }
         @media (max-width: 900px) { .studio-layout { grid-template-columns: 1fr; } .studio-top { align-items: flex-start; } }
         @media (max-width: 520px) { .studio-shell { padding: 18px 12px 30px; } .studio-panel { padding: 17px; border-radius: 16px; } .studio-brand img { width: 46px; height: 46px; } .studio-brand p { font-size: 8px; letter-spacing: .12em; } .studio-back { padding: 9px 11px; font-size: 11px; } .sticker-row { grid-template-columns: 1fr; } .sticker-row-actions { flex-direction: row; } }
@@ -187,6 +201,7 @@ export default function StickerStudioPage() {
           <p className="studio-muted">Bold, high-contrast labels for clearer thermal printing. Each quantity creates a separate sticker.</p>
           <div className="studio-field"><label htmlFor="customer">Customer name (optional)</label><input id="customer" value={customer} onChange={(e) => setCustomer(e.target.value)} placeholder="e.g. Alex" maxLength={42} /></div>
           <div className="studio-field"><label htmlFor="drink">Drink name *</label><input id="drink" value={drink} onChange={(e) => setDrink(e.target.value)} placeholder="e.g. Oreo Matcha" maxLength={42} /></div>
+          <div className="studio-field"><label htmlFor="theme">Sticker theme</label><select id="theme" value={theme} onChange={(e) => setTheme(e.target.value)}><option value="horror">Undas / Horror</option><option value="regular">Regular SYP</option><option value="christmas">Christmas</option><option value="valentines">Valentine’s</option></select><p className="studio-muted" style={{ margin: 0 }}>Theme applies to new stickers added to the queue.</p></div>
           <div className="studio-two">
             <div className="studio-field"><label htmlFor="size">Cup size</label><select id="size" value={size} onChange={(e) => setSize(e.target.value)}><option>16 oz</option><option>22 oz</option><option>Hot 8 oz</option><option>Hot 12 oz</option><option>Custom size</option></select></div>
             <div className="studio-field"><label htmlFor="quantity">Quantity</label><input id="quantity" type="number" min={1} max={100} value={quantity} onChange={(e) => setQuantity(Math.max(1, Math.min(100, Number(e.target.value) || 1)))} /></div>
@@ -199,7 +214,7 @@ export default function StickerStudioPage() {
           <div className="studio-field"><label>Manila date & time</label><input value={dateTime} readOnly aria-label="Current Manila date and time" /></div>
           <button className="studio-button" type="button" onClick={addStickers}>＋ Add to sticker queue</button>
           {notice && <div className="studio-notice" role="status">{notice}</div>}
-          <div className="studio-actions"><button className="studio-button secondary" type="button" onClick={() => { setCustomer(""); setDrink(""); setSize("22 oz"); setIce("Regular ice"); setSugar("Regular sugar"); setNotes(""); setQuantity(1); setNotice("Form cleared."); }}>Clear form</button><button className="studio-button secondary" type="button" onClick={() => { setStickers([]); setNotice("Sticker queue cleared."); }}>Clear queue</button></div>
+          <div className="studio-actions"><button className="studio-button secondary" type="button" onClick={() => { setCustomer(""); setDrink(""); setSize("22 oz"); setIce("Regular ice"); setSugar("Regular sugar"); setNotes(""); setQuantity(1); setTheme("horror"); setNotice("Form cleared."); }}>Clear form</button><button className="studio-button secondary" type="button" onClick={() => { setStickers([]); setNotice("Sticker queue cleared."); }}>Clear queue</button></div>
         </section>
 
         <section className="studio-panel">
@@ -210,7 +225,7 @@ export default function StickerStudioPage() {
             <div className="sticker-sheet" data-sticker-id={sticker.id}><StickerArt sticker={sticker} qrUrl={qrUrl} /></div>
           </div>)}</div>}
           <div className="studio-actions"><button className="studio-button" type="button" onClick={printAll} disabled={!stickers.length}>Print all stickers</button><button className="studio-button secondary" type="button" onClick={() => window.print()} disabled={!stickers.length}>Reprint queue</button></div>
-          <p className="studio-muted" style={{ marginTop: 15, marginBottom: 0 }}>Undas Horror Edition • Print at 100% / Actual size, disable headers and footers, and test one sticker first. Printer drivers may override custom roll dimensions.</p>
+          <p className="studio-muted" style={{ marginTop: 15, marginBottom: 0 }}>Choose a theme for each new sticker: Horror, Regular, Christmas or Valentine’s. Print at 100% / Actual size, disable headers and footers, and test one sticker first.</p>
         </section>
       </div>
     </main>
@@ -218,7 +233,7 @@ export default function StickerStudioPage() {
 }
 
 function StickerArt({ sticker, qrUrl }: { sticker: Sticker; qrUrl: string }) {
-  return <div className="sticker-art">
+  return <div className={`sticker-art theme-${sticker.theme || "horror"}`}>
     <div className="sticker-main">
       <div className="sticker-head"><img className="sticker-logo" src={LOGO_URL} alt="SYP logo" onError={(event) => { event.currentTarget.style.display = "none"; }} /><div className="sticker-wordmark"><strong>SYP ON CAFÉ</strong><span>STREET • ICED • BREWED</span></div></div>
       <div className="sticker-qr"><img src={qrUrl} alt="QR code to syponcafe.shop" /><span>SCAN SYP</span></div>
