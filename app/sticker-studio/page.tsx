@@ -16,122 +16,68 @@ type Sticker = {
   notes: string;
   dateTime: string;
   quote: string;
+  orderId?: string | number;
+  orderNumber?: string;
+  source: "manual" | "pos_order";
 };
 
-const OPENINGS = [
-  "Kape muna", "Dahan-dahan lang", "Laban lang", "Pahinga rin",
-  "Ngiti muna", "Isang higop", "Ngayong gabi", "Sa bawat araw",
-  "Konting pahinga", "Tuloy ang buhay", "Walang susuko", "Huminga muna",
-  "Chill ka lang", "Para sa sarili", "Sa tamang oras", "Kaya mo 'yan",
-  "Minsan talaga", "Kapag pagod", "Kahit mabagal", "Basta masaya",
-  "Kape at kwento", "Tahimik muna", "Sapat na muna", "Isang araw",
-  "Walang pressure", "Hindi kailangang", "Piliin ang saya", "Sulitin natin",
-  "Ngayong sandali", "Bukas ulit", "Kahit puyat", "Sa bawat sip",
-  "Tambay muna", "Puso muna", "Breathe in", "Walang madali",
-  "Konting tiwala", "Sarili muna", "Good vibes lang", "Kahit umuulan",
-  "Sa likod ng pagod", "Munting saya", "Lahat lilipas", "Kaya pa",
-  "Dito ka muna", "Walang karera", "Isang pahinga", "Sige lang",
-  "Maging mabait", "Huwag magmadali", "Pahinga is life",
-];
+type PosItem = {
+  product_name?: string;
+  name?: string;
+  drink?: string;
+  size?: string;
+  quantity?: number;
+  price?: number;
+  line_total?: number;
+  temperature?: string;
+  ice?: string;
+  sugar?: string;
+  notes?: string;
+};
 
-const ENDINGS = [
-  "may magandang bukas.", "deserve mo rin ang pahinga.",
-  "hindi ka nahuhuli.", "hindi kailangang perfect.",
-  "may dahilan para ngumiti.", "isa ka pa ring panalo.",
-  "hindi mo kailangang patunayan lahat.", "may saya sa simpleng bagay.",
-  "dahan-dahan, makakarating ka rin.", "hindi ka nag-iisa.",
-  "okay lang magsimula ulit.", "may oras para sa lahat.",
-  "hindi lahat kailangang madaliin.", "piliin mo rin ang sarili mo.",
-  "hindi nasusukat sa bilis ang progreso.", "may bukas pang naghihintay.",
-  "deserve mo ang good things.", "hindi bawal mapagod.",
-  "bawat maliit na hakbang ay mahalaga.", "may ginhawa pagkatapos ng pagod.",
-  "huwag kalimutang huminga.", "hindi kailangang laging malakas.",
-  "ang mahalaga ay patuloy ka.", "may dahilan para magpatuloy.",
-  "hindi lahat ng sagot ay ngayon.", "okay lang magpahinga sandali.",
-  "mas mahalaga ang kapayapaan.", "sapat ka kahit may kulang.",
-  "may sariling oras ang tagumpay.", "may bagong chance bukas.",
-  "hindi mo kailangang madaliin ang buhay.", "may saya sa bawat simpleng higop.",
-  "mas gumagaan kapag dahan-dahan.", "hindi sayang ang pahinga.",
-  "ang mahalaga, hindi ka sumuko.", "may kwento ang bawat araw.",
-  "piliin ang payapang isip.", "hindi lahat kailangan sagutin.",
-  "may tamang panahon para sa iyo.", "sulit ang bawat munting saya.",
-];
+type PosOrder = {
+  id: string | number;
+  order_number?: string;
+  receipt_no?: string;
+  queue_no?: string;
+  customer_name?: string;
+  total?: number;
+  status?: string;
+  payment_status?: string;
+  payment_method?: string;
+  items?: PosItem[];
+  order_items?: PosItem[];
+  paid_at?: string;
+  created_at?: string;
+};
 
-const FUNNY = [
+const QUOTES = [
+  "Kape muna, may magandang bukas.",
+  "Dahan-dahan lang, hindi ka nahuhuli.",
+  "Laban lang, deserve mo rin ang pahinga.",
+  "Pahinga rin, hindi kailangang perfect.",
+  "Ngiti muna, may dahilan para ngumiti.",
+  "Isang higop, isa ka pa ring panalo.",
+  "Chill ka lang, hindi ka nag-iisa.",
+  "Kape at kwento, may saya sa simpleng bagay.",
+  "Walang pressure, piliin mo rin ang sarili mo.",
+  "Kahit puyat, may bagong chance bukas.",
   "Ang kape, hindi nang-iiwan.",
-  "Puyat ngayon, bawi sa weekend.",
   "Kape ang sagot. Ano ulit ang tanong?",
   "Hindi tamad, naka-power saving mode.",
-  "Ang sahod, dumadaan lang.",
   "Kung may problema, may kape muna.",
-  "Ang tunay na relasyon, may refill.",
   "Busy kunwari, nagkakape talaga.",
-  "Ang diet, bukas na ulit.",
-  "Kalmado lang, may kape pa.",
   "Petsa de peligro pero may iced coffee.",
-  "Hindi ako late, dramatic entrance lang.",
-  "Mahal ang buhay, sulit ang kape.",
-  "Walang jowa, may kape naman.",
-  "Hindi overthink, extra strong lang.",
-  "Ang adulting, walang tutorial.",
-  "Kape muna bago magdesisyon.",
-  "Kaya pa, may yelo pa.",
-  "Puyat responsibly.",
-  "Ang problema, huwag ihalo sa kape.",
-  "Low battery, high caffeine.",
-  "Sana all, may extra shot.",
   "Kape ang love language ko.",
-  "Hindi bitter, dark roast lang.",
-  "May deadline, pero may kape.",
-  "Isang sip pa bago sumuko.",
-  "Kung stress ka, order ka muna.",
-  "Ang plot twist, ubos na ang kape.",
-  "Masakit ang katotohanan, dagdagan ng yelo.",
-  "Walang tulugan, may tambayan.",
-];
-
-const HUGOT = [
-  "Hindi lahat ng matamis ay pangmatagalan.",
+  "Puyat responsibly.",
   "Minsan, kailangan mo lang ng space at kape.",
-  "May mga bagay na mas okay nang bitawan.",
-  "Hindi lahat ng nawala ay kawalan.",
   "Ang pahinga ay hindi pagsuko.",
-  "May mga sagot na dumarating sa katahimikan.",
-  "Hindi lahat ng tahimik ay walang iniisip.",
-  "Minsan, sarili mo ang kailangan mong piliin.",
-  "May mga alaala na sapat nang balikan.",
   "Hindi lahat ng miss mo ay dapat balikan.",
-  "Kahit malamig ang gabi, puwedeng uminit ang puso.",
-  "May mga kwentong hanggang dito na lang.",
-  "Hindi lahat ng simula ay kailangang ipilit.",
-  "May mga araw na survival na ang achievement.",
   "Okay lang hindi okay araw-araw.",
-  "Ang paghilom ay hindi paligsahan.",
-  "Hindi mo kailangang magpaliwanag sa lahat.",
   "May peace sa pagbitaw.",
   "Hindi ka mahina dahil napagod ka.",
   "May bagong kwento pagkatapos ng dulo.",
 ];
-
-function buildQuotes() {
-  const quotes = new Set<string>([...FUNNY, ...HUGOT]);
-
-  for (const opening of OPENINGS) {
-    for (const ending of ENDINGS) {
-      quotes.add(`${opening}, ${ending}`);
-    }
-  }
-
-  return Array.from(quotes);
-}
-
-const QUOTES = buildQuotes();
-
-function randomQuote(excluded: Set<string>) {
-  const available = QUOTES.filter((quote) => !excluded.has(quote));
-  const pool = available.length ? available : QUOTES;
-  return pool[Math.floor(Math.random() * pool.length)];
-}
 
 function manilaDateTime() {
   return new Intl.DateTimeFormat("en-PH", {
@@ -143,6 +89,18 @@ function manilaDateTime() {
     minute: "2-digit",
     hour12: true,
   }).format(new Date());
+}
+
+function randomQuote(used: Set<string>) {
+  const available = QUOTES.filter((quote) => !used.has(quote));
+  const pool = available.length ? available : QUOTES;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+function normalizeItems(order: PosOrder): PosItem[] {
+  if (Array.isArray(order.order_items)) return order.order_items;
+  if (Array.isArray(order.items)) return order.items;
+  return [];
 }
 
 export default function StickerStudioPage() {
@@ -159,12 +117,11 @@ export default function StickerStudioPage() {
   const [notice, setNotice] = useState("");
   const [printing, setPrinting] = useState(false);
 
-  useEffect(() => {
-    const update = () => setDateTime(manilaDateTime());
-    update();
-    const timer = window.setInterval(update, 30000);
-    return () => window.clearInterval(timer);
-  }, []);
+  const [orderSearch, setOrderSearch] = useState("");
+  const [orders, setOrders] = useState<PosOrder[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<PosOrder | null>(null);
+  const [history, setHistory] = useState<string[]>([]);
 
   const qrUrl = useMemo(
     () =>
@@ -172,17 +129,67 @@ export default function StickerStudioPage() {
     [],
   );
 
-  function addStickers() {
+  useEffect(() => {
+    const timer = window.setInterval(() => setDateTime(manilaDateTime()), 30000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  async function searchOrders() {
+    setSearching(true);
+    setNotice("");
+    setOrders([]);
+
+    try {
+      const query = orderSearch.trim();
+      const response = await fetch(
+        `/api/sticker-studio/orders${query ? `?q=${encodeURIComponent(query)}` : ""}`,
+        { method: "GET", credentials: "same-origin", cache: "no-store" },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || "Hindi makuha ang POS orders.");
+      }
+
+      const list = Array.isArray(data)
+        ? data
+        : Array.isArray(data.orders)
+          ? data.orders
+          : Array.isArray(data.data)
+            ? data.data
+            : [];
+
+      setOrders(list);
+      if (!list.length) setNotice("Walang nahanap na order. Subukan ang receipt number o customer name.");
+    } catch (error) {
+      setNotice(
+        error instanceof Error
+          ? error.message
+          : "Hindi makakonekta sa POS orders API.",
+      );
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  function selectOrder(order: PosOrder) {
+    setSelectedOrder(order);
+    setCustomer(order.customer_name || "");
+    setNotice(`Napili ang order ${order.order_number || order.receipt_no || order.id}. Piliin ang item na gagawan ng sticker.`);
+  }
+
+  function addManualStickers() {
     if (!drink.trim()) {
       setNotice("Ilagay muna ang drink name.");
       return;
     }
 
-    const safeQuantity = Math.max(1, Math.min(100, quantity));
-    const used = new Set(stickers.map((sticker) => sticker.quote));
+    const count = Math.max(1, Math.min(100, quantity));
+    const used = new Set(stickers.map((item) => item.quote));
     const added: Sticker[] = [];
 
-    for (let i = 0; i < safeQuantity; i++) {
+    for (let i = 0; i < count; i++) {
       const quote = randomQuote(used);
       used.add(quote);
 
@@ -196,14 +203,76 @@ export default function StickerStudioPage() {
         notes: notes.trim(),
         dateTime: manilaDateTime(),
         quote,
+        source: "manual",
       });
     }
 
     setStickers((current) => [...current, ...added]);
     setNextId((current) => current + added.length);
-    setNotice(
-      `${added.length} sticker(s) added. May ${QUOTES.length.toLocaleString()} quotes sa library.`,
-    );
+    setNotice(`${added.length} manual sticker(s) added.`);
+  }
+
+  function addOrderItem(order: PosOrder, item: PosItem) {
+    const drinkName = item.product_name || item.name || item.drink || "POS Order Item";
+    const count = Math.max(1, Math.min(100, Number(item.quantity) || 1));
+    const used = new Set(stickers.map((sticker) => sticker.quote));
+    const added: Sticker[] = [];
+
+    for (let i = 0; i < count; i++) {
+      const quote = randomQuote(used);
+      used.add(quote);
+
+      added.push({
+        id: nextId + i,
+        customer: order.customer_name || "",
+        drink: drinkName,
+        size: item.size || "22 oz",
+        ice: item.ice || (item.temperature === "Hot" ? "Hot" : "Regular ice"),
+        sugar: item.sugar || "Regular sugar",
+        notes: item.notes || "",
+        dateTime: manilaDateTime(),
+        quote,
+        orderId: order.id,
+        orderNumber: order.order_number || order.receipt_no || String(order.id),
+        source: "pos_order",
+      });
+    }
+
+    setStickers((current) => [...current, ...added]);
+    setNextId((current) => current + added.length);
+    setNotice(`${count} sticker(s) added from order ${order.order_number || order.id}. Walang bagong sale na ginawa.`);
+  }
+
+  async function recordPrint(sticker: Sticker) {
+    const response = await fetch("/api/sticker-studio/print", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: sticker.source,
+        orderId: sticker.orderId ?? null,
+        orderNumber: sticker.orderNumber ?? null,
+        customerName: sticker.customer,
+        items: [
+          {
+            product_name: sticker.drink,
+            size: sticker.size,
+            quantity: 1,
+            ice: sticker.ice,
+            sugar: sticker.sugar,
+            notes: sticker.notes,
+          },
+        ],
+        quantity: 1,
+        action: "print",
+      }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(data.error || data.message || "Hindi naitala ang print job.");
+    }
   }
 
   async function preparePrint() {
@@ -231,16 +300,15 @@ export default function StickerStudioPage() {
     );
 
     await new Promise<void>((resolve) => {
-      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      requestAnimationFrame(() => requestAnimationFrame(resolve));
     });
   }
 
   function cleanupPrint() {
     document.body.classList.remove("printing-one");
-    document
-      .querySelectorAll<HTMLElement>(".sticker-sheet")
-      .forEach((node) => node.classList.remove("print-selected"));
-    window.removeEventListener("afterprint", cleanupPrint);
+    document.querySelectorAll<HTMLElement>(".sticker-sheet").forEach((node) => {
+      node.classList.remove("print-selected");
+    });
     setPrinting(false);
   }
 
@@ -250,38 +318,52 @@ export default function StickerStudioPage() {
       return;
     }
 
-    cleanupPrint();
+    const selected = id === undefined
+      ? stickers
+      : stickers.filter((sticker) => sticker.id === id);
 
-    if (id !== undefined) {
-      document
-        .querySelectorAll<HTMLElement>(".sticker-sheet")
-        .forEach((node) => {
-          node.classList.toggle(
-            "print-selected",
-            Number(node.dataset.stickerId) === id,
-          );
-        });
-      document.body.classList.add("printing-one");
-    }
+    if (!selected.length) return;
 
     setPrinting(true);
-    setNotice("Inihahanda ang print...");
+    setNotice("Inihahanda ang print at itinatala ang print job...");
 
     try {
+      for (const sticker of selected) {
+        await recordPrint(sticker);
+      }
+
+      document.body.classList.remove("printing-one");
+      document.querySelectorAll<HTMLElement>(".sticker-sheet").forEach((node) => {
+        node.classList.toggle(
+          "print-selected",
+          id !== undefined && Number(node.dataset.stickerId) === id,
+        );
+      });
+
+      if (id !== undefined) document.body.classList.add("printing-one");
+
       await preparePrint();
-      setNotice("");
+      setNotice("Buksan ang print dialog. Suriin ang paper size bago mag-print.");
+
       window.addEventListener("afterprint", cleanupPrint, { once: true });
       window.print();
-    } catch {
+
+      setHistory((current) => [
+        `${manilaDateTime()} — ${selected.length} sticker(s) — ${selected[0].orderNumber || selected[0].source}`,
+        ...current,
+      ].slice(0, 30));
+    } catch (error) {
       cleanupPrint();
-      setNotice("Hindi naihanda ang print. Subukan ulit.");
+      setNotice(
+        error instanceof Error
+          ? error.message
+          : "Hindi naihanda o naitala ang print job.",
+      );
     }
   }
 
   function removeSticker(id: number) {
-    setStickers((current) =>
-      current.filter((sticker) => sticker.id !== id),
-    );
+    setStickers((current) => current.filter((sticker) => sticker.id !== id));
     setNotice("Inalis ang sticker sa queue.");
   }
 
@@ -292,7 +374,7 @@ export default function StickerStudioPage() {
 
   function reshuffleQuote(id: number) {
     const used = new Set(
-      stickers.filter((sticker) => sticker.id !== id).map((s) => s.quote),
+      stickers.filter((sticker) => sticker.id !== id).map((item) => item.quote),
     );
 
     setStickers((current) =>
@@ -309,17 +391,9 @@ export default function StickerStudioPage() {
     <main className="studio-shell">
       <style jsx global>{`
         * { box-sizing: border-box; }
-        body {
-          margin: 0;
-          background: #f4eee5;
-          color: #241b15;
-          font-family: Arial, Helvetica, sans-serif;
-        }
+        body { margin: 0; background: #f4eee5; color: #241b15; font-family: Arial, Helvetica, sans-serif; }
         .studio-shell { min-height: 100vh; padding: 26px clamp(12px,3vw,40px) 42px; }
-        .studio-top {
-          max-width: 1280px; margin: 0 auto 24px;
-          display: flex; justify-content: space-between; align-items: center; gap: 14px;
-        }
+        .studio-top { max-width: 1280px; margin: 0 auto 24px; display: flex; justify-content: space-between; align-items: center; gap: 14px; }
         .studio-brand { display: flex; align-items: center; gap: 12px; }
         .studio-brand img { width: 54px; height: 54px; object-fit: contain; background: white; border-radius: 10px; }
         .studio-brand h1 { margin: 0; font-size: clamp(22px,3vw,30px); letter-spacing: -.04em; }
@@ -331,44 +405,31 @@ export default function StickerStudioPage() {
         .studio-muted { color: #877461; font-size: 12px; line-height: 1.55; margin: 0 0 18px; }
         .studio-field { display: grid; gap: 6px; margin-bottom: 13px; }
         .studio-field label { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #80644c; font-weight: 850; }
-        .studio-field input, .studio-field select, .studio-field textarea {
-          width: 100%; min-width: 0; border: 1px solid #dfcfbd; background: white; color: #34251a;
-          border-radius: 9px; padding: 11px; font: inherit; font-size: 13px; outline: none;
-        }
+        .studio-field input, .studio-field select, .studio-field textarea { width: 100%; min-width: 0; border: 1px solid #dfcfbd; background: white; color: #34251a; border-radius: 9px; padding: 11px; font: inherit; font-size: 13px; outline: none; }
         .studio-field textarea { resize: vertical; min-height: 65px; }
-        .studio-field input:focus, .studio-field select:focus, .studio-field textarea:focus { border-color: #a67a48; box-shadow: 0 0 0 3px #c59a5822; }
         .studio-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .studio-button { border: 0; border-radius: 9px; padding: 12px 14px; background: #62442e; color: white; font-weight: 800; cursor: pointer; font-size: 12px; }
         .studio-button.secondary { color: #62442e; background: #efe3d3; }
         .studio-button:disabled, .small-action:disabled { opacity: .45; cursor: not-allowed; }
         .studio-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-        .studio-notice { padding: 10px 12px; border-radius: 9px; background: #f5ead8; color: #6d4c2e; font-size: 12px; margin-top: 12px; }
+        .studio-notice { padding: 10px 12px; border-radius: 9px; background: #f5ead8; color: #6d4c2e; font-size: 12px; margin-top: 12px; overflow-wrap: anywhere; }
         .studio-preview-head { display: flex; justify-content: space-between; align-items: start; gap: 12px; margin-bottom: 16px; }
         .studio-count { font-size: 11px; font-weight: 850; color: #785a3d; background: #f3e7d7; border-radius: 30px; padding: 8px 10px; white-space: nowrap; }
-        .studio-empty { min-height: 200px; border: 1px dashed #d7c4ae; border-radius: 14px; display: grid; place-items: center; padding: 25px; text-align: center; color: #927a64; font-size: 13px; line-height: 1.6; }
+        .studio-empty { min-height: 120px; border: 1px dashed #d7c4ae; border-radius: 14px; display: grid; place-items: center; padding: 25px; text-align: center; color: #927a64; font-size: 13px; line-height: 1.6; }
+        .order-results { display: grid; gap: 8px; margin-bottom: 14px; }
+        .order-card { padding: 11px; border: 1px solid #e5d4c0; border-radius: 10px; background: #fffaf3; }
+        .order-card strong { font-size: 12px; }
+        .order-card p { font-size: 11px; color: #806b56; margin: 5px 0; overflow-wrap: anywhere; }
+        .order-item { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding-top: 8px; margin-top: 8px; border-top: 1px solid #eee0d0; }
+        .order-item span { font-size: 11px; overflow-wrap: anywhere; }
         .sticker-list { display: grid; gap: 12px; }
         .sticker-row { display: grid; grid-template-columns: minmax(0,1fr) auto; align-items: center; gap: 10px; padding: 12px; border: 1px solid #e8d9c6; border-radius: 12px; background: #fffaf3; min-width: 0; }
         .sticker-thumb { width: 100%; aspect-ratio: 80 / 50; background: white; overflow: hidden; margin-inline: auto; border: 1px dashed #cdbba5; }
         .sticker-row-actions { display: flex; flex-direction: column; gap: 6px; }
         .small-action { border: 1px solid #d8c4ad; background: white; color: #67472f; padding: 8px 9px; border-radius: 7px; font-size: 10px; font-weight: 800; cursor: pointer; white-space: nowrap; }
-
-        /* Exact label: 80 x 50 mm. The extra 2 mm is feed gap. */
-        .sticker-sheet {
-          display: none; width: 80mm; height: 52mm; margin: 0; padding: 0;
-          overflow: hidden; background: white; color: black;
-        }
-        .sticker-art {
-          width: 80mm; height: 50mm; overflow: hidden; background: white; color: black;
-          display: grid; grid-template-columns: 17mm minmax(0,1fr) 13mm;
-          grid-template-rows: minmax(0,1fr) auto;
-          column-gap: 1.5mm; row-gap: 1mm; padding: 2mm 3mm 1.5mm 2mm;
-          font-family: Arial, Helvetica, sans-serif; position: relative;
-          -webkit-print-color-adjust: exact; print-color-adjust: exact;
-        }
-        .sticker-brand-logo {
-          grid-column: 1; grid-row: 1; width: 16mm; height: 16mm;
-          object-fit: contain; align-self: start; justify-self: start;
-        }
+        .sticker-sheet { display: none; width: 80mm; height: 52mm; margin: 0; padding: 0; overflow: hidden; background: white; color: black; }
+        .sticker-art { width: 80mm; height: 50mm; overflow: hidden; background: white; color: black; display: grid; grid-template-columns: 17mm minmax(0,1fr) 13mm; grid-template-rows: minmax(0,1fr) auto; column-gap: 1.5mm; row-gap: 1mm; padding: 2mm 3mm 1.5mm 2mm; font-family: Arial, Helvetica, sans-serif; position: relative; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .sticker-brand-logo { grid-column: 1; grid-row: 1; width: 16mm; height: 16mm; object-fit: contain; align-self: start; justify-self: start; }
         .sticker-copy { grid-column: 2; grid-row: 1; min-width: 0; overflow: hidden; }
         .sticker-wordmark { font-size: 7pt; font-weight: 900; letter-spacing: -.03em; line-height: 1; white-space: nowrap; }
         .sticker-tagline { font-size: 4.5pt; font-weight: 800; margin-top: .8mm; letter-spacing: .03em; white-space: nowrap; }
@@ -379,43 +440,21 @@ export default function StickerStudioPage() {
         .sticker-qr { grid-column: 3; grid-row: 1; width: 13mm; display: flex; flex-direction: column; align-items: center; justify-content: start; }
         .sticker-qr img { display: block; width: 11mm; height: 11mm; object-fit: contain; }
         .sticker-qr span { font-size: 4pt; font-weight: 900; margin-top: .5mm; white-space: nowrap; }
-        .sticker-quote {
-          grid-column: 1 / 4; grid-row: 2; border-top: .45mm solid #000;
-          padding-top: 1mm; min-width: 0; display: flex; gap: 1.5mm;
-          align-items: center; overflow: hidden;
-        }
+        .sticker-quote { grid-column: 1 / 4; grid-row: 2; border-top: .45mm solid #000; padding-top: 1mm; min-width: 0; display: flex; gap: 1.5mm; align-items: center; overflow: hidden; }
         .quote-mark { font-size: 15pt; line-height: .8; font-weight: 900; flex: 0 0 auto; }
         .quote-text { font-size: 7pt; font-weight: 800; line-height: 1.15; overflow-wrap: anywhere; }
         .sticker-footer { font-size: 4pt; font-weight: 700; margin-top: .5mm; display: flex; justify-content: space-between; gap: 2mm; }
         @media (max-width: 900px) { .studio-layout { grid-template-columns: 1fr; } .studio-top { align-items: flex-start; } }
-        @media (max-width: 520px) {
-          .studio-shell { padding: 16px 10px 28px; }
-          .studio-panel { padding: 15px; }
-          .studio-brand img { width: 44px; height: 44px; }
-          .studio-brand p { font-size: 8px; letter-spacing: .1em; }
-          .studio-back { padding: 8px 10px; font-size: 10px; }
-          .sticker-row { grid-template-columns: 1fr; }
-          .sticker-row-actions { flex-direction: row; flex-wrap: wrap; }
-        }
-
+        @media (max-width: 520px) { .studio-shell { padding: 16px 10px 28px; } .studio-panel { padding: 15px; } .studio-brand img { width: 44px; height: 44px; } .studio-brand p { font-size: 8px; letter-spacing: .1em; } .studio-back { padding: 8px 10px; font-size: 10px; } .sticker-row { grid-template-columns: 1fr; } .sticker-row-actions { flex-direction: row; flex-wrap: wrap; } }
         @page { size: 80mm 52mm; margin: 0; }
         @media print {
           html, body { width: 80mm !important; margin: 0 !important; padding: 0 !important; background: white !important; overflow: visible !important; }
           body, body * { visibility: hidden !important; }
           .sticker-sheet, .sticker-sheet * { visibility: visible !important; }
-          .studio-shell, .studio-layout, .studio-panel, .sticker-list {
-            display: block !important; width: 80mm !important; min-width: 0 !important;
-            max-width: none !important; margin: 0 !important; padding: 0 !important;
-            border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: white !important;
-          }
-          .studio-top, .studio-form-panel, .studio-preview-head, .studio-empty, .sticker-row-actions, .studio-notice, .studio-actions, .studio-muted, .sticker-thumb { display: none !important; }
+          .studio-shell, .studio-layout, .studio-panel, .sticker-list { display: block !important; width: 80mm !important; min-width: 0 !important; max-width: none !important; margin: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: white !important; }
+          .studio-top, .studio-form-panel, .studio-preview-head, .studio-empty, .sticker-row-actions, .studio-notice, .studio-actions, .studio-muted, .sticker-thumb, .order-results { display: none !important; }
           .sticker-row { display: block !important; width: 80mm !important; margin: 0 !important; padding: 0 !important; border: 0 !important; background: white !important; break-inside: avoid !important; page-break-inside: avoid !important; }
-          .sticker-sheet {
-            display: block !important; position: relative !important; width: 80mm !important; height: 52mm !important;
-            margin: 0 !important; padding: 0 !important; overflow: hidden !important;
-            break-inside: avoid !important; page-break-inside: avoid !important;
-            break-after: page !important; page-break-after: always !important;
-          }
+          .sticker-sheet { display: block !important; position: relative !important; width: 80mm !important; height: 52mm !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; break-inside: avoid !important; page-break-inside: avoid !important; break-after: page !important; page-break-after: always !important; }
           .sticker-art { width: 80mm !important; height: 50mm !important; padding: 2mm 3mm 1.5mm 2mm !important; overflow: hidden !important; }
           .sticker-row:last-child .sticker-sheet { break-after: auto !important; page-break-after: auto !important; }
           body.printing-one .sticker-sheet { display: none !important; break-after: auto !important; page-break-after: auto !important; }
@@ -437,21 +476,50 @@ export default function StickerStudioPage() {
 
       <div className="studio-layout">
         <section className="studio-panel studio-form-panel">
-          <h2>Create drink stickers</h2>
-          <p className="studio-muted">
-            Landscape 80 × 50 mm. May 2 mm feed gap at random Tagalog coffee quotes.
-          </p>
+          <h2>POS order stickers</h2>
+          <p className="studio-muted">Hanapin ang existing order at idagdag ang item sa sticker queue.</p>
+
+          <div className="studio-field">
+            <label htmlFor="orderSearch">Receipt / order number / customer</label>
+            <input id="orderSearch" value={orderSearch} onChange={(e) => setOrderSearch(e.target.value)} placeholder="Search POS order..." maxLength={100} />
+          </div>
+          <button className="studio-button" type="button" disabled={searching} onClick={searchOrders}>
+            {searching ? "Searching..." : "Search POS orders"}
+          </button>
+
+          <div className="order-results">
+            {orders.map((order) => {
+              const items = normalizeItems(order);
+              return (
+                <div className="order-card" key={String(order.id)}>
+                  <strong>Order: {order.order_number || order.receipt_no || order.id}</strong>
+                  <p>{order.customer_name || "Walk-in"} · {order.status || order.payment_status || "POS order"}</p>
+                  <p>Total: ₱{Number(order.total || 0).toFixed(2)} · {order.paid_at || order.created_at || ""}</p>
+                  {items.map((item, index) => (
+                    <div className="order-item" key={`${order.id}-${index}`}>
+                      <span>{item.product_name || item.name || item.drink || "Item"} × {item.quantity || 1} {item.size || ""}</span>
+                      <button className="small-action" type="button" onClick={() => addOrderItem(order, item)}>Add sticker</button>
+                    </div>
+                  ))}
+                  {!items.length && (
+                    <button className="small-action" type="button" onClick={() => selectOrder(order)}>Select order</button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <h2 style={{ marginTop: 24 }}>Manual sticker</h2>
+          <p className="studio-muted">Para sa walk-in, test print, o item na walang POS order.</p>
 
           <div className="studio-field">
             <label htmlFor="customer">Customer name (optional)</label>
             <input id="customer" value={customer} onChange={(e) => setCustomer(e.target.value)} placeholder="e.g. Alex" maxLength={42} />
           </div>
-
           <div className="studio-field">
             <label htmlFor="drink">Drink name *</label>
             <input id="drink" value={drink} onChange={(e) => setDrink(e.target.value)} placeholder="e.g. Oreo Matcha" maxLength={42} />
           </div>
-
           <div className="studio-two">
             <div className="studio-field">
               <label htmlFor="size">Cup size</label>
@@ -464,7 +532,6 @@ export default function StickerStudioPage() {
               <input id="quantity" type="number" min={1} max={100} value={quantity} onChange={(e) => setQuantity(Math.max(1, Math.min(100, Number(e.target.value) || 1)))} />
             </div>
           </div>
-
           <div className="studio-two">
             <div className="studio-field">
               <label htmlFor="ice">Ice preference</label>
@@ -479,25 +546,20 @@ export default function StickerStudioPage() {
               </select>
             </div>
           </div>
-
           <div className="studio-field">
             <label htmlFor="notes">Custom notes (optional)</label>
             <textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Oat milk, no whipped cream" maxLength={100} />
           </div>
-
           <div className="studio-field">
             <label htmlFor="dateTime">Manila date &amp; time</label>
             <input id="dateTime" value={dateTime} readOnly />
           </div>
-
-          <button className="studio-button" type="button" onClick={addStickers}>＋ Add to sticker queue</button>
+          <button className="studio-button" type="button" onClick={addManualStickers}>＋ Add manual stickers</button>
 
           {notice && <div className="studio-notice" role="status">{notice}</div>}
-
           <div className="studio-actions">
             <button className="studio-button secondary" type="button" onClick={() => {
-              setCustomer(""); setDrink(""); setSize("22 oz"); setIce("Regular ice");
-              setSugar("Regular sugar"); setNotes(""); setQuantity(1); setNotice("Form cleared.");
+              setCustomer(""); setDrink(""); setSize("22 oz"); setIce("Regular ice"); setSugar("Regular sugar"); setNotes(""); setQuantity(1); setSelectedOrder(null); setNotice("Form cleared.");
             }}>Clear form</button>
             <button className="studio-button secondary" type="button" onClick={clearQueue}>Clear queue</button>
           </div>
@@ -507,30 +569,24 @@ export default function StickerStudioPage() {
           <div className="studio-preview-head">
             <div>
               <h2>Print queue</h2>
-              <p className="studio-muted" style={{ marginBottom: 0 }}>
-                Label 80 × 50 mm + 2 mm feed gap. Check the preview before printing.
-              </p>
+              <p className="studio-muted" style={{ marginBottom: 0 }}>Label 80 × 50 mm + 2 mm feed gap.</p>
             </div>
             <span className="studio-count">{stickers.length} sticker(s)</span>
           </div>
 
           {!stickers.length ? (
-            <div className="studio-empty">Your sticker preview will appear here.<br />Add a drink to get started.</div>
+            <div className="studio-empty">Your sticker preview will appear here.<br />Search a POS order or add a manual sticker.</div>
           ) : (
             <div className="sticker-list">
               {stickers.map((sticker) => (
                 <div className="sticker-row" key={sticker.id}>
-                  <div className="sticker-thumb">
-                    <StickerArt sticker={sticker} qrUrl={qrUrl} />
-                  </div>
+                  <div className="sticker-thumb"><StickerArt sticker={sticker} qrUrl={qrUrl} /></div>
                   <div className="sticker-row-actions">
                     <button className="small-action" type="button" disabled={printing} onClick={() => printStickers(sticker.id)}>Print / reprint</button>
                     <button className="small-action" type="button" disabled={printing} onClick={() => reshuffleQuote(sticker.id)}>Random quote</button>
                     <button className="small-action" type="button" disabled={printing} onClick={() => removeSticker(sticker.id)}>Remove</button>
                   </div>
-                  <div className="sticker-sheet" data-sticker-id={sticker.id}>
-                    <StickerArt sticker={sticker} qrUrl={qrUrl} />
-                  </div>
+                  <div className="sticker-sheet" data-sticker-id={sticker.id}><StickerArt sticker={sticker} qrUrl={qrUrl} /></div>
                 </div>
               ))}
             </div>
@@ -542,8 +598,12 @@ export default function StickerStudioPage() {
             </button>
           </div>
 
+          <h2 style={{ marginTop: 24 }}>Recent print actions</h2>
+          <p className="studio-muted">Temporary list for this browser session. Ang permanent history ay dapat manggaling sa database API.</p>
+          {!history.length ? <div className="studio-empty">Wala pang print action sa session na ito.</div> : history.map((entry, index) => <p key={`${entry}-${index}`} className="studio-muted">{entry}</p>)}
+
           <p className="studio-muted" style={{ marginTop: 14, marginBottom: 0 }}>
-            Set paper to 80 × 52 mm if your driver allows custom size. The label artwork is 80 × 50 mm with a 2 mm feed gap. Print at 100% / Actual size, margins 0, headers and footers off. If the printer uses a gap sensor, calibrate the roll first.
+            Set paper to 80 × 52 mm, print at 100% / Actual size, margins 0, headers and footers off. Calibrate the gap sensor if needed.
           </p>
         </section>
       </div>
