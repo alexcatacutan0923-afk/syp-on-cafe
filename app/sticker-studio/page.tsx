@@ -43,6 +43,7 @@ export default function StickerStudioPage() {
   const [stickers, setStickers] = useState<Sticker[]>([]);
   const [nextId, setNextId] = useState(1);
   const [notice, setNotice] = useState("");
+  const [printing, setPrinting] = useState(false);
 
   useEffect(() => {
     const update = () => setDateTime(manilaDateTime());
@@ -54,7 +55,7 @@ export default function StickerStudioPage() {
 
   const qrUrl = useMemo(
     () =>
-      `https://api.qrserver.com/v1/create-qr-code/?size=160x160&margin=0&data=${encodeURIComponent(QR_TARGET)}`,
+      `https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=2&ecc=H&data=${encodeURIComponent(QR_TARGET)}`,
     [],
   );
 
@@ -89,23 +90,93 @@ export default function StickerStudioPage() {
     );
   }
 
-  function printAll() {
-    if (!stickers.length) {
-      setNotice("Wala pang stickers sa print queue. Gumawa muna ng sticker.");
-      return;
+  async function prepareStickerPrint() {
+    if ("fonts" in document) {
+      await document.fonts.ready;
     }
 
+    const images = Array.from(
+      document.querySelectorAll<HTMLImageElement>(
+        ".sticker-sheet img",
+      ),
+    );
+
+    await Promise.all(
+      images.map(async (img) => {
+        if (!img.complete) {
+          await new Promise<void>((resolve) => {
+            const finish = () => resolve();
+
+            img.addEventListener("load", finish, { once: true });
+            img.addEventListener("error", finish, { once: true });
+          });
+        }
+
+        if (img.naturalWidth > 0 && img.decode) {
+          try {
+            await img.decode();
+          } catch {
+            // Continue if the browser cannot decode an image.
+          }
+        }
+      }),
+    );
+
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(resolve);
+      });
+    });
+  }
+
+  function cleanupStickerPrint() {
     document.body.classList.remove("printing-one");
+
     document
       .querySelectorAll<HTMLElement>(".sticker-sheet")
       .forEach((node) => node.classList.remove("print-selected"));
 
-    setNotice("");
-    window.print();
+    window.removeEventListener("afterprint", handleAfterPrint);
+    setPrinting(false);
   }
 
-  function printOne(id: number) {
-    if (!stickers.some((sticker) => sticker.id === id)) return;
+  function handleAfterPrint() {
+    cleanupStickerPrint();
+  }
+
+  async function printAll() {
+    if (!stickers.length || printing) {
+      if (!stickers.length) {
+        setNotice("Wala pang stickers sa print queue. Gumawa muna ng sticker.");
+      }
+      return;
+    }
+
+    cleanupStickerPrint();
+    setPrinting(true);
+    setNotice("Preparing stickers for printing...");
+
+    try {
+      await prepareStickerPrint();
+
+      setNotice("");
+      window.addEventListener("afterprint", handleAfterPrint, {
+        once: true,
+      });
+
+      window.print();
+    } catch {
+      cleanupStickerPrint();
+      setNotice("Hindi naihanda ang print. Subukan ulit.");
+    }
+  }
+
+  async function printOne(id: number) {
+    if (!stickers.some((sticker) => sticker.id === id) || printing) {
+      return;
+    }
+
+    cleanupStickerPrint();
 
     const sheets =
       document.querySelectorAll<HTMLElement>(".sticker-sheet");
@@ -118,14 +189,21 @@ export default function StickerStudioPage() {
     });
 
     document.body.classList.add("printing-one");
+    setPrinting(true);
+    setNotice("Preparing selected sticker...");
 
     try {
+      await prepareStickerPrint();
+
+      setNotice("");
+      window.addEventListener("afterprint", handleAfterPrint, {
+        once: true,
+      });
+
       window.print();
-    } finally {
-      document.body.classList.remove("printing-one");
-      sheets.forEach((node) =>
-        node.classList.remove("print-selected"),
-      );
+    } catch {
+      cleanupStickerPrint();
+      setNotice("Hindi naihanda ang sticker. Subukan ulit.");
     }
   }
 
@@ -426,8 +504,6 @@ export default function StickerStudioPage() {
           background: #fff;
           color: #000;
           overflow: hidden;
-          page-break-after: auto;
-          break-after: auto;
         }
 
         .sticker-art {
@@ -448,6 +524,7 @@ export default function StickerStudioPage() {
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
           text-align: left;
+          transform: none;
         }
 
         .sticker-art.theme-horror {
@@ -476,6 +553,7 @@ export default function StickerStudioPage() {
           width: 100%;
           height: 100%;
           z-index: 0;
+          pointer-events: none;
         }
 
         .sticker-main {
@@ -525,7 +603,7 @@ export default function StickerStudioPage() {
 
         .sticker-wordmark strong {
           display: block;
-          font-family: Montserrat, Impact, sans-serif;
+          font-family: Arial, Helvetica, sans-serif;
           font-size: 13pt;
           line-height: 1;
           font-weight: 900;
@@ -537,10 +615,10 @@ export default function StickerStudioPage() {
         .sticker-wordmark span {
           display: block;
           margin-top: 0.7mm;
-          font-family: Montserrat, Arial, sans-serif;
+          font-family: Arial, Helvetica, sans-serif;
           font-size: 4.5pt;
           font-weight: 900;
-          letter-spacing: 0.12em;
+          letter-spacing: 0.08em;
           white-space: nowrap;
           color: #000;
         }
@@ -556,14 +634,16 @@ export default function StickerStudioPage() {
         }
 
         .sticker-qr img {
+          display: block;
           width: 12mm;
           height: 12mm;
           object-fit: contain;
-          image-rendering: pixelated;
+          image-rendering: auto;
         }
 
         .sticker-qr span {
-          font-size: 4.2pt;
+          font-family: Arial, Helvetica, sans-serif;
+          font-size: 4.5pt;
           margin-top: 0.5mm;
           font-weight: 900;
         }
@@ -580,10 +660,10 @@ export default function StickerStudioPage() {
 
         .sticker-customer {
           width: 100%;
-          font-family: "Special Elite", Courier, monospace;
-          font-size: 6pt;
+          font-family: Arial, Helvetica, sans-serif;
+          font-size: 6.5pt;
           font-weight: 900;
-          line-height: 1.05;
+          line-height: 1.1;
           overflow: hidden;
           white-space: nowrap;
           text-overflow: ellipsis;
@@ -592,19 +672,17 @@ export default function StickerStudioPage() {
 
         .sticker-drink {
           width: 100%;
-          font-family: Creepster, Impact, Haettenschweiler,
-            "Arial Narrow Bold", fantasy, sans-serif;
-          font-size: 27pt;
+          font-family: Arial, Helvetica, sans-serif;
+          font-size: 23pt;
           font-weight: 900;
-          line-height: 0.88;
-          letter-spacing: 0.005em;
+          line-height: 0.98;
+          letter-spacing: -0.035em;
           margin-top: 1mm;
           overflow-wrap: anywhere;
           max-height: 15mm;
           overflow: hidden;
           color: #000;
           text-transform: uppercase;
-          -webkit-text-stroke: 0.12px #000;
         }
 
         .sticker-meta {
@@ -621,6 +699,7 @@ export default function StickerStudioPage() {
           border: 0.35mm solid #000;
           border-radius: 1mm;
           padding: 0.7mm 1mm;
+          font-family: Arial, Helvetica, sans-serif;
           font-size: 4.8pt;
           line-height: 1;
           font-weight: 900;
@@ -629,9 +708,9 @@ export default function StickerStudioPage() {
 
         .sticker-notes {
           width: 100%;
-          font-family: "Special Elite", Courier, monospace;
-          font-size: 5pt;
-          line-height: 1.05;
+          font-family: Arial, Helvetica, sans-serif;
+          font-size: 5.5pt;
+          line-height: 1.1;
           font-weight: 800;
           margin-top: 1mm;
           max-height: 4mm;
@@ -650,6 +729,7 @@ export default function StickerStudioPage() {
           justify-content: space-between;
           align-items: center;
           gap: 1mm;
+          font-family: Arial, Helvetica, sans-serif;
           font-size: 4.5pt;
           line-height: 1;
           font-weight: 800;
@@ -710,10 +790,16 @@ export default function StickerStudioPage() {
           html,
           body {
             width: 80mm !important;
-            min-width: 80mm !important;
+            min-width: 0 !important;
             margin: 0 !important;
             padding: 0 !important;
             background: #fff !important;
+            overflow: visible !important;
+          }
+
+          body {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
 
           body * {
@@ -731,10 +817,12 @@ export default function StickerStudioPage() {
           .sticker-list {
             display: block !important;
             width: 80mm !important;
-            min-width: 80mm !important;
+            min-width: 0 !important;
+            max-width: none !important;
             margin: 0 !important;
             padding: 0 !important;
             border: 0 !important;
+            border-radius: 0 !important;
             box-shadow: none !important;
             background: #fff !important;
           }
@@ -757,7 +845,8 @@ export default function StickerStudioPage() {
           .sticker-row {
             display: block !important;
             width: 80mm !important;
-            min-width: 80mm !important;
+            min-width: 0 !important;
+            max-width: none !important;
             margin: 0 !important;
             padding: 0 !important;
             border: 0 !important;
@@ -773,13 +862,19 @@ export default function StickerStudioPage() {
 
           .sticker-sheet {
             display: block !important;
+            position: relative !important;
             width: 80mm !important;
             height: 50mm !important;
+            min-width: 0 !important;
             min-height: 50mm !important;
+            max-width: none !important;
             max-height: 50mm !important;
             margin: 0 !important;
             padding: 0 !important;
+            border: 0 !important;
             overflow: hidden !important;
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
             page-break-after: always !important;
             break-after: page !important;
           }
@@ -802,16 +897,56 @@ export default function StickerStudioPage() {
           }
 
           .sticker-art {
+            display: flex !important;
+            position: relative !important;
             width: 80mm !important;
             height: 50mm !important;
-            min-width: 80mm !important;
-            min-height: 50mm !important;
-            max-width: 80mm !important;
-            max-height: 50mm !important;
+            min-width: 0 !important;
+            min-height: 0 !important;
+            max-width: none !important;
+            max-height: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            transform: none !important;
+            zoom: 1 !important;
+            background: #fff !important;
+            color: #000 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          .theme-artwork {
+            display: block !important;
+            width: 100% !important;
+            height: 100% !important;
           }
 
           .sticker-main {
+            width: calc(100% - 6mm) !important;
             height: calc(100% - 6mm) !important;
+            min-height: 0 !important;
+            margin: 3mm !important;
+            overflow: hidden !important;
+          }
+
+          .sticker-wordmark strong,
+          .sticker-wordmark span,
+          .sticker-customer,
+          .sticker-drink,
+          .sticker-pill,
+          .sticker-notes,
+          .sticker-footer,
+          .sticker-qr span {
+            color: #000 !important;
+            -webkit-text-fill-color: #000 !important;
+          }
+
+          .sticker-logo,
+          .sticker-qr img {
+            visibility: visible !important;
+            print-color-adjust: exact !important;
+            -webkit-print-color-adjust: exact !important;
           }
         }
       `}</style>
@@ -840,8 +975,8 @@ export default function StickerStudioPage() {
         <section className="studio-panel studio-form-panel">
           <h2>Create drink stickers</h2>
           <p className="studio-muted">
-            Bold, high-contrast labels for clearer thermal printing. Each
-            quantity creates a separate sticker.
+            High-contrast labels designed for thermal printing.
+            Each quantity creates a separate sticker.
           </p>
 
           <div className="studio-field">
@@ -909,7 +1044,10 @@ export default function StickerStudioPage() {
                 value={quantity}
                 onChange={(e) =>
                   setQuantity(
-                    Math.max(1, Math.min(100, Number(e.target.value) || 1)),
+                    Math.max(
+                      1,
+                      Math.min(100, Number(e.target.value) || 1),
+                    ),
                   )
                 }
               />
@@ -1006,13 +1144,14 @@ export default function StickerStudioPage() {
             <div>
               <h2>Print queue</h2>
               <p className="studio-muted" style={{ marginBottom: 0 }}>
-                Each sticker is 80 × 50 mm, landscape. Check printer settings
-                for correct label feed and spacing.
+                Each sticker is 80 × 50 mm, landscape. Check the
+                printer settings for the correct label feed and spacing.
               </p>
             </div>
 
             <span className="studio-count">
-              {stickers.length} sticker{stickers.length === 1 ? "" : "s"}
+              {stickers.length} sticker
+              {stickers.length === 1 ? "" : "s"}
             </span>
           </div>
 
@@ -1034,6 +1173,7 @@ export default function StickerStudioPage() {
                     <button
                       className="small-action"
                       type="button"
+                      disabled={printing}
                       onClick={() => printOne(sticker.id)}
                     >
                       Print / reprint
@@ -1042,6 +1182,7 @@ export default function StickerStudioPage() {
                     <button
                       className="small-action"
                       type="button"
+                      disabled={printing}
                       onClick={() => removeSticker(sticker.id)}
                     >
                       Remove
@@ -1064,25 +1205,26 @@ export default function StickerStudioPage() {
               className="studio-button"
               type="button"
               onClick={printAll}
-              disabled={!stickers.length}
+              disabled={!stickers.length || printing}
             >
-              Print all stickers
+              {printing ? "Preparing print..." : "Print all stickers"}
             </button>
 
             <button
               className="studio-button secondary"
               type="button"
               onClick={printAll}
-              disabled={!stickers.length}
+              disabled={!stickers.length || printing}
             >
               Reprint queue
             </button>
           </div>
 
           <p className="studio-muted" style={{ marginTop: 15, marginBottom: 0 }}>
-            Print at 100% / Actual size, set margins to None, disable headers
-            and footers, and test one sticker first. The physical feed and
-            2 mm gap also depend on the printer driver and sticker stock.
+            Print at 100% / Actual size, set margins to None, disable
+            headers and footers, and test one sticker first. Printer
+            printable width and label-gap handling depend on the driver
+            and sticker stock.
           </p>
         </section>
       </div>
