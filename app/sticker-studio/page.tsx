@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 const LOGO_URL = "/IMG_5996.jpeg";
 
 // Palitan ng eksaktong Facebook page URL kapag available na.
-const QR_TARGET = "https://www.facebook.com/share/19sRNkRpda/?mibextid=wwXIfr";
+const QR_TARGET = "https://www.facebook.com/SypOnCafe";
 
 type Sticker = {
   id: number;
