@@ -59,8 +59,8 @@ function PinkMap({ latitude, longitude, onChange }: {
       const L = window.L;
       const initial: [number, number] = [latitude, longitude];
       const m = L.map(host.current, { zoomControl: true, scrollWheelZoom: true }).setView(initial, 16);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 20, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+        maxZoom: 19, attribution: "Tiles &copy; Esri"
       }).addTo(m);
       const icon = L.divIcon({
         className: "syp-pink-pin",
@@ -135,10 +135,13 @@ export default function DeliveryPinPage() {
   }
 
   async function save(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setSaving(true); setError(""); setNotice("");
+    event.preventDefault(); setError(""); setNotice("");
+    if (!address.trim()) { setError("Please enter the complete delivery address."); return; }
+    if (!landmark.trim()) { setError("Please enter a landmark or delivery instruction."); return; }
+    setSaving(true);
     const { data, error: rpcError } = await supabase.rpc("save_delivery_pin", {
       p_token: token, p_latitude: latitude, p_longitude: longitude,
-      p_address_text: address.trim() || null, p_landmark: landmark.trim() || null,
+      p_address_text: address.trim(), p_landmark: landmark.trim(),
       p_customer_mobile: customerMobile.trim() || null
     });
     setSaving(false);
@@ -156,7 +159,7 @@ export default function DeliveryPinPage() {
       <header className="rounded-3xl border border-pink-100 bg-white p-5 shadow-sm sm:p-6">
         <p className="text-xs font-black tracking-[.24em] text-pink-600">STREET • ICED • BREWED</p>
         <h1 className="mt-2 text-2xl font-black sm:text-3xl">Drop Your Delivery Pin 📍</h1>
-        <p className="mt-2 text-sm leading-6 text-stone-600">Hi {record.customer_name}, drag the pink pin or tap the exact spot on the map. You can adjust it before saving.</p>
+        <p className="mt-2 text-sm leading-6 text-stone-600">Hi {record.customer_name}, drag the pink pin or tap the exact spot on the satellite map. You can adjust it before saving.</p>
         {record.order_ref && <p className="mt-2 text-xs font-bold text-stone-500">Order: {record.order_ref}</p>}
       </header>
       <section className="mt-3 overflow-hidden rounded-3xl border border-pink-100 bg-white shadow-sm">
@@ -167,10 +170,13 @@ export default function DeliveryPinPage() {
         </div>
       </section>
       <form onSubmit={save} className="mt-3 rounded-3xl border border-pink-100 bg-white p-5 shadow-sm sm:p-6">
-        <label className="block text-sm font-bold">Complete address (optional)</label>
-        <textarea maxLength={500} rows={2} value={address} onChange={e => setAddress(e.target.value)} placeholder="House / unit, street, subdivision, barangay" className="mt-2 w-full rounded-xl border border-stone-200 p-3 text-sm outline-none focus:border-pink-400" />
-        <label className="mt-4 block text-sm font-bold">Mobile number (optional)</label>\n        <input type="tel" inputMode="tel" autoComplete="tel" maxLength={30} value={customerMobile} onChange={e => setCustomerMobile(e.target.value)} placeholder="09XXXXXXXXX" className="mt-2 w-full rounded-xl border border-stone-200 p-3 text-sm outline-none focus:border-pink-400" />\n        <p className="mt-1 text-xs text-stone-500">Ilagay ang number na puwedeng tawagan tungkol sa delivery. Optional lang.</p>\n        <label className="mt-4 block text-sm font-bold">Landmark / delivery instructions</label>
-        <textarea maxLength={500} rows={2} value={landmark} onChange={e => setLandmark(e.target.value)} placeholder="e.g. blue gate beside the sari-sari store" className="mt-2 w-full rounded-xl border border-stone-200 p-3 text-sm outline-none focus:border-pink-400" />
+        <label className="block text-sm font-bold">Complete address <span className="text-red-500">*</span></label>
+        <textarea required maxLength={500} rows={2} value={address} onChange={e => setAddress(e.target.value)} placeholder="House / unit, street, subdivision, barangay" className="mt-2 w-full rounded-xl border border-stone-200 p-3 text-sm outline-none focus:border-pink-400" />
+        <label className="mt-4 block text-sm font-bold">Mobile number (optional)</label>
+        <input type="tel" inputMode="tel" autoComplete="tel" maxLength={30} value={customerMobile} onChange={e => setCustomerMobile(e.target.value)} placeholder="09XXXXXXXXX" className="mt-2 w-full rounded-xl border border-stone-200 p-3 text-sm outline-none focus:border-pink-400" />
+        <p className="mt-1 text-xs text-stone-500">Ilagay ang number na puwedeng tawagan tungkol sa delivery. Optional lang.</p>
+        <label className="mt-4 block text-sm font-bold">Landmark / delivery instructions <span className="text-red-500">*</span></label>
+        <textarea required maxLength={500} rows={2} value={landmark} onChange={e => setLandmark(e.target.value)} placeholder="e.g. blue gate beside the sari-sari store" className="mt-2 w-full rounded-xl border border-stone-200 p-3 text-sm outline-none focus:border-pink-400" />
         <button disabled={saving} className="mt-4 w-full rounded-xl bg-pink-600 p-3.5 font-black text-white transition hover:bg-pink-500 disabled:opacity-60">{saving ? "Saving delivery pin…" : record.status === "pin_saved" ? "Update delivery location" : "Confirm delivery location"}</button>
         {notice && <p role="status" className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">{notice}</p>}
         {error && <p role="alert" className="mt-3 rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
