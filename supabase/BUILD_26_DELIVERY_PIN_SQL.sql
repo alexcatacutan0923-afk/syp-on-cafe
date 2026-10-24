@@ -8,6 +8,7 @@ create table if not exists public.delivery_pin_links (
   token text not null unique default encode(gen_random_bytes(24), 'hex'),
   customer_name text not null,
   phone text not null,
+  customer_mobile text,
   order_ref text,
   address_text text,
   landmark text,
@@ -23,7 +24,7 @@ create table if not exists public.delivery_pin_links (
   )
 );
 
-create index if not exists delivery_pin_links_created_at_idx
+alter table public.delivery_pin_links add column if not exists customer_mobile text;\n\ncreate index if not exists delivery_pin_links_created_at_idx
   on public.delivery_pin_links (created_at desc);
 create index if not exists delivery_pin_links_token_idx
   on public.delivery_pin_links (token);
@@ -33,7 +34,7 @@ revoke all on public.delivery_pin_links from anon, authenticated;
 
 -- Admin functions require a logged-in Supabase user (the existing ProtectedRoute
 -- uses Supabase Auth). The browser cannot read the table directly.
-create or replace function public.admin_list_delivery_pins()
+drop function if exists public.admin_list_delivery_pins();\ncreate or replace function public.admin_list_delivery_pins()
 returns table (
   id uuid, token text, customer_name text, phone text, order_ref text,
   address_text text, landmark text, latitude double precision,
@@ -186,9 +187,9 @@ $$;
 revoke all on function public.admin_list_delivery_pins() from public, anon;
 revoke all on function public.admin_create_delivery_pin(text, text, text, text) from public, anon;
 revoke all on function public.get_delivery_pin(text) from public;
-revoke all on function public.save_delivery_pin(text, double precision, double precision, text, text) from public;
+revoke all on function public.save_delivery_pin(text, double precision, double precision, text, text, text) from public;
 
 grant execute on function public.admin_list_delivery_pins() to authenticated;
 grant execute on function public.admin_create_delivery_pin(text, text, text, text) to authenticated;
 grant execute on function public.get_delivery_pin(text) to anon, authenticated;
-grant execute on function public.save_delivery_pin(text, double precision, double precision, text, text) to anon, authenticated;
+grant execute on function public.save_delivery_pin(text, double precision, double precision, text, text, text) to anon, authenticated;
