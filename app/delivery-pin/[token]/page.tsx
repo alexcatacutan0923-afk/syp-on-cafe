@@ -125,7 +125,7 @@ export default function DeliveryPinPage() {
     setError(""); setNotice("");
     if (!navigator.geolocation) { setError("Location access is unavailable in this browser. Please move the pin manually."); return; }
     navigator.geolocation.getCurrentPosition(
-      position => { setLatitude(Number(position.coords.latitude.toFixed(7)); setLongitude(Number(position.coords.longitude.toFixed(7)); setNotice("Current location selected. Check the pink pin before saving."); },
+      position => { setLatitude(Number(position.coords.latitude.toFixed(7))); setLongitude(Number(position.coords.longitude.toFixed(7))); setNotice("Current location selected. Check the pink pin before saving."); },
       issue => setError(issue.code === issue.PERMISSION_DENIED ? "Allow location access, or move the pin manually." : "Could not get your location. Move the pin manually instead."),
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
