@@ -303,7 +303,7 @@ const QUOTES = [
 "Don't quit on a difficult day.",
 "Pahinga, recharge, repeat.",
 "Better things are on the way.",
-"Keep your dreams bigger than your doubts."
+"Keep your dreams bigger than your doubts.",
 "Esmeringhoy, kape muna bago magkalat.",
 "Awit sa buhay, iced coffee sa kamay.",
 "Luh, bakit mahal ang bilihin pero mura ang peace of mind ko?",
