@@ -344,19 +344,19 @@ export default function StickerStudioPage() {
         .syp-history-row { display:flex; justify-content:space-between; align-items:center; gap:8px; border-bottom:1px solid #eee2d5; padding:9px 0; font-size:12px; }
         @media(max-width:800px) { .syp-layout { grid-template-columns:1fr; } .syp-studio { padding:14px; } }
         @media(max-width:480px) { .syp-row { grid-template-columns:1fr; } .syp-row-actions { flex-direction:row; flex-wrap:wrap; } .syp-header { align-items:flex-start; } }
-        @page { size:70mm 50mm; margin:0; }
+        @page { size:70mm 50mm landscape; margin:0; }
         @media print {
-          html, body { width:70mm !important; margin:0 !important; padding:0 !important; background:white !important; overflow:visible !important; }
+          html, body { width:70mm !important; height:50mm !important; min-width:70mm !important; min-height:50mm !important; margin:0 !important; padding:0 !important; background:white !important; overflow:hidden !important; }
           body, body * { visibility:hidden !important; }
           .syp-print-sheet, .syp-print-sheet * { visibility:visible !important; }
           .syp-studio, .syp-layout, .syp-panel, .syp-list { display:block !important; width:70mm !important; min-width:0 !important; max-width:none !important; margin:0 !important; padding:0 !important; border:0 !important; border-radius:0 !important; box-shadow:none !important; background:white !important; }
           .syp-header, .syp-form, .syp-panel-head, .syp-row-actions, .syp-thumb, .syp-notice, .syp-actions, .syp-muted, .syp-history { display:none !important; }
           .syp-row { display:block !important; width:70mm !important; margin:0 !important; padding:0 !important; border:0 !important; break-inside:avoid !important; page-break-inside:avoid !important; }
-          .syp-print-sheet { display:block !important; width:70mm !important; height:50mm !important; margin:0 !important; padding:0 !important; overflow:hidden !important; break-after:page !important; page-break-after:always !important; }
+          .syp-print-sheet { display:block !important; box-sizing:border-box !important; width:70mm !important; min-width:70mm !important; max-width:70mm !important; height:50mm !important; min-height:50mm !important; max-height:50mm !important; margin:0 !important; padding:0 !important; overflow:hidden !important; break-after:page !important; page-break-after:always !important; }
           .syp-row:last-child .syp-print-sheet { break-after:auto !important; page-break-after:auto !important; }
           body.syp-print-one .syp-print-sheet { display:none !important; break-after:auto !important; page-break-after:auto !important; }
           body.syp-print-one .syp-print-sheet.syp-selected { display:block !important; }
-          .syp-art { width:70mm !important; height:50mm !important; }
+          .syp-art { box-sizing:border-box !important; width:70mm !important; min-width:70mm !important; max-width:70mm !important; height:50mm !important; min-height:50mm !important; max-height:50mm !important; }
         }
       `}</style>
 
@@ -420,7 +420,7 @@ export default function StickerStudioPage() {
           <div className="syp-panel-head" style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
             <div>
               <h2>Print queue</h2>
-              <p className="syp-muted">Label size: 70 × 50 mm · Print at 100% / Actual size.</p>
+              <p className="syp-muted">Label size: 70 × 50 mm · Landscape · One label per page · Actual size / 100%.</p>
             </div>
             <strong>{stickers.length}</strong>
           </div>
@@ -477,7 +477,7 @@ export default function StickerStudioPage() {
           </div>
 
           <p className="syp-muted" style={{ marginTop: 20, marginBottom: 0 }}>
-            Sa print dialog, piliin ang 70 × 50 mm, Actual size / 100%, margins: none, at i-off ang headers at footers.
+            Sa print dialog, piliin ang 70 × 50 mm paper, Landscape, Actual size / 100%, margins: none, at i-off ang headers at footers. Bawat sticker ay isang label/page.
           </p>
         </section>
       </div>
