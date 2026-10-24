@@ -5,9 +5,78 @@ import { useMemo, useState } from "react";
 const LOGO_URL = "/IMG_5996.jpeg";
 const FACEBOOK_URL = "https://www.facebook.com/SypOnCafe";
 
+const QUOTE_STARTS = [
+  "Kape muna, ", "Iced coffee kasi ", "Hindi ako tamad, ", "Adulting na naman, ",
+  "Puyat pero ", "Walang jowa pero ", "Wallet ko payat, ", "Pahinga saglit, ",
+  "Kung stressed ka, ", "Dasurv mo ’to, ", "Bawal sumuko, ", "Ang buhay ay ",
+  "Love yourself, ", "Kape ang sagot, ", "Pagod na ang beshie, ", "Trabaho nang trabaho, ",
+  "Laban lang, ", "Manifesting na ", "Budget kuno, ", "Sabi ko isa lang, ",
+  "Nagtitipid ako, ", "May problema? ", "Hindi lahat ng ", "Kung walang plot twist, ",
+  "Lowbat na ako, ", "Puso ko marupok, ", "Minsan kailangan lang ", "Wag kang mag-alala, ",
+  "Chill ka lang, ", "Main character ka, ", "Kape muna bago ", "Gising pa rin dahil ",
+  "Sana all, ", "Walang forever pero ", "Petsa de peligro, ", "Ang importante, ",
+  "Kung pagod ka na, ", "Hindi man mayaman, ", "Self-care muna, ", "Buhay ay maikli, ",
+  "Kape ang therapy, ", "May exam bukas, ", "May deadline mamaya, ", "Hindi ako late, ",
+  "Sabi ng puso ko, ", "Sabi ng utak ko, ", "Nandito para sa kape, ", "Tambay responsibly, ",
+  "Konting sip lang, ", "Kaya pa ’yan, ", "Walang perfect, ", "Laban mga ka-SYP, ",
+  "Kalmado lang kunwari, ", "Ngiti muna, ", "Hinga nang malalim, ", "Kapag may sahod, ",
+  "Kapag walang sahod, ", "Ang tunay na plot twist, ", "Minsan ang sagot ay ", "Sana kasing tamis ng kape "
+];
+
+const QUOTE_ENDINGS = [
+  "ang problema, bukas na.", "kape muna bago breakdown.", "pero cute pa rin.", "at least may caffeine.",
+  "bahala na si future me.", "ang bills, hindi nawawala.", "pero laban pa rin.", "deserve ko ng extra shot.",
+  "hindi kasama sa budget.", "pero masarap ang buhay.", "wag lang maubusan ng yelo.", "kaya natin ’to, besh.",
+  "at least may iced coffee.", "sa susunod na sweldo na.", "sana all may pahinga.", "wag lang i-chat ang ex.",
+  "pahinga, hindi pagsuko.", "ang importante, may kape.", "puso lang ang walang sukli.", "kaya pala kailangan ng large.",
+  "pero order muna tayo.", "hindi bayad ang overthink.", "may free therapy sa bawat sip.", "bukas na ang pagiging productive.",
+  "hindi lahat nadadaan sa tulog.", "pero may pag-asa pa.", "kape muna bago desisyon.", "mas okay kapag may kasama.",
+  "ang tunay na love language ay fries.", "hindi dapat minamadali ang happiness.", "pero ubos na ang allowance.",
+  "pahingi naman ng plot armor.", "sana pati sweldo, extra large.", "pero hindi tayo susuko.", "at least hindi tubig ang order.",
+  "wag kalimutang mag-water din.", "konting arte, malaking saya.", "may resibo ang kaligayahan.", "basta may kape, may laban.",
+  "hindi lahat ng tahimik ay okay.", "pero okay lang magpahinga.", "ang stress, walang loyalty card.", "ang saya, dagdagan ng pearls.",
+  "piliin ang peace at cheese fries.", "hindi kasama ang problema sa refill.", "mas masarap kapag libre—charot.", "puro ka na lang 'next time'.",
+  "pero sige, one day at a time.", "ang importante, hindi ka nag-give up.", "may caffeine, may chance.", "hindi ito gastos, investment sa mood.",
+  "wag puro seen, mag-reply ka rin.", "pero hindi tayo marupok ngayon.", "sana all may extra income.", "hindi lahat ng tanong kailangan sagutin.",
+  "ang tunay na glow-up ay tulog.", "sana may add-to-cart sa sahod.", "pero chill muna tayo tonight.", "kaya order ka na, deserve mo ’yan.",
+  "hindi lahat ng desisyon dapat 3AM.", "may bukas pa para magpaka-responsable.", "wag lang maubos ang pasensya.", "basta wag kalimutan ang sarili.",
+  "at least may dahilan para ngumiti.", "pero wag kalimutan magbayad, besh.", "sana all may stable na Wi-Fi.", "dahan-dahan lang, hindi karera ang buhay.",
+  "may kape na, kulang na lang peace of mind.", "at least masaya ang taste buds.", "ang importante, may pang-order ulit.",
+  "pahinga ka rin, hindi ka robot.", "hindi ka weak, kailangan mo lang ng kape.", "kahit sabog, present pa rin.",
+  "kung di kaya ngayon, sip muna.", "wag gawing personality ang puyat.", "pero ang saya maging KasYP.",
+  "kaya ngumiti ka naman diyan.", "ang budget ay suggestion lang—joke!", "pero wag na nating bilangin ang calories.",
+  "sana may promo rin sa responsibilities.", "may bayad ang stress, walang overtime.", "tuloy lang kahit loading ang utak.",
+  "ang tunay na flex ay may peace of mind.", "hindi man perfect, at least may caffeine.", "basta masarap, walang debate.",
+  "sana pati problema may closing time.", "pwedeng mapagod, bawal mawalan ng kape.", "at least may magandang cup ka.",
+  "wag i-overthink ang straw.", "hindi ka nag-iisa, may iced coffee ka.", "small wins count, pati first sip.",
+  "ang bukas ay problema ni bukas.", "pero tonight, tambay muna.", "kaya mo ’yan, wag lang walang tulog.",
+  "sana lahat ng red flag ay kulay brown sugar.", "mas okay ang mixed feelings kapag mixed coffee.",
+  "ang love life ay seasonal, kape ay available.", "kung walang lambing, dagdagan ng whipped cream.",
+  "wag i-judge ang order, i-enjoy ang sip.", "hindi lahat ng malaki ay problema—minsan 22oz.",
+  "ang tunay na commitment ay bumalik sa SYP.", "at least hindi ka nag-order ng sama ng loob.",
+  "kape ang plot twist na deserve mo.", "tama na ang drama, dagdagan ang crema.",
+  "kung may problema, upuan muna natin.", "pwedeng magpahinga habang nagcha-charge ang phone.",
+  "mas masarap ang buhay kapag may tambayan.", "ang tunay na rich ay may oras mag-chill.",
+  "sana ang deadline marunong mag-adjust.", "wag magmadali, natutunaw din ang yelo.",
+  "kung walang clue, iced coffee muna.", "hindi lahat ng cravings dapat pigilan.",
+  "basta wag lang 'last order' na pala.", "may kape, may kwento, may dahilan bumalik."
+];
+
+function getRandomQuote(current = "") {
+  const total = QUOTE_STARTS.length * QUOTE_ENDINGS.length;
+  for (let attempt = 0; attempt < 12; attempt += 1) {
+    const start = QUOTE_STARTS[Math.floor(Math.random() * QUOTE_STARTS.length)];
+    const ending = QUOTE_ENDINGS[Math.floor(Math.random() * QUOTE_ENDINGS.length)];
+    const candidate = start + ending;
+    if (candidate !== current) return candidate;
+  }
+  return QUOTE_STARTS[Math.floor(Math.random() * QUOTE_STARTS.length)] +
+    QUOTE_ENDINGS[Math.floor(Math.random() * QUOTE_ENDINGS.length)];
+}
+
 export default function CupWrapPage() {
   const [cup, setCup] = useState<"16oz" | "22oz">("16oz");
-  const [quote, setQuote] = useState("THANKS FOR SUPPORTING SMALL BUSINESS!");
+  const [quote, setQuote] = useState(() => getRandomQuote());
   const [drinkName, setDrinkName] = useState("Spanish Latte");
   const [customerName, setCustomerName] = useState("");
   const [orderNumber, setOrderNumber] = useState("001");
@@ -113,8 +182,10 @@ export default function CupWrapPage() {
               <input id="order-date-time" type="datetime-local" value={orderDateTime} onChange={(e) => setOrderDateTime(e.target.value)} />
             </div>
             <div className="wrap-field">
-              <label htmlFor="main-quote">Large quote</label>
-              <input id="main-quote" value={quote} onChange={(e) => setQuote(e.target.value.slice(0, 70))} maxLength={70} />
+              <label htmlFor="main-quote">Large quote · 1,000+ random Tagalog/Taglish lines</label>
+              <input id="main-quote" value={quote} onChange={(e) => setQuote(e.target.value.slice(0, 120))} maxLength={120} />
+              <button type="button" className="wrap-btn secondary" onClick={() => setQuote(getRandomQuote(quote))}>🎲 Random funny quote</button>
+              <p className="wrap-muted">Automatic random quote pag-open ng page. Pindutin ulit ang button para sa bagong funny line, o i-edit ang text kung gusto mo.</p>
             </div>
             <div className="wrap-field">
               <label><input type="checkbox" checked={showQr} onChange={(e) => setShowQr(e.target.checked)} /> Include Facebook QR</label>
