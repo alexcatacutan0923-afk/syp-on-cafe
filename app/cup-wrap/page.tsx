@@ -8,6 +8,14 @@ const FACEBOOK_URL = "https://www.facebook.com/SypOnCafe";
 export default function CupWrapPage() {
   const [cup, setCup] = useState<"16oz" | "22oz">("16oz");
   const [quote, setQuote] = useState("THANKS FOR SUPPORTING SMALL BUSINESS!");
+  const [drinkName, setDrinkName] = useState("Spanish Latte");
+  const [customerName, setCustomerName] = useState("");
+  const [orderNumber, setOrderNumber] = useState("001");
+  const [orderDateTime, setOrderDateTime] = useState(() => {
+    const now = new Date();
+    const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 16);
+  });
   const [showQr, setShowQr] = useState(true);
 
   // Starting estimates only: measure the actual cup before printing.
@@ -44,7 +52,7 @@ export default function CupWrapPage() {
         .wrap-script { font-family:Georgia,serif; font-style:italic; font-weight:800; font-size:clamp(14px,2vw,23px); line-height:1.05; }
         .wrap-brand { font-size:clamp(16px,2.5vw,27px); font-weight:900; letter-spacing:.03em; line-height:1; }
         .wrap-tag { font-size:9px; font-weight:800; letter-spacing:.12em; margin-top:5px; }
-        .wrap-quote { font-family:Georgia,serif; font-size:clamp(12px,1.8vw,19px); font-style:italic; font-weight:800; line-height:1.12; }
+        .wrap-drink { font-size:clamp(17px,2.5vw,30px); font-weight:900; text-align:center; line-height:1.05; overflow-wrap:anywhere; }\n        .wrap-order-meta { font-size:8px; font-weight:800; line-height:1.4; margin-top:5px; overflow-wrap:anywhere; }\n        .wrap-quote { font-family:Georgia,serif; font-size:clamp(12px,1.8vw,19px); font-style:italic; font-weight:800; line-height:1.12; }
         .wrap-qr { width:54px; height:54px; object-fit:contain; background:white; padding:2px; }
         .wrap-social { font-size:8px; font-weight:800; margin-top:4px; overflow-wrap:anywhere; }
         .wrap-notes { font-size:12px; line-height:1.55; color:#70553e; }
@@ -61,7 +69,7 @@ export default function CupWrapPage() {
           .wrap-print-art { position:absolute!important; left:0!important; top:0!important; width:${wrapLength}mm!important; height:${wrapHeight}mm!important; transform-origin:top left!important; transform:translateX(80mm) rotate(90deg)!important; display:grid!important; grid-template-columns:1.2fr 1fr 1fr .65fr!important; gap:2mm!important; padding:2mm!important; background:#43291b!important; color:#f8e9d1!important; border:1px solid #d2a879!important; print-color-adjust:exact!important; -webkit-print-color-adjust:exact!important; }
           .wrap-print-art .wrap-script { font-size:16pt!important; }
           .wrap-print-art .wrap-brand { font-size:17pt!important; }
-          .wrap-print-art .wrap-quote { font-size:13pt!important; }
+          .wrap-print-art .wrap-quote { font-size:13pt!important; }\n          .wrap-print-art .wrap-drink { font-size:17pt!important; }\n          .wrap-print-art .wrap-order-meta { font-size:6pt!important; }\n          .wrap-print-art .wrap-logo { width:14mm!important; height:14mm!important; object-fit:contain!important; }
           .wrap-print-art .wrap-qr { width:13mm!important; height:13mm!important; }
           .wrap-print-art .wrap-social { font-size:6pt!important; }
           .wrap-print-art .wrap-tag { font-size:6pt!important; }
@@ -103,7 +111,7 @@ export default function CupWrapPage() {
             <h2>360° wrap preview · {cup}</h2>
             <p className="wrap-muted">Preview only. Measure your actual cup circumference and wrap height before final printing.</p>
             <div className="wrap-preview">
-              <WrapArt quote={quote} showQr={showQr} qrUrl={qrUrl} />
+              <WrapArt quote={quote} showQr={showQr} qrUrl={qrUrl} drinkName={drinkName} customerName={customerName} orderNumber={orderNumber} orderDateTime={orderDateTime} />
             </div>
             <div className="wrap-instructions wrap-notes">
               <p><strong>Important:</strong> 250mm (16oz) and 280mm (22oz) are starting estimates, not guaranteed fit. Cups vary by brand and taper. Measure around the cup where the strip will sit, then adjust the length in code if needed.</p>
@@ -121,7 +129,7 @@ export default function CupWrapPage() {
             <div className="wrap-block">
               <div className="wrap-brand">SYP ON CAFÉ</div>
               <div className="wrap-tag">STREET • ICED • BREWED</div>
-              <div className="wrap-social">Kape+Tambay, KasYP!</div>
+              
             </div>
             <div className="wrap-block">
               <div className="wrap-quote">{quote || "Good Drinks, Better Days"}</div>
@@ -138,7 +146,7 @@ export default function CupWrapPage() {
   );
 }
 
-function WrapArt({ quote, showQr, qrUrl }: { quote: string; showQr: boolean; qrUrl: string }) {
+function WrapArt({ quote, showQr, qrUrl, drinkName, customerName, orderNumber, orderDateTime }: { quote: string; showQr: boolean; qrUrl: string; drinkName: string; customerName: string; orderNumber: string; orderDateTime: string }) {
   return (
     <div className="wrap-art">
       <div className="wrap-block">
@@ -147,7 +155,7 @@ function WrapArt({ quote, showQr, qrUrl }: { quote: string; showQr: boolean; qrU
       <div className="wrap-block">
         <div className="wrap-brand">SYP ON CAFÉ</div>
         <div className="wrap-tag">STREET • ICED • BREWED</div>
-        <div className="wrap-social">Kape+Tambay, KasYP!</div>
+        
       </div>
       <div className="wrap-block">
         <div className="wrap-quote">{quote || "Good Drinks, Better Days"}</div>
