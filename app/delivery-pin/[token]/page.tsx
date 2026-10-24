@@ -8,6 +8,7 @@ declare global { interface Window { L?: any; } }
 
 type PinRecord = {
   customer_name: string;
+  customer_mobile: string | null;
   order_ref: string | null;
   address_text: string | null;
   landmark: string | null;
@@ -94,6 +95,7 @@ export default function DeliveryPinPage() {
   const [longitude, setLongitude] = useState(DEFAULT_CENTER[1]);
   const [address, setAddress] = useState("");
   const [landmark, setLandmark] = useState("");
+  const [customerMobile, setCustomerMobile] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -116,6 +118,7 @@ export default function DeliveryPinPage() {
       }
       setAddress(pin.address_text || "");
       setLandmark(pin.landmark || "");
+      setCustomerMobile(pin.customer_mobile || "");
       setLoading(false);
     })();
     return () => { active = false; };
@@ -135,7 +138,8 @@ export default function DeliveryPinPage() {
     event.preventDefault(); setSaving(true); setError(""); setNotice("");
     const { data, error: rpcError } = await supabase.rpc("save_delivery_pin", {
       p_token: token, p_latitude: latitude, p_longitude: longitude,
-      p_address_text: address.trim() || null, p_landmark: landmark.trim() || null
+      p_address_text: address.trim() || null, p_landmark: landmark.trim() || null,
+      p_customer_mobile: customerMobile.trim() || null
     });
     setSaving(false);
     if (rpcError) { setError(rpcError.message); return; }
@@ -165,7 +169,7 @@ export default function DeliveryPinPage() {
       <form onSubmit={save} className="mt-3 rounded-3xl border border-pink-100 bg-white p-5 shadow-sm sm:p-6">
         <label className="block text-sm font-bold">Complete address (optional)</label>
         <textarea maxLength={500} rows={2} value={address} onChange={e => setAddress(e.target.value)} placeholder="House / unit, street, subdivision, barangay" className="mt-2 w-full rounded-xl border border-stone-200 p-3 text-sm outline-none focus:border-pink-400" />
-        <label className="mt-4 block text-sm font-bold">Landmark / delivery instructions</label>
+        <label className="mt-4 block text-sm font-bold">Mobile number (optional)</label>\n        <input type="tel" inputMode="tel" autoComplete="tel" maxLength={30} value={customerMobile} onChange={e => setCustomerMobile(e.target.value)} placeholder="09XXXXXXXXX" className="mt-2 w-full rounded-xl border border-stone-200 p-3 text-sm outline-none focus:border-pink-400" />\n        <p className="mt-1 text-xs text-stone-500">Ilagay ang number na puwedeng tawagan tungkol sa delivery. Optional lang.</p>\n        <label className="mt-4 block text-sm font-bold">Landmark / delivery instructions</label>
         <textarea maxLength={500} rows={2} value={landmark} onChange={e => setLandmark(e.target.value)} placeholder="e.g. blue gate beside the sari-sari store" className="mt-2 w-full rounded-xl border border-stone-200 p-3 text-sm outline-none focus:border-pink-400" />
         <button disabled={saving} className="mt-4 w-full rounded-xl bg-pink-600 p-3.5 font-black text-white transition hover:bg-pink-500 disabled:opacity-60">{saving ? "Saving delivery pin…" : record.status === "pin_saved" ? "Update delivery location" : "Confirm delivery location"}</button>
         {notice && <p role="status" className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">{notice}</p>}
