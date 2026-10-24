@@ -1585,6 +1585,14 @@ export default function AdminPage() {
   </Link>
 
   <Link
+    href="/admin/delivery-pins"
+    onClick={() => setMobileSidebarOpen(false)}
+    className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-pink-300"
+  >
+    📍 Delivery Pins
+  </Link>
+
+  <Link
     href="/admin/tv-standby"
     onClick={() => setMobileSidebarOpen(false)}
     className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300"
