@@ -132,6 +132,9 @@ language plpgsql
 security definer
 set search_path = public, pg_temp
 as $$
+declare
+  v_pin public.delivery_pin_links%rowtype;
+  v_notes text;
 begin
   if length(coalesce(p_token, '')) <> 48 or p_token !~ '^[a-f0-9]{48}$' then
     raise exception 'Invalid delivery link';
@@ -141,20 +144,42 @@ begin
      or p_longitude < -180 or p_longitude > 180 then
     raise exception 'Please choose a valid location on the map';
   end if;
-  return query
-    update public.delivery_pin_links d
-    set latitude = p_latitude,
-        longitude = p_longitude,
-        address_text = nullif(left(trim(coalesce(p_address_text, '')), 500), ''),
-        landmark = nullif(left(trim(coalesce(p_landmark, '')), 500), ''),
-        status = 'pin_saved',
-        updated_at = now()
-    where d.token = p_token
-    returning d.customer_name, d.order_ref, d.address_text, d.landmark,
-      d.latitude, d.longitude, d.status;
+
+  update public.delivery_pin_links d
+  set latitude = p_latitude,
+      longitude = p_longitude,
+      address_text = nullif(left(trim(coalesce(p_address_text, '')), 500), ''),
+      landmark = nullif(left(trim(coalesce(p_landmark, '')), 500), ''),
+      status = 'pin_saved',
+      updated_at = now()
+  where d.token = p_token
+  returning d.* into v_pin;
+
   if not found then
     raise exception 'Delivery link not found';
   end if;
+
+  -- If staff entered an existing POS order number when creating the link,
+  -- sync the customer's saved delivery details back to that delivery order.
+  if nullif(trim(coalesce(v_pin.order_ref, '')), '') is not null then
+    update public.orders o
+    set address = coalesce(v_pin.address_text, o.address),
+        landmark = coalesce(v_pin.landmark, o.landmark),
+        notes = concat_ws(E'\n',
+          nullif(trim(regexp_replace(
+            regexp_replace(coalesce(o.notes, ''), E'\\[DELIVERY PIN: [^\\]]+\\]', '', 'g'),
+            E'\\[MAP: https://www\\.google\\.com/maps\\?q=[^\\]]+\\]', '', 'g'
+          )), ''),
+          format('[DELIVERY PIN: %s, %s]', v_pin.latitude, v_pin.longitude),
+          format('[MAP: https://www.google.com/maps?q=%s,%s]', v_pin.latitude, v_pin.longitude)
+        )
+    where o.order_number::text = trim(v_pin.order_ref)
+      and o.order_type = 'delivery';
+  end if;
+
+  return query
+    select v_pin.customer_name, v_pin.order_ref, v_pin.address_text,
+      v_pin.landmark, v_pin.latitude, v_pin.longitude, v_pin.status;
 end;
 $$;
 
