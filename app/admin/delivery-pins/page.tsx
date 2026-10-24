@@ -10,6 +10,7 @@ type DeliveryPin = {
   token: string;
   customer_name: string;
   phone: string;
+  customer_mobile: string | null;
   order_ref: string | null;
   address_text: string | null;
   landmark: string | null;
@@ -121,11 +122,11 @@ function AdminContent() {
           </div>
           <div className="overflow-x-auto rounded-2xl border border-white/10 bg-neutral-950">
             <table className="w-full min-w-[900px] text-left text-sm">
-              <thead className="bg-white/5 text-xs uppercase tracking-wide text-neutral-400"><tr>{["Customer", "Order", "Status", "Coordinates", "Address / landmark", "Created", "Link"].map(x => <th key={x} className="px-4 py-3">{x}</th>)}</tr></thead>
+              <thead className="bg-white/5 text-xs uppercase tracking-wide text-neutral-400"><tr>{["Customer", "Customer mobile", "Order", "Status", "Coordinates", "Address / landmark", "Created", "Link"].map(x => <th key={x} className="px-4 py-3">{x}</th>)}</tr></thead>
               <tbody>{rows.map(row => (
                 <tr key={row.id} className="border-t border-white/5 align-top">
                   <td className="px-4 py-4"><div className="font-bold">{row.customer_name}</div><div className="mt-1 text-xs text-neutral-500">{row.phone}</div></td>
-                  <td className="px-4 py-4">{row.order_ref || "—"}</td>
+                  <td className="px-4 py-4">{row.customer_mobile || "—"}</td>\n                  <td className="px-4 py-4">{row.order_ref || "—"}</td>
                   <td className="px-4 py-4"><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${row.status === "pin_saved" ? "bg-emerald-400/10 text-emerald-300" : "bg-amber-400/10 text-amber-300"}`}>{row.status === "pin_saved" ? "Pin saved" : "Awaiting pin"}</span></td>
                   <td className="px-4 py-4">{row.latitude !== null && row.longitude !== null ? <><div className="font-mono text-xs">{row.latitude.toFixed(6)}, {row.longitude.toFixed(6)}</div><a target="_blank" rel="noreferrer" className="mt-2 inline-block text-pink-300 underline" href={`https://www.google.com/maps?q=${row.latitude},${row.longitude}`}>Open Google Maps ↗</a></> : <span className="text-neutral-500">Not submitted</span>}</td>
                   <td className="max-w-64 whitespace-normal px-4 py-4">{row.address_text || "—"}{row.landmark && <div className="mt-1 text-xs text-neutral-400">{row.landmark}</div>}</td>
