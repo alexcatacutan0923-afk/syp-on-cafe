@@ -537,7 +537,7 @@ export default function StickerStudioPage() {
     if (!drink.trim()) { setNotice("Ilagay muna ang drink name."); return; }
     if (!Number.isFinite(unitPrice) || unitPrice < 0) { setNotice("Ilagay ang valid na presyo."); return; }
     const count = Math.max(1, Math.min(100, quantity));
-    const orderId = `STK-${String(manualOrderCounter).padStart(4, "0")}`;
+    const orderId = `SYP-${String(manualOrderCounter).padStart(4, "0")}`;
     const total = count * unitPrice;
     const now = manilaDateTime();
     const order: ManualOrder = { orderId, customer: customer.trim(), drink: drink.trim(), size, quantity: count, unitPrice, total, dateTime: now };
@@ -779,7 +779,7 @@ export default function StickerStudioPage() {
         .sticker-thumb { width: 100%; aspect-ratio: 70 / 50; background: white; overflow: hidden; margin-inline: auto; border: 1px dashed #cdbba5; }
         .sticker-row-actions { display: flex; flex-direction: column; gap: 6px; }
         .small-action { border: 1px solid #d8c4ad; background: white; color: #67472f; padding: 8px 9px; border-radius: 7px; font-size: 10px; font-weight: 800; cursor: pointer; white-space: nowrap; }
-        .sticker-sheet { display: none; width: 70mm; height: 52mm; margin: 0; padding: 0; overflow: hidden; background: white; color: black; }
+        .sticker-sheet { display: none; width: 70mm; height: 50mm; margin: 0; padding: 0; overflow: hidden; background: white; color: black; }
         .sticker-art { width: 70mm; height: 50mm; overflow: hidden; background: white; color: black; display: grid; grid-template-columns: 17mm minmax(0,1fr) 13mm; grid-template-rows: minmax(0,1fr) auto; column-gap: 1.5mm; row-gap: 1mm; padding: 2mm 3mm 1.5mm 2mm; font-family: Arial, Helvetica, sans-serif; position: relative; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         .sticker-brand-logo { grid-column: 1; grid-row: 1; width: 16mm; height: 16mm; object-fit: contain; align-self: start; justify-self: start; }
         .sticker-copy { grid-column: 2; grid-row: 1; min-width: 0; overflow: hidden; }
@@ -798,16 +798,16 @@ export default function StickerStudioPage() {
         .sticker-footer { font-size: 4pt; font-weight: 700; margin-top: .5mm; display: flex; justify-content: space-between; gap: 2mm; }
         @media (max-width: 900px) { .sales-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } .studio-layout { grid-template-columns: 1fr; } .studio-top { align-items: flex-start; } }
         @media (max-width: 520px) { .sales-grid { gap:8px; } .sales-card { padding:12px; } .studio-shell { padding: 16px 10px 28px; } .studio-panel { padding: 15px; } .studio-brand img { width: 44px; height: 44px; } .studio-brand p { font-size: 8px; letter-spacing: .1em; } .studio-back { padding: 8px 10px; font-size: 10px; } .sticker-row { grid-template-columns: 1fr; } .sticker-row-actions { flex-direction: row; flex-wrap: wrap; } }
-        @page { size: 70mm 52mm; margin: 0; }
+        @page { size: 70mm 50mm; margin: 0; }
         @media print {
           html, body { width: 70mm !important; min-width: 70mm !important; margin: 0 !important; padding: 0 !important; background: white !important; overflow: visible !important; }
           body, body * { visibility: hidden !important; }
           .sticker-sheet, .sticker-sheet * { visibility: visible !important; }
           .studio-shell, .studio-layout, .studio-panel, .sticker-list { display: block !important; width: 70mm !important; min-width: 70mm !important; max-width: 70mm !important; margin: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: white !important; }
           .studio-top, .studio-form-panel, .studio-preview-head, .studio-empty, .sticker-row-actions, .studio-notice, .studio-actions, .studio-muted, .sticker-thumb, .order-results { display: none !important; }
-          .sticker-row { display: block !important; width: 70mm !important; height: 52mm !important; margin: 0 !important; padding: 0 !important; border: 0 !important; background: white !important; break-inside: avoid !important; page-break-inside: avoid !important; }
-          .sticker-sheet { display: block !important; position: relative !important; width: 70mm !important; height: 52mm !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; break-inside: avoid !important; page-break-inside: avoid !important; break-after: page !important; page-break-after: always !important; }
-          .sticker-art { width: 70mm !important; height: 50mm !important; padding: 2mm 2mm 1.5mm 2mm !important; overflow: hidden !important; }
+          .sticker-row { display: block !important; width: 70mm !important; height: 50mm !important; margin: 0 !important; padding: 0 !important; border: 0 !important; background: white !important; break-inside: avoid !important; page-break-inside: avoid !important; }
+          .sticker-sheet { display: block !important; position: relative !important; width: 70mm !important; height: 50mm !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; break-inside: avoid !important; page-break-inside: avoid !important; break-after: page !important; page-break-after: always !important; }
+          .sticker-art { width: 70mm !important; height: 50mm !important; padding: 1mm 1.5mm 1mm 1.5mm !important; overflow: hidden !important; }
           .sticker-row:last-child .sticker-sheet { break-after: auto !important; page-break-after: auto !important; }
           body.printing-one .sticker-row { display: none !important; break-after: auto !important; page-break-after: auto !important; }
           body.printing-one .sticker-row:has(.sticker-sheet.print-selected) { display: block !important; }
@@ -935,7 +935,7 @@ export default function StickerStudioPage() {
           <div className="studio-preview-head">
             <div>
               <h2>Print queue</h2>
-              <p className="studio-muted" style={{ marginBottom: 0 }}>Label 70 × 50 mm + 2 mm feed gap.</p>
+              <p className="studio-muted" style={{ marginBottom: 0 }}>Label 70 × 50 mm · no extra feed gap.</p>
             </div>
             <span className="studio-count">{stickers.length} sticker(s)</span>
           </div>
