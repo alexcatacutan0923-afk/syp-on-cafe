@@ -9,7 +9,6 @@ type Sticker = {
   id: number;
   customer: string;
   drink: string;
-  price?: number;
   size: string;
   ice: string;
   sugar: string;
@@ -304,7 +303,7 @@ const QUOTES = [
 "Don't quit on a difficult day.",
 "Pahinga, recharge, repeat.",
 "Better things are on the way.",
-"Keep your dreams bigger than your doubts.",
+"Keep your dreams bigger than your doubts."
 "Esmeringhoy, kape muna bago magkalat.",
 "Awit sa buhay, iced coffee sa kamay.",
 "Luh, bakit mahal ang bilihin pero mura ang peace of mind ko?",
@@ -453,7 +452,7 @@ export default function StickerStudioPage() {
   const [orders, setOrders] = useState<PosOrder[]>([]);
   const [searching, setSearching] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<PosOrder | null>(null);
-  const [history, setHistory] = useState<{ sticker: Sticker; printedAt: string }[]>([]);
+  const [history, setHistory] = useState<string[]>([]);
 
   const qrUrl = useMemo(
     () =>
@@ -538,7 +537,7 @@ export default function StickerStudioPage() {
     if (!drink.trim()) { setNotice("Ilagay muna ang drink name."); return; }
     if (!Number.isFinite(unitPrice) || unitPrice < 0) { setNotice("Ilagay ang valid na presyo."); return; }
     const count = Math.max(1, Math.min(100, quantity));
-    const orderId = `SYP-${String(manualOrderCounter).padStart(4, "0")}`;
+    const orderId = `STK-${String(manualOrderCounter).padStart(4, "0")}`;
     const total = count * unitPrice;
     const now = manilaDateTime();
     const order: ManualOrder = { orderId, customer: customer.trim(), drink: drink.trim(), size, quantity: count, unitPrice, total, dateTime: now };
@@ -546,7 +545,7 @@ export default function StickerStudioPage() {
     const added: Sticker[] = [];
     for (let i = 0; i < count; i++) {
       const quote = randomQuote(used); used.add(quote);
-      added.push({ id: nextId + i, customer: customer.trim(), drink: drink.trim(), price: unitPrice, size, ice, sugar, notes: notes.trim(), dateTime: now, quote, orderId, orderNumber: orderId, source: "manual" });
+      added.push({ id: nextId + i, customer: customer.trim(), drink: drink.trim(), size, ice, sugar, notes: notes.trim(), dateTime: now, quote, orderId, orderNumber: orderId, source: "manual" });
     }
     setStickers((current) => [...current, ...added]);
     setNextId((current) => current + added.length);
@@ -569,7 +568,6 @@ export default function StickerStudioPage() {
         id: nextId + i,
         customer: order.customer_name || "",
         drink: drinkName,
-        price: typeof item.price === "number" ? item.price : (typeof item.line_total === "number" ? item.line_total / count : undefined),
         size: item.size || "22 oz",
         ice: item.ice || (item.temperature === "Hot" ? "Hot" : "Regular ice"),
         sugar: item.sugar || "Regular sugar",
@@ -674,6 +672,10 @@ export default function StickerStudioPage() {
     setNotice("Inihahanda ang print at itinatala ang print job...");
 
     try {
+      for (const sticker of selected) {
+        await recordPrint(sticker);
+      }
+
       document.body.classList.remove("printing-one");
       document.querySelectorAll<HTMLElement>(".sticker-sheet").forEach((node) => {
         node.classList.toggle(
@@ -687,20 +689,14 @@ export default function StickerStudioPage() {
       await preparePrint();
       setNotice("Buksan ang print dialog. Suriin ang paper size bago mag-print.");
 
-      // Keep a snapshot for reprinting. Remove from active queue when the
-      // browser closes the print dialog; physical printer success cannot be
-      // verified reliably by window.print().
-      window.addEventListener("afterprint", () => {
-        setHistory((current) => [
-          ...selected.map((sticker) => ({ sticker, printedAt: manilaDateTime() })),
-          ...current,
-        ].slice(0, 100));
-        setStickers((current) => current.filter((sticker) => !selected.some((done) => done.id === sticker.id)));
-        setPrintedCount((current) => current + selected.length);
-        cleanupPrint();
-        setNotice(`Print dialog closed. ${selected.length} sticker(s) moved to print history; puwede silang i-reprint.`);
-      }, { once: true });
+      window.addEventListener("afterprint", cleanupPrint, { once: true });
       window.print();
+
+      setPrintedCount((current) => current + selected.length);
+      setHistory((current) => [
+        `${manilaDateTime()} — ${selected.length} sticker(s) — ${selected[0].orderNumber || selected[0].source}`,
+        ...current,
+      ].slice(0, 30));
     } catch (error) {
       cleanupPrint();
       setNotice(
@@ -709,14 +705,6 @@ export default function StickerStudioPage() {
           : "Hindi naihanda o naitala ang print job.",
       );
     }
-  }
-
-  function requeueForReprint(sticker: Sticker) {
-    const copy = { ...sticker, id: nextId };
-    setStickers((current) => [...current, copy]);
-    setNextId((current) => current + 1);
-    setNotice(`${sticker.orderNumber || sticker.orderId || "Sticker"} added back to queue. Pindutin ang Print / reprint.`);
-    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function removeSticker(id: number) {
@@ -792,19 +780,18 @@ export default function StickerStudioPage() {
         .sticker-row-actions { display: flex; flex-direction: column; gap: 6px; }
         .small-action { border: 1px solid #d8c4ad; background: white; color: #67472f; padding: 8px 9px; border-radius: 7px; font-size: 10px; font-weight: 800; cursor: pointer; white-space: nowrap; }
         .sticker-sheet { display: none; width: 70mm; height: 52mm; margin: 0; padding: 0; overflow: hidden; background: white; color: black; }
-        .sticker-art { width: 70mm; height: 50mm; overflow: hidden; background: white; color: black; display: grid; grid-template-columns: 22mm minmax(0,1fr) 17mm; grid-template-rows: minmax(0,1fr) auto; column-gap: 1.5mm; row-gap: 1mm; padding: 2mm 3mm 1.5mm 2mm; font-family: Arial, Helvetica, sans-serif; position: relative; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        .sticker-brand-logo { grid-column: 1; grid-row: 1; width: 21mm; height: 21mm; object-fit: contain; align-self: start; justify-self: start; }
+        .sticker-art { width: 70mm; height: 50mm; overflow: hidden; background: white; color: black; display: grid; grid-template-columns: 17mm minmax(0,1fr) 13mm; grid-template-rows: minmax(0,1fr) auto; column-gap: 1.5mm; row-gap: 1mm; padding: 2mm 3mm 1.5mm 2mm; font-family: Arial, Helvetica, sans-serif; position: relative; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .sticker-brand-logo { grid-column: 1; grid-row: 1; width: 16mm; height: 16mm; object-fit: contain; align-self: start; justify-self: start; }
         .sticker-copy { grid-column: 2; grid-row: 1; min-width: 0; overflow: hidden; }
-        .sticker-wordmark { font-size: 8pt; font-weight: 900; letter-spacing: -.03em; line-height: 1; white-space: nowrap; }
-        .sticker-tagline { font-size: 5pt; font-weight: 800; margin-top: .8mm; letter-spacing: .03em; white-space: nowrap; }
-        .sticker-drink { font-family: Arial, Helvetica, sans-serif; font-size: 25pt; font-weight: 1000; font-style: normal; line-height: .98; letter-spacing: -.045em; overflow-wrap: anywhere; margin-top: 3mm; -webkit-text-stroke: .35px #000; }
-        .sticker-price { display: block; margin-top: 2mm; font-family: Arial, Helvetica, sans-serif; font-size: 13pt; line-height: 1; font-weight: 800; letter-spacing: -.02em; border: 0; padding: 0; }
+        .sticker-wordmark { font-size: 7pt; font-weight: 900; letter-spacing: -.03em; line-height: 1; white-space: nowrap; }
+        .sticker-tagline { font-size: 4.5pt; font-weight: 800; margin-top: .8mm; letter-spacing: .03em; white-space: nowrap; }
+        .sticker-drink { font-size: 17pt; font-weight: 900; line-height: 1; letter-spacing: -.045em; overflow-wrap: anywhere; margin-top: 2mm; }
         .sticker-pills { display: flex; flex-wrap: wrap; gap: .8mm; margin-top: 1.5mm; }
-        .sticker-pill { border: .35mm solid #000; padding: .6mm 1mm; font-size: 6pt; font-weight: 800; line-height: 1.1; }
+        .sticker-pill { border: .25mm solid #000; padding: .5mm .8mm; font-size: 5.5pt; font-weight: 800; line-height: 1.1; }
         .sticker-customer, .sticker-notes { font-size: 6pt; font-weight: 700; margin-top: 1mm; overflow-wrap: anywhere; }
-        .sticker-qr { grid-column: 3; grid-row: 1; width: 17mm; display: flex; flex-direction: column; align-items: center; justify-content: start; }
-        .sticker-qr img { display: block; width: 16mm; height: 16mm; object-fit: contain; }
-        .sticker-qr span { font-size: 5pt; font-weight: 900; margin-top: .5mm; white-space: nowrap; }
+        .sticker-qr { grid-column: 3; grid-row: 1; width: 13mm; display: flex; flex-direction: column; align-items: center; justify-content: start; }
+        .sticker-qr img { display: block; width: 11mm; height: 11mm; object-fit: contain; }
+        .sticker-qr span { font-size: 4pt; font-weight: 900; margin-top: .5mm; white-space: nowrap; }
         .sticker-quote { grid-column: 1 / 4; grid-row: 2; border-top: .45mm solid #000; padding-top: 1mm; min-width: 0; display: flex; gap: 1.5mm; align-items: center; overflow: hidden; }
         .quote-mark { font-size: 15pt; line-height: .8; font-weight: 900; flex: 0 0 auto; }
         .quote-text { font-size: 7pt; font-weight: 800; line-height: 1.15; overflow-wrap: anywhere; }
@@ -813,17 +800,19 @@ export default function StickerStudioPage() {
         @media (max-width: 520px) { .sales-grid { gap:8px; } .sales-card { padding:12px; } .studio-shell { padding: 16px 10px 28px; } .studio-panel { padding: 15px; } .studio-brand img { width: 44px; height: 44px; } .studio-brand p { font-size: 8px; letter-spacing: .1em; } .studio-back { padding: 8px 10px; font-size: 10px; } .sticker-row { grid-template-columns: 1fr; } .sticker-row-actions { flex-direction: row; flex-wrap: wrap; } }
         @page { size: 70mm 52mm; margin: 0; }
         @media print {
-          html, body { width: 70mm !important; margin: 0 !important; padding: 0 !important; background: white !important; overflow: visible !important; }
+          html, body { width: 70mm !important; min-width: 70mm !important; margin: 0 !important; padding: 0 !important; background: white !important; overflow: visible !important; }
           body, body * { visibility: hidden !important; }
           .sticker-sheet, .sticker-sheet * { visibility: visible !important; }
-          .studio-shell, .studio-layout, .studio-panel, .sticker-list { display: block !important; width: 70mm !important; min-width: 0 !important; max-width: none !important; margin: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: white !important; }
+          .studio-shell, .studio-layout, .studio-panel, .sticker-list { display: block !important; width: 70mm !important; min-width: 70mm !important; max-width: 70mm !important; margin: 0 !important; padding: 0 !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; background: white !important; }
           .studio-top, .studio-form-panel, .studio-preview-head, .studio-empty, .sticker-row-actions, .studio-notice, .studio-actions, .studio-muted, .sticker-thumb, .order-results { display: none !important; }
-          .sticker-row { display: block !important; width: 70mm !important; margin: 0 !important; padding: 0 !important; border: 0 !important; background: white !important; break-inside: avoid !important; page-break-inside: avoid !important; }
+          .sticker-row { display: block !important; width: 70mm !important; height: 52mm !important; margin: 0 !important; padding: 0 !important; border: 0 !important; background: white !important; break-inside: avoid !important; page-break-inside: avoid !important; }
           .sticker-sheet { display: block !important; position: relative !important; width: 70mm !important; height: 52mm !important; margin: 0 !important; padding: 0 !important; overflow: hidden !important; break-inside: avoid !important; page-break-inside: avoid !important; break-after: page !important; page-break-after: always !important; }
-          .sticker-art { width: 70mm !important; height: 50mm !important; padding: 2mm 3mm 1.5mm 2mm !important; overflow: hidden !important; }
+          .sticker-art { width: 70mm !important; height: 50mm !important; padding: 2mm 2mm 1.5mm 2mm !important; overflow: hidden !important; }
           .sticker-row:last-child .sticker-sheet { break-after: auto !important; page-break-after: auto !important; }
+          body.printing-one .sticker-row { display: none !important; break-after: auto !important; page-break-after: auto !important; }
+          body.printing-one .sticker-row:has(.sticker-sheet.print-selected) { display: block !important; }
           body.printing-one .sticker-sheet { display: none !important; break-after: auto !important; page-break-after: auto !important; }
-          body.printing-one .sticker-sheet.print-selected { display: block !important; }
+          body.printing-one .sticker-sheet.print-selected { display: block !important; break-after: auto !important; page-break-after: auto !important; }
           .sticker-brand-logo, .sticker-qr img { visibility: visible !important; }
         }
       `}</style>
@@ -946,7 +935,7 @@ export default function StickerStudioPage() {
           <div className="studio-preview-head">
             <div>
               <h2>Print queue</h2>
-              <p className="studio-muted" style={{ marginBottom: 0 }}>Label 70 × 50 mm + 2 mm feed allowance.</p>
+              <p className="studio-muted" style={{ marginBottom: 0 }}>Label 70 × 50 mm + 2 mm feed gap.</p>
             </div>
             <span className="studio-count">{stickers.length} sticker(s)</span>
           </div>
@@ -988,15 +977,10 @@ export default function StickerStudioPage() {
 
           <h2 style={{ marginTop: 24 }}>Recent print actions</h2>
           <p className="studio-muted">Temporary list for this browser session. Ang permanent history ay dapat manggaling sa database API.</p>
-          {!history.length ? <div className="studio-empty">Wala pang print action sa session na ito.</div> : history.map((entry, index) => (
-            <div className="manual-order-item" key={`${entry.sticker.id}-${entry.printedAt}-${index}`}>
-              <div><strong>{entry.sticker.orderNumber || entry.sticker.orderId || entry.sticker.source} · {entry.sticker.drink}</strong><small>{entry.sticker.customer || "Walk-in"} · {entry.printedAt}</small></div>
-              <button className="small-action" type="button" disabled={printing} onClick={() => requeueForReprint(entry.sticker)}>Reprint</button>
-            </div>
-          ))}
+          {!history.length ? <div className="studio-empty">Wala pang print action sa session na ito.</div> : history.map((entry, index) => <p key={`${entry}-${index}`} className="studio-muted">{entry}</p>)}
 
           <p className="studio-muted" style={{ marginTop: 14, marginBottom: 0 }}>
-            Set paper to 80 × 52 mm, print at 100% / Actual size, margins 0, headers and footers off. Calibrate the gap sensor if needed.
+            Set paper to 70 × 52 mm, print at 100% / Actual size, margins 0, headers and footers off.
           </p>
         </section>
       </div>
@@ -1013,7 +997,11 @@ function StickerArt({ sticker, qrUrl }: { sticker: Sticker; qrUrl: string }) {
         <div className="sticker-tagline">STREET • ICED • BREWED</div>
         {sticker.customer && <div className="sticker-customer">FOR: {sticker.customer}</div>}
         <div className="sticker-drink">{sticker.drink}</div>
-        {typeof sticker.price === "number" && <div className="sticker-price">₱{sticker.price}</div>}
+        <div className="sticker-pills">
+          <span className="sticker-pill">{sticker.size}</span>
+          <span className="sticker-pill">{sticker.ice}</span>
+          <span className="sticker-pill">{sticker.sugar}</span>
+        </div>
         {sticker.notes && <div className="sticker-notes">NOTE: {sticker.notes}</div>}
       </div>
       <div className="sticker-qr">
