@@ -97,6 +97,22 @@ export default function CupWrapPage() {
               </select>
             </div>
             <div className="wrap-field">
+              <label htmlFor="drink-name">Drink name (editable)</label>
+              <input id="drink-name" value={drinkName} onChange={(e) => setDrinkName(e.target.value.slice(0, 40))} maxLength={40} placeholder="e.g. Spanish Latte" />
+            </div>
+            <div className="wrap-field">
+              <label htmlFor="customer-name">Customer name (optional)</label>
+              <input id="customer-name" value={customerName} onChange={(e) => setCustomerName(e.target.value.slice(0, 40))} maxLength={40} placeholder="e.g. Alex" />
+            </div>
+            <div className="wrap-field">
+              <label htmlFor="order-number">Order number / pang-ilan</label>
+              <input id="order-number" value={orderNumber} onChange={(e) => setOrderNumber(e.target.value.slice(0, 12))} maxLength={12} placeholder="e.g. 001" />
+            </div>
+            <div className="wrap-field">
+              <label htmlFor="order-date-time">Order date &amp; time</label>
+              <input id="order-date-time" type="datetime-local" value={orderDateTime} onChange={(e) => setOrderDateTime(e.target.value)} />
+            </div>
+            <div className="wrap-field">
               <label htmlFor="main-quote">Large quote</label>
               <input id="main-quote" value={quote} onChange={(e) => setQuote(e.target.value.slice(0, 70))} maxLength={70} />
             </div>
@@ -127,9 +143,15 @@ export default function CupWrapPage() {
               <div className="wrap-script">Thanks for<br />Supporting<br />Small Business!</div>
             </div>
             <div className="wrap-block">
+              <img className="wrap-logo" src={LOGO_URL} alt="SYP ON CAFÉ logo" />
               <div className="wrap-brand">SYP ON CAFÉ</div>
               <div className="wrap-tag">STREET • ICED • BREWED</div>
-              
+              <div className="wrap-drink">{drinkName || "YOUR DRINK"}</div>
+              <div className="wrap-order-meta">
+                {customerName ? <>FOR: {customerName}<br /></> : null}
+                ORDER #{orderNumber || "—"}<br />
+                {orderDateTime ? new Date(orderDateTime).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" }) : ""}
+              </div>
             </div>
             <div className="wrap-block">
               <div className="wrap-quote">{quote || "Good Drinks, Better Days"}</div>
