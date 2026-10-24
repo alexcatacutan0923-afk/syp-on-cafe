@@ -86,7 +86,21 @@ function AdminContent() {
           </div>
         </header>
 
-        <section className="mt-7 rounded-2xl border border-pink-400/20 bg-neutral-950 p-5 sm:p-6">
+        <section className="mt-7 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-white/10 bg-neutral-950 p-5">
+            <p className="text-xs font-black tracking-wide text-emerald-300">FULL ONLINE ORDERING</p>
+            <h2 className="mt-2 text-lg font-bold">Let customers order from the menu</h2>
+            <p className="mt-2 text-sm leading-6 text-neutral-400">Send this link when the customer still needs to choose drinks and submit a complete online order. The existing menu and checkout already handle cart items and payment choice.</p>
+            <a href="/menu" target="_blank" rel="noreferrer" className="mt-4 inline-flex rounded-xl bg-emerald-400 px-4 py-2.5 text-sm font-black text-black hover:bg-emerald-300">Open online menu ↗</a>
+          </div>
+          <div className="rounded-2xl border border-pink-400/20 bg-neutral-950 p-5">
+            <p className="text-xs font-black tracking-wide text-pink-300">QUICK MESSENGER ORDER</p>
+            <h2 className="mt-2 text-lg font-bold">Send a location-only link</h2>
+            <p className="mt-2 text-sm leading-6 text-neutral-400">For an order already agreed in Messenger, enter that order in the POS first, then put its exact order number in the form below. When the customer saves the pin, their address, landmark, coordinates, and Google Maps URL sync to that existing delivery order.</p>
+          </div>
+        </section>
+
+        <section className="mt-4 rounded-2xl border border-pink-400/20 bg-neutral-950 p-5 sm:p-6">
           <h2 className="text-lg font-bold">Create unique customer link</h2>
           <form onSubmit={createLink} className="mt-4 grid gap-3 sm:grid-cols-2">
             <input required maxLength={120} value={name} onChange={e => setName(e.target.value)} placeholder="Customer name" className="rounded-xl border border-white/10 bg-black px-4 py-3 text-sm outline-none focus:border-pink-400" />
@@ -95,7 +109,7 @@ function AdminContent() {
             <input maxLength={300} value={landmark} onChange={e => setLandmark(e.target.value)} placeholder="Known landmark (optional)" className="rounded-xl border border-white/10 bg-black px-4 py-3 text-sm outline-none focus:border-pink-400" />
             <button disabled={loading} className="rounded-xl bg-pink-500 px-4 py-3 font-black text-black transition hover:bg-pink-400 disabled:opacity-50 sm:col-span-2">{loading ? "Creating link…" : "＋ Create unique link & copy"}</button>
           </form>
-          <p className="mt-3 text-xs text-neutral-500">The copied link is unique to this delivery. Send it only to the intended customer.</p>
+          <p className="mt-3 text-xs leading-5 text-neutral-500">The copied link is unique to this delivery. For Messenger orders, enter the exact existing POS order number above; this lets the customer's saved address and map pin sync back to the delivery order. Send the link only to the intended customer.</p>
         </section>
 
         {error && <p role="alert" className="mt-4 rounded-xl border border-red-400/20 bg-red-400/10 p-3 text-sm text-red-200">{error}</p>}
