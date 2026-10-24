@@ -24,7 +24,9 @@ create table if not exists public.delivery_pin_links (
   )
 );
 
-alter table public.delivery_pin_links add column if not exists customer_mobile text;\n\ncreate index if not exists delivery_pin_links_created_at_idx
+alter table public.delivery_pin_links add column if not exists customer_mobile text;
+
+create index if not exists delivery_pin_links_created_at_idx
   on public.delivery_pin_links (created_at desc);
 create index if not exists delivery_pin_links_token_idx
   on public.delivery_pin_links (token);
@@ -34,9 +36,10 @@ revoke all on public.delivery_pin_links from anon, authenticated;
 
 -- Admin functions require a logged-in Supabase user (the existing ProtectedRoute
 -- uses Supabase Auth). The browser cannot read the table directly.
-drop function if exists public.admin_list_delivery_pins();\ncreate or replace function public.admin_list_delivery_pins()
+drop function if exists public.admin_list_delivery_pins();
+create or replace function public.admin_list_delivery_pins()
 returns table (
-  id uuid, token text, customer_name text, phone text, order_ref text,
+  id uuid, token text, customer_name text, phone text, customer_mobile text, order_ref text,
   address_text text, landmark text, latitude double precision,
   longitude double precision, status text, created_at timestamptz, updated_at timestamptz
 )
@@ -49,7 +52,7 @@ begin
     raise exception 'Authentication required';
   end if;
   return query
-    select d.id, d.token, d.customer_name, d.phone, d.order_ref,
+    select d.id, d.token, d.customer_name, d.phone, d.customer_mobile, d.order_ref,
       d.address_text, d.landmark, d.latitude, d.longitude, d.status,
       d.created_at, d.updated_at
     from public.delivery_pin_links d
@@ -101,32 +104,34 @@ end;
 $$;
 
 -- Public customer links can only retrieve/update the row matching their unguessable token.
--- The customer-facing function deliberately does not return the customer's phone number.
+drop function if exists public.get_delivery_pin(text);
 create or replace function public.get_delivery_pin(p_token text)
 returns table (
-  customer_name text, order_ref text, address_text text, landmark text,
+  customer_name text, customer_mobile text, order_ref text, address_text text, landmark text,
   latitude double precision, longitude double precision, status text
 )
 language sql
 security definer
 set search_path = public, pg_temp
 as $$
-  select d.customer_name, d.order_ref, d.address_text, d.landmark,
+  select d.customer_name, d.customer_mobile, d.order_ref, d.address_text, d.landmark,
     d.latitude, d.longitude, d.status
   from public.delivery_pin_links d
   where d.token = p_token and length(p_token) = 48
   limit 1;
 $$;
 
+drop function if exists public.save_delivery_pin(text, double precision, double precision, text, text);
 create or replace function public.save_delivery_pin(
   p_token text,
   p_latitude double precision,
   p_longitude double precision,
   p_address_text text default null,
-  p_landmark text default null
+  p_landmark text default null,
+  p_customer_mobile text default null
 )
 returns table (
-  customer_name text, order_ref text, address_text text, landmark text,
+  customer_name text, customer_mobile text, order_ref text, address_text text, landmark text,
   latitude double precision, longitude double precision, status text
 )
 language plpgsql
@@ -151,6 +156,7 @@ begin
       longitude = p_longitude,
       address_text = nullif(left(trim(coalesce(p_address_text, '')), 500), ''),
       landmark = nullif(left(trim(coalesce(p_landmark, '')), 500), ''),
+      customer_mobile = nullif(left(trim(coalesce(p_customer_mobile, '')), 30), ''),
       status = 'pin_saved',
       updated_at = now()
   where d.token = p_token
@@ -179,7 +185,7 @@ begin
   end if;
 
   return query
-    select v_pin.customer_name, v_pin.order_ref, v_pin.address_text,
+    select v_pin.customer_name, v_pin.customer_mobile, v_pin.order_ref, v_pin.address_text,
       v_pin.landmark, v_pin.latitude, v_pin.longitude, v_pin.status;
 end;
 $$;
