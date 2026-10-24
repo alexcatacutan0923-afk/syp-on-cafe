@@ -785,7 +785,7 @@ export default function StickerStudioPage() {
         .sticker-copy { grid-column: 2; grid-row: 1; min-width: 0; overflow: hidden; }
         .sticker-wordmark { font-size: 7pt; font-weight: 900; letter-spacing: -.03em; line-height: 1; white-space: nowrap; }
         .sticker-tagline { font-size: 4.5pt; font-weight: 800; margin-top: .8mm; letter-spacing: .03em; white-space: nowrap; }
-        .sticker-drink { font-size: 17pt; font-weight: 900; line-height: 1; letter-spacing: -.045em; overflow-wrap: anywhere; margin-top: 2mm; }
+        .sticker-drink { font-size: 12pt; font-weight: 900; line-height: 1.05; letter-spacing: -.025em; overflow-wrap: anywhere; word-break: normal; margin-top: 1.5mm; max-height: 2.15em; }
         .sticker-pills { display: flex; flex-wrap: wrap; gap: .8mm; margin-top: 1.5mm; }
         .sticker-pill { border: .25mm solid #000; padding: .5mm .8mm; font-size: 5.5pt; font-weight: 800; line-height: 1.1; }
         .sticker-customer, .sticker-notes { font-size: 6pt; font-weight: 700; margin-top: 1mm; overflow-wrap: anywhere; }
