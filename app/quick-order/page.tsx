@@ -104,7 +104,7 @@ export default function QuickOrderPage() {
       ]);
       if (!active) return;
       if (menu.error) { setLoadError(menu.error.message); setProducts([]); }
-      else setProducts((menu.data ?? []) as Product[]);
+      else setProducts(((menu.data ?? []) as Product[]).filter((product) => product.category !== "Fries"));
       if (!store.error && store.data) setSettings({ ...DEFAULT_SETTINGS, ...(store.data as StoreSettings), delivery_fee: Number(store.data.delivery_fee ?? 30) });
       setLoading(false);
     }
