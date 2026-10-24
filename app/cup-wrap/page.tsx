@@ -53,7 +53,7 @@ export default function CupWrapPage() {
         .wrap-brand { font-size:clamp(16px,2.5vw,27px); font-weight:900; letter-spacing:.03em; line-height:1; }
         .wrap-tag { font-size:9px; font-weight:800; letter-spacing:.12em; margin-top:5px; }
         .wrap-drink { font-size:clamp(17px,2.5vw,30px); font-weight:900; text-align:center; line-height:1.05; overflow-wrap:anywhere; }\n        .wrap-order-meta { font-size:8px; font-weight:800; line-height:1.4; margin-top:5px; overflow-wrap:anywhere; }\n        .wrap-quote { font-family:Georgia,serif; font-size:clamp(12px,1.8vw,19px); font-style:italic; font-weight:800; line-height:1.12; }
-        .wrap-qr { width:54px; height:54px; object-fit:contain; background:white; padding:2px; }
+        .wrap-logo { width:58px; height:58px; object-fit:contain; background:#fff; padding:2px; border-radius:5px; align-self:center; margin-bottom:4px; }\n        .wrap-qr { width:54px; height:54px; object-fit:contain; background:white; padding:2px; }
         .wrap-social { font-size:8px; font-weight:800; margin-top:4px; overflow-wrap:anywhere; }
         .wrap-notes { font-size:12px; line-height:1.55; color:#70553e; }
         @media(max-width:760px) { .wrap-page { padding:12px; } .wrap-grid { grid-template-columns:1fr; } }
@@ -150,12 +150,18 @@ function WrapArt({ quote, showQr, qrUrl, drinkName, customerName, orderNumber, o
   return (
     <div className="wrap-art">
       <div className="wrap-block">
+        <img className="wrap-logo" src={LOGO_URL} alt="SYP ON CAFÉ logo" />
         <div className="wrap-script">Thanks for<br />Supporting<br />Small Business!</div>
       </div>
       <div className="wrap-block">
         <div className="wrap-brand">SYP ON CAFÉ</div>
         <div className="wrap-tag">STREET • ICED • BREWED</div>
-        
+        <div className="wrap-drink">{drinkName || "YOUR DRINK"}</div>
+        <div className="wrap-order-meta">
+          {customerName ? <>FOR: {customerName}<br /></> : null}
+          ORDER #{orderNumber || "—"}<br />
+          {orderDateTime ? new Date(orderDateTime).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" }) : ""}
+        </div>
       </div>
       <div className="wrap-block">
         <div className="wrap-quote">{quote || "Good Drinks, Better Days"}</div>
