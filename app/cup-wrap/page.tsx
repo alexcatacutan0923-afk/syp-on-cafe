@@ -63,7 +63,6 @@ const QUOTE_ENDINGS = [
 ];
 
 function getRandomQuote(current = "") {
-  const total = QUOTE_STARTS.length * QUOTE_ENDINGS.length;
   for (let attempt = 0; attempt < 12; attempt += 1) {
     const start = QUOTE_STARTS[Math.floor(Math.random() * QUOTE_STARTS.length)];
     const ending = QUOTE_ENDINGS[Math.floor(Math.random() * QUOTE_ENDINGS.length)];
@@ -182,7 +181,7 @@ export default function CupWrapPage() {
               <input id="order-date-time" type="datetime-local" value={orderDateTime} onChange={(e) => setOrderDateTime(e.target.value)} />
             </div>
             <div className="wrap-field">
-              <label htmlFor="main-quote">Large quote · 1,000+ random Tagalog/Taglish lines</label>
+              <label htmlFor="main-quote">Large quote · 1,000+ random Tagalog/Taglish combinations</label>
               <input id="main-quote" value={quote} onChange={(e) => setQuote(e.target.value.slice(0, 120))} maxLength={120} />
               <button type="button" className="wrap-btn secondary" onClick={() => setQuote(getRandomQuote(quote))}>🎲 Random funny quote</button>
               <p className="wrap-muted">Automatic random quote pag-open ng page. Pindutin ulit ang button para sa bagong funny line, o i-edit ang text kung gusto mo.</p>
