@@ -139,7 +139,7 @@ export default function CupWrapPage() {
           .wrap-shell, .wrap-head, .wrap-grid, .wrap-panel { display:block!important; width:80mm!important; max-width:80mm!important; margin:0!important; padding:0!important; border:0!important; background:white!important; }
           .wrap-head, .wrap-controls, .wrap-preview, .wrap-instructions { display:none!important; }
           .wrap-print-target { display:block!important; position:fixed!important; left:0!important; top:0!important; width:80mm!important; height:297mm!important; overflow:hidden!important; background:#fff!important; }
-          .wrap-print-art { position:absolute!important; left:50%!important; top:50%!important; width:280mm!important; height:62mm!important; transform-origin:center center!important; transform:translate(-50%,-50%) rotate(90deg)!important; display:grid!important; grid-template-columns:1.05fr 1.05fr 1.1fr .65fr!important; gap:3mm!important; padding:4mm!important; background:#fff!important; color:#000!important; border:1.2mm solid #000!important; outline:0.35mm solid #000!important; outline-offset:1mm!important; print-color-adjust:exact!important; -webkit-print-color-adjust:exact!important; }
+          .wrap-print-art { position:absolute!important; left:50%!important; top:50%!important; width:${wrapLength}mm!important; height:62mm!important; transform-origin:center center!important; transform:translate(-50%,-50%) rotate(90deg)!important; display:grid!important; grid-template-columns:1.05fr 1.05fr 1.1fr .65fr!important; gap:3mm!important; padding:4mm!important; background:#fff!important; color:#000!important; border:1.2mm solid #000!important; outline:0.35mm solid #000!important; outline-offset:1mm!important; print-color-adjust:exact!important; -webkit-print-color-adjust:exact!important; }
           .wrap-print-art .wrap-script { font-size:20pt!important; }
           .wrap-print-art .wrap-brand { font-size:20pt!important; }
           .wrap-print-art .wrap-quote { font-size:17pt!important; }
@@ -257,7 +257,7 @@ function WrapArt({ quote, showQr, qrUrl, drinkName, customerName, orderNumber, o
         <div className="wrap-script">Thanks for<br />Supporting<br />Small Business!</div>
       </div>
       <div className="wrap-block">
-        <div className="wrap-text-logo">SYP ON CAFÉ</div>
+        <img className="wrap-print-logo" src={LOGO_URL} alt="SYP ON CAFÉ" />
         <div className="wrap-tag">STREET • ICED • BREWED</div>
         <div className="wrap-drink">{drinkName || "YOUR DRINK"}</div>
         <div className="wrap-order-meta">
