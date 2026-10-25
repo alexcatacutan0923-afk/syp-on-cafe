@@ -115,14 +115,19 @@ export default function CupWrapPage() {
         .wrap-btn { border:0; border-radius:9px; padding:12px 14px; background:#62442e; color:white; font-weight:800; cursor:pointer; }
         .wrap-btn.secondary { background:#eee1d0; color:#62442e; }
         .wrap-preview { overflow-x:auto; padding:14px; background:#e7d8c6; border-radius:12px; }
-        .wrap-art { width:100%; min-width:620px; aspect-ratio:280 / 45; display:grid; grid-template-columns:1.2fr 1fr 1fr .65fr; gap:9px; align-items:center; padding:10px 14px; background:#fff; color:#000; border:1px dashed #aaa; }
+        .wrap-art { width:100%; min-width:620px; aspect-ratio:280 / 45; display:grid; grid-template-columns:1.05fr 1.05fr 1.1fr .65fr; gap:9px; align-items:center; padding:10px 14px; background:#fff; color:#000; border:2px solid #000; outline:1px solid #000; outline-offset:3px; }
         .wrap-block { height:100%; min-width:0; display:flex; flex-direction:column; justify-content:center; border-right:1px solid #aaa; padding-right:8px; }
         .wrap-script { font-family:Georgia,serif; font-style:italic; font-weight:800; font-size:clamp(14px,2vw,23px); line-height:1.05; }
         .wrap-brand { font-size:clamp(16px,2.5vw,27px); font-weight:900; letter-spacing:.03em; line-height:1; }
         .wrap-tag { font-size:9px; font-weight:800; letter-spacing:.12em; margin-top:5px; }
-        .wrap-drink { font-size:clamp(17px,2.5vw,30px); font-weight:900; text-align:center; line-height:1.05; overflow-wrap:anywhere; }\n        .wrap-order-meta { font-size:8px; font-weight:800; line-height:1.4; margin-top:5px; overflow-wrap:anywhere; }\n        .wrap-quote { font-family:Georgia,serif; font-size:clamp(12px,1.8vw,19px); font-style:italic; font-weight:800; line-height:1.12; }
-        .wrap-logo { display:none!important; }\n        .wrap-text-logo { font-size:clamp(18px,2.8vw,30px); font-weight:1000; letter-spacing:.02em; text-align:center; line-height:1; margin-bottom:5px; color:#000; }\n        .wrap-qr { width:54px; height:54px; object-fit:contain; background:white; padding:2px; }
-        .wrap-social { font-size:8px; font-weight:800; margin-top:4px; overflow-wrap:anywhere; }\n        .wrap-side-date { font-size:7px; font-weight:800; text-align:center; line-height:1.2; margin-top:4px; overflow-wrap:anywhere; }
+        .wrap-drink { font-size:clamp(17px,2.5vw,30px); font-weight:900; text-align:center; line-height:1.05; overflow-wrap:anywhere; }
+        .wrap-order-meta { font-size:8px; font-weight:800; line-height:1.4; margin-top:5px; overflow-wrap:anywhere; }
+        .wrap-quote { font-family:Georgia,serif; font-size:clamp(12px,1.8vw,19px); font-style:italic; font-weight:800; line-height:1.12; }
+        .wrap-logo { display:none!important; }
+        .wrap-print-logo { display:block; width:34mm; max-width:100%; height:13mm; object-fit:contain; object-position:center; filter:grayscale(1) contrast(2); margin:0 auto 1mm; }
+        .wrap-qr { width:54px; height:54px; object-fit:contain; background:white; padding:2px; }
+        .wrap-social { font-size:8px; font-weight:800; margin-top:4px; overflow-wrap:anywhere; }
+        .wrap-side-date { font-size:7px; font-weight:800; text-align:center; line-height:1.2; margin-top:4px; overflow-wrap:anywhere; }
         .wrap-notes { font-size:12px; line-height:1.55; color:#70553e; }
         @media(max-width:760px) { .wrap-page { padding:12px; } .wrap-grid { grid-template-columns:1fr; } }
         @page { size: 80mm auto; margin: 0; }
@@ -133,14 +138,20 @@ export default function CupWrapPage() {
           .wrap-page { padding:0!important; margin:0!important; }
           .wrap-shell, .wrap-head, .wrap-grid, .wrap-panel { display:block!important; width:80mm!important; max-width:80mm!important; margin:0!important; padding:0!important; border:0!important; background:white!important; }
           .wrap-head, .wrap-controls, .wrap-preview, .wrap-instructions { display:none!important; }
-          .wrap-print-target { display:block!important; position:fixed!important; left:0!important; top:0!important; width:80mm!important; height:${wrapLength}mm!important; overflow:hidden!important; background:#fff!important; }
-          .wrap-print-art { position:absolute!important; left:50%!important; top:50%!important; width:${wrapLength}mm!important; height:${wrapHeight}mm!important; transform-origin:center center!important; transform:translate(-50%,-50%) rotate(90deg)!important; display:grid!important; grid-template-columns:1.2fr 1fr 1fr .65fr!important; gap:2mm!important; padding:2mm!important; background:#fff!important; color:#000!important; border:0!important; print-color-adjust:exact!important; -webkit-print-color-adjust:exact!important; }
-          .wrap-print-art .wrap-script { font-size:16pt!important; }
-          .wrap-print-art .wrap-brand { font-size:17pt!important; }
-          .wrap-print-art .wrap-quote { font-size:13pt!important; }\n          .wrap-print-art .wrap-drink { font-size:17pt!important; }\n          .wrap-print-art .wrap-order-meta { font-size:6pt!important; }\n          .wrap-print-art .wrap-logo { display:none!important; }\n          .wrap-print-art .wrap-text-logo { font-size:13pt!important; color:#000!important; }\n          .wrap-print-art .wrap-side-date { font-size:5pt!important; }
-          .wrap-print-art .wrap-qr { width:13mm!important; height:13mm!important; }
+          .wrap-print-target { display:block!important; position:fixed!important; left:0!important; top:0!important; width:80mm!important; height:297mm!important; overflow:hidden!important; background:#fff!important; }
+          .wrap-print-art { position:absolute!important; left:50%!important; top:50%!important; width:280mm!important; height:62mm!important; transform-origin:center center!important; transform:translate(-50%,-50%) rotate(90deg)!important; display:grid!important; grid-template-columns:1.05fr 1.05fr 1.1fr .65fr!important; gap:3mm!important; padding:4mm!important; background:#fff!important; color:#000!important; border:1.2mm solid #000!important; outline:0.35mm solid #000!important; outline-offset:1mm!important; print-color-adjust:exact!important; -webkit-print-color-adjust:exact!important; }
+          .wrap-print-art .wrap-script { font-size:20pt!important; }
+          .wrap-print-art .wrap-brand { font-size:20pt!important; }
+          .wrap-print-art .wrap-quote { font-size:17pt!important; }
+          .wrap-print-art .wrap-drink { font-size:21pt!important; }
+          .wrap-print-art .wrap-order-meta { font-size:6pt!important; }
+          .wrap-print-art .wrap-logo { display:none!important; }
+          .wrap-print-art .wrap-print-logo { width:35mm!important; height:15mm!important; object-fit:contain!important; filter:grayscale(1) contrast(2)!important; margin:0 auto 1mm!important; }
+          
+          .wrap-print-art .wrap-side-date { font-size:7pt!important; }
+          .wrap-print-art .wrap-qr { width:16mm!important; height:16mm!important; }
           .wrap-print-art .wrap-social { font-size:6pt!important; }
-          .wrap-print-art .wrap-tag { font-size:6pt!important; }
+          .wrap-print-art .wrap-tag { font-size:8pt!important; }
         }
       `}</style>
 
@@ -214,7 +225,7 @@ export default function CupWrapPage() {
             </div>
             <div className="wrap-block">
               
-              <div className="wrap-text-logo">SYP ON CAFÉ</div>
+              <img className="wrap-print-logo" src={LOGO_URL} alt="SYP ON CAFÉ" />
               <div className="wrap-tag">STREET • ICED • BREWED</div>
               <div className="wrap-drink">{drinkName || "YOUR DRINK"}</div>
               <div className="wrap-order-meta">
