@@ -1,9 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const LOGO_URL = "/IMG_5996.jpeg";
 const FACEBOOK_URL = "https://www.facebook.com/SypOnCafe";
+
+ type PrintRecord = { id: string; printedAt: string; cup: string; drinkName: string; customerName: string; orderNumber: string; orderDateTime: string; quote: string; };
+const HISTORY_KEY = "sypCupWrapPrintHistoryV1";
 
 const QUOTE_STARTS = [
   "Kape muna, ", "Iced coffee kasi ", "Hindi ako tamad, ", "Adulting na naman, ",
@@ -85,6 +88,52 @@ export default function CupWrapPage() {
     return local.toISOString().slice(0, 16);
   });
   const [showQr, setShowQr] = useState(true);
+  const [history, setHistory] = useState<PrintRecord[]>([]);
+  const [shiftLabel, setShiftLabel] = useState("Current shift");
+
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(HISTORY_KEY);
+      if (saved) setHistory(JSON.parse(saved) as PrintRecord[]);
+    } catch { /* Ignore unavailable or invalid local history. */ }
+  }, []);
+
+  useEffect(() => {
+    try { window.localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); }
+    catch { /* Browser storage may be unavailable. */ }
+  }, [history]);
+
+  const recordAndPrint = () => {
+    const record: PrintRecord = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      printedAt: new Date().toISOString(),
+      cup,
+      drinkName: drinkName.trim() || "YOUR DRINK",
+      customerName: customerName.trim(),
+      orderNumber: orderNumber.trim() || "—",
+      orderDateTime,
+      quote: quote.trim(),
+    };
+    setHistory((previous) => [record, ...previous]);
+    window.setTimeout(() => window.print(), 100);
+  };
+
+  const downloadHistory = () => {
+    const header = ["Printed at", "Shift", "Cup", "Drink", "Customer", "Order #", "Order date/time", "Quote"];
+    const rows = history.map((item) => [new Date(item.printedAt).toLocaleString("en-PH"), shiftLabel, item.cup, item.drinkName, item.customerName, item.orderNumber, item.orderDateTime, item.quote]);
+    const csv = [header, ...rows].map((row) => row.map((value) => `"${String(value ?? "").replaceAll('"', '""')}"`).join(",")).join("\\r\\n");
+    const blob = new Blob(["\\uFEFF", csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `syp-cup-wrap-history-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const clearHistory = () => {
+    if (window.confirm("I-clear ang lahat ng saved print history sa browser na ito? I-export muna ang CSV kung kailangan ng kopya.")) setHistory([]);
+  };
 
   // Starting estimates only: measure the actual cup before printing.
   const wrapLength = cup === "16oz" ? 250 : 280;
@@ -137,7 +186,7 @@ export default function CupWrapPage() {
           .wrap-print-target, .wrap-print-target * { visibility:visible!important; }
           .wrap-page { padding:0!important; margin:0!important; }
           .wrap-shell, .wrap-head, .wrap-grid, .wrap-panel { display:block!important; width:80mm!important; max-width:80mm!important; margin:0!important; padding:0!important; border:0!important; background:white!important; }
-          .wrap-head, .wrap-controls, .wrap-preview, .wrap-instructions { display:none!important; }
+          .wrap-head, .wrap-controls, .wrap-preview, .wrap-instructions, .wrap-history { display:none!important; }
           .wrap-print-target { display:block!important; position:fixed!important; left:0!important; top:0!important; width:80mm!important; height:297mm!important; overflow:hidden!important; background:#fff!important; }
           .wrap-print-art { position:absolute!important; left:50%!important; top:50%!important; width:${wrapLength}mm!important; height:62mm!important; transform-origin:center center!important; transform:translate(-50%,-50%) rotate(90deg)!important; display:grid!important; grid-template-columns:1.05fr 1.05fr 1.1fr .65fr!important; gap:3mm!important; padding:4mm!important; background:#fff!important; color:#000!important; border:1.2mm solid #000!important; outline:0.35mm solid #000!important; outline-offset:1mm!important; print-color-adjust:exact!important; -webkit-print-color-adjust:exact!important; }
           .wrap-print-art .wrap-script { font-size:20pt!important; }
@@ -200,7 +249,7 @@ export default function CupWrapPage() {
             <div className="wrap-field">
               <label><input type="checkbox" checked={showQr} onChange={(e) => setShowQr(e.target.checked)} /> Include Facebook QR</label>
             </div>
-            <button className="wrap-btn" onClick={() => window.print()}>Print cup wrap</button>
+            <button className="wrap-btn" onClick={recordAndPrint}>Print cup wrap + record</button>
             <p className="wrap-muted">Print using thermal printer with continuous 80mm paper, portrait feed, and scaling at 100% / Actual size. Test on plain paper first.</p>
           </section>
 
@@ -218,6 +267,29 @@ export default function CupWrapPage() {
           </section>
         </div>
 
+          <section className="wrap-panel wrap-history">
+            <h2>Print history &amp; shift count</h2>
+            <p className="wrap-muted">Bawat pindot sa “Print cup wrap + record” ay idaragdag dito para mabilang sa shift handover.</p>
+            <div className="wrap-field">
+              <label htmlFor="shift-label">Shift / staff label</label>
+              <input id="shift-label" value={shiftLabel} onChange={(e) => setShiftLabel(e.target.value.slice(0, 40))} maxLength={40} placeholder="e.g. Night shift - Alex" />
+            </div>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center",margin:"12px 0"}}>
+              <strong>Total recorded prints: {history.length}</strong>
+              <button type="button" className="wrap-btn secondary" onClick={downloadHistory} disabled={!history.length}>Export CSV</button>
+              <button type="button" className="wrap-btn secondary" onClick={clearHistory} disabled={!history.length}>Clear history</button>
+            </div>
+            <div className="wrap-muted">Recent prints (latest first)</div>
+            {history.length === 0 ? <p className="wrap-muted">Wala pang recorded prints sa browser na ito.</p> : (
+              <div style={{overflowX:"auto",marginTop:8}}>
+                <table style={{width:"100%",borderCollapse:"collapse",fontSize:12,textAlign:"left"}}>
+                  <thead><tr><th style={{padding:8,borderBottom:"1px solid #d9c4ac"}}>Print time</th><th style={{padding:8,borderBottom:"1px solid #d9c4ac"}}>Order / Drink</th><th style={{padding:8,borderBottom:"1px solid #d9c4ac"}}>Cup</th></tr></thead>
+                  <tbody>{history.map((item) => <tr key={item.id}><td style={{padding:8,borderBottom:"1px solid #eee"}}>{new Date(item.printedAt).toLocaleString("en-PH")}</td><td style={{padding:8,borderBottom:"1px solid #eee"}}><strong>#{item.orderNumber}</strong> · {item.drinkName}{item.customerName ? <div className="wrap-muted">{item.customerName}</div> : null}</td><td style={{padding:8,borderBottom:"1px solid #eee"}}>{item.cup}</td></tr>)}</tbody>
+                </table>
+              </div>
+            )}
+            <p className="wrap-muted">Note: browser-local history ito. Naka-save sa parehong device/browser lamang; hindi pa ito shared sa ibang cashier/device. Ang record ay ginagawa kapag pinindot ang print button, hindi nito makukumpirma kung lumabas talaga ang papel.</p>
+          </section>
         <div className="wrap-print-target" aria-hidden="true">
           <div className="wrap-print-art">
             <div className="wrap-block">
