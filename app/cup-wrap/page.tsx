@@ -312,15 +312,6 @@ export default function CupWrapPage() {
             <h2>Customize cup wrap</h2>
             <p className="wrap-muted">Compact cup wrap for 80mm thermal roll paper. Includes hot 8oz/12oz, price, and a shorter layout. Measure your cup before printing.</p>
             <div className="wrap-field">
-              <label htmlFor="cup-size">Cup size</label>
-              <select id="cup-size" value={cup} onChange={(e) => setCup(e.target.value as "16oz" | "22oz")}>
-                <option value="Hot 8oz">Hot 8oz — estimated 190mm wrap</option>
-                <option value="Hot 12oz">Hot 12oz — estimated 210mm wrap</option>
-                <option value="16oz">16oz — estimated 230mm wrap</option>
-                <option value="22oz">22oz — estimated 250mm wrap</option>
-              </select>
-            </div>
-            <div className="wrap-field">
               <label htmlFor="menu-search">Search drink from POS menu</label>
               <input id="menu-search" value={menuSearch} onChange={(e) => setMenuSearch(e.target.value)} placeholder="Type Spanish Latte, Matcha, Hot..." />
             </div>
