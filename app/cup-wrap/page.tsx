@@ -394,7 +394,6 @@ export default function CupWrapPage() {
               <img className="wrap-print-logo" src={LOGO_URL} alt="SYP ON CAFÉ" />
               <div className="wrap-tag">STREET • ICED • BREWED</div>
               <div className="wrap-drink">{drinkName || "YOUR DRINK"}</div>
-        <div className="wrap-price">₱{price || "0"} · {cup}</div>
               <div className="wrap-price">₱{price || "0"} · {cup}</div>
               <div className="wrap-order-meta">
                 {customerName ? <>FOR: {customerName}<br /></> : null}
