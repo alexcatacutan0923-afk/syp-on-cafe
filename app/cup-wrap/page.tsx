@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 const LOGO_URL = "/IMG_5996.jpeg";
 const FACEBOOK_URL = "https://www.facebook.com/SypOnCafe";
 
- type PrintRecord = { id: string; printedAt: string; cup: string; drinkName: string; customerName: string; orderNumber: string; orderDateTime: string; quote: string; };
+ type PrintRecord = { id: string; printedAt: string; cup: string; drinkName: string; price: string; customerName: string; orderNumber: string; orderDateTime: string; quote: string; };
 const HISTORY_KEY = "sypCupWrapPrintHistoryV1";
 
 const QUOTE_STARTS = [
@@ -77,7 +77,8 @@ function getRandomQuote(current = "") {
 }
 
 export default function CupWrapPage() {
-  const [cup, setCup] = useState<"16oz" | "22oz">("16oz");
+  const [cup, setCup] = useState<"Hot 8oz" | "Hot 12oz" | "16oz" | "22oz">("Hot 8oz");
+  const [price, setPrice] = useState("59");
   const [quote, setQuote] = useState(() => getRandomQuote());
   const [drinkName, setDrinkName] = useState("Spanish Latte");
   const [customerName, setCustomerName] = useState("");
@@ -109,6 +110,7 @@ export default function CupWrapPage() {
       printedAt: new Date().toISOString(),
       cup,
       drinkName: drinkName.trim() || "YOUR DRINK",
+      price: price.trim(),
       customerName: customerName.trim(),
       orderNumber: orderNumber.trim() || "—",
       orderDateTime,
@@ -119,8 +121,8 @@ export default function CupWrapPage() {
   };
 
   const downloadHistory = () => {
-    const header = ["Printed at", "Shift", "Cup", "Drink", "Customer", "Order #", "Order date/time", "Quote"];
-    const rows = history.map((item) => [new Date(item.printedAt).toLocaleString("en-PH"), shiftLabel, item.cup, item.drinkName, item.customerName, item.orderNumber, item.orderDateTime, item.quote]);
+    const header = ["Printed at", "Shift", "Cup", "Drink", "Price", "Customer", "Order #", "Order date/time", "Quote"];
+    const rows = history.map((item) => [new Date(item.printedAt).toLocaleString("en-PH"), shiftLabel, item.cup, item.drinkName, item.price, item.customerName, item.orderNumber, item.orderDateTime, item.quote]);
     const csv = [header, ...rows].map((row) => row.map((value) => `"${String(value ?? "").replaceAll('"', '""')}"`).join(",")).join("\\r\\n");
     const blob = new Blob(["\\uFEFF", csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -136,7 +138,7 @@ export default function CupWrapPage() {
   };
 
   // Starting estimates only: measure the actual cup before printing.
-  const wrapLength = cup === "16oz" ? 250 : 280;
+  const wrapLength = cup === "Hot 8oz" ? 190 : cup === "Hot 12oz" ? 210 : cup === "16oz" ? 230 : 250;
   const wrapHeight = 45;
   const qrUrl = useMemo(
     () => "https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=1&data=" + encodeURIComponent(FACEBOOK_URL),
@@ -164,12 +166,13 @@ export default function CupWrapPage() {
         .wrap-btn { border:0; border-radius:9px; padding:12px 14px; background:#62442e; color:white; font-weight:800; cursor:pointer; }
         .wrap-btn.secondary { background:#eee1d0; color:#62442e; }
         .wrap-preview { overflow-x:auto; padding:14px; background:#e7d8c6; border-radius:12px; }
-        .wrap-art { width:100%; min-width:620px; aspect-ratio:280 / 45; display:grid; grid-template-columns:1.05fr 1.05fr 1.1fr .65fr; gap:9px; align-items:center; padding:10px 14px; background:#fff; color:#000; border:2px solid #000; outline:1px solid #000; outline-offset:3px; }
+        .wrap-art { width:100%; min-width:540px; aspect-ratio:250 / 45; display:grid; grid-template-columns:1.05fr 1.05fr 1.1fr .65fr; gap:9px; align-items:center; padding:10px 14px; background:#fff; color:#000; border:2px solid #000; outline:1px solid #000; outline-offset:3px; }
         .wrap-block { height:100%; min-width:0; display:flex; flex-direction:column; justify-content:center; border-right:1px solid #aaa; padding-right:8px; }
         .wrap-script { font-family:Georgia,serif; font-style:italic; font-weight:800; font-size:clamp(14px,2vw,23px); line-height:1.05; }
         .wrap-brand { font-size:clamp(16px,2.5vw,27px); font-weight:900; letter-spacing:.03em; line-height:1; }
         .wrap-tag { font-size:9px; font-weight:800; letter-spacing:.12em; margin-top:5px; }
         .wrap-drink { font-size:clamp(17px,2.5vw,30px); font-weight:900; text-align:center; line-height:1.05; overflow-wrap:anywhere; }
+        .wrap-price { font-size:clamp(12px,1.8vw,18px); font-weight:900; text-align:center; margin-top:3px; }
         .wrap-order-meta { font-size:8px; font-weight:800; line-height:1.4; margin-top:5px; overflow-wrap:anywhere; }
         .wrap-quote { font-family:Georgia,serif; font-size:clamp(12px,1.8vw,19px); font-style:italic; font-weight:800; line-height:1.12; }
         .wrap-logo { display:none!important; }
@@ -192,7 +195,8 @@ export default function CupWrapPage() {
           .wrap-print-art .wrap-script { font-size:20pt!important; }
           .wrap-print-art .wrap-brand { font-size:20pt!important; }
           .wrap-print-art .wrap-quote { font-size:17pt!important; }
-          .wrap-print-art .wrap-drink { font-size:21pt!important; }
+          .wrap-print-art .wrap-drink { font-size:17pt!important; }
+          .wrap-print-art .wrap-price { font-size:12pt!important; font-weight:900!important; text-align:center!important; margin-top:1mm!important; }
           .wrap-print-art .wrap-order-meta { font-size:6pt!important; }
           .wrap-print-art .wrap-logo { display:none!important; }
           .wrap-print-art .wrap-print-logo { width:35mm!important; height:15mm!important; object-fit:contain!important; filter:grayscale(1) contrast(2)!important; margin:0 auto 1mm!important; }
@@ -216,17 +220,23 @@ export default function CupWrapPage() {
         <div className="wrap-grid">
           <section className="wrap-panel wrap-controls">
             <h2>Customize cup wrap</h2>
-            <p className="wrap-muted">Long horizontal full-wrap design para sa thermal roll paper. Brown and cream café look, with large readable messages.</p>
+            <p className="wrap-muted">Compact cup wrap for 80mm thermal roll paper. Includes hot 8oz/12oz, price, and a shorter layout. Measure your cup before printing.</p>
             <div className="wrap-field">
               <label htmlFor="cup-size">Cup size</label>
               <select id="cup-size" value={cup} onChange={(e) => setCup(e.target.value as "16oz" | "22oz")}>
-                <option value="16oz">16oz — estimated 250mm wrap</option>
-                <option value="22oz">22oz — estimated 280mm wrap</option>
+                <option value="Hot 8oz">Hot 8oz — estimated 190mm wrap</option>
+                <option value="Hot 12oz">Hot 12oz — estimated 210mm wrap</option>
+                <option value="16oz">16oz — estimated 230mm wrap</option>
+                <option value="22oz">22oz — estimated 250mm wrap</option>
               </select>
             </div>
             <div className="wrap-field">
               <label htmlFor="drink-name">Drink name (editable)</label>
               <input id="drink-name" value={drinkName} onChange={(e) => setDrinkName(e.target.value.slice(0, 40))} maxLength={40} placeholder="e.g. Spanish Latte" />
+            </div>
+            <div className="wrap-field">
+              <label htmlFor="drink-price">Price (₱)</label>
+              <input id="drink-price" type="number" min="0" step="1" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="e.g. 59" />
             </div>
             <div className="wrap-field">
               <label htmlFor="customer-name">Customer name (optional)</label>
@@ -257,10 +267,10 @@ export default function CupWrapPage() {
             <h2>360° wrap preview · {cup}</h2>
             <p className="wrap-muted">Preview only. Measure your actual cup circumference and wrap height before final printing.</p>
             <div className="wrap-preview">
-              <WrapArt quote={quote} showQr={showQr} qrUrl={qrUrl} drinkName={drinkName} customerName={customerName} orderNumber={orderNumber} orderDateTime={orderDateTime} />
+              <WrapArt quote={quote} showQr={showQr} qrUrl={qrUrl} drinkName={drinkName} price={price} cup={cup} customerName={customerName} orderNumber={orderNumber} orderDateTime={orderDateTime} />
             </div>
             <div className="wrap-instructions wrap-notes">
-              <p><strong>Important:</strong> 250mm (16oz) and 280mm (22oz) are starting estimates, not guaranteed fit. Cups vary by brand and taper. Measure around the cup where the strip will sit, then adjust the length in code if needed.</p>
+              <p><strong>Important:</strong> 190mm (Hot 8oz), 210mm (Hot 12oz), 230mm (16oz), and 250mm (22oz) are shorter starting estimates, not guaranteed fit. Cups vary by brand and taper. Measure around the cup where the strip will sit, then adjust the length in code if needed.</p>
               <p>For ordinary thermal paper, the print will be monochrome (black on paper). The brown/cream color is a design preview; thermal printers do not print brown ink. Use the wrap as a long paper band and secure the ends with tape.</p>
               <p>Facebook destination: <strong>facebook.com/SypOnCafe</strong></p>
             </div>
@@ -300,6 +310,8 @@ export default function CupWrapPage() {
               <img className="wrap-print-logo" src={LOGO_URL} alt="SYP ON CAFÉ" />
               <div className="wrap-tag">STREET • ICED • BREWED</div>
               <div className="wrap-drink">{drinkName || "YOUR DRINK"}</div>
+        <div className="wrap-price">₱{price || "0"} · {cup}</div>
+              <div className="wrap-price">₱{price || "0"} · {cup}</div>
               <div className="wrap-order-meta">
                 {customerName ? <>FOR: {customerName}<br /></> : null}
                 ORDER #{orderNumber || "—"}
@@ -321,7 +333,7 @@ export default function CupWrapPage() {
   );
 }
 
-function WrapArt({ quote, showQr, qrUrl, drinkName, customerName, orderNumber, orderDateTime }: { quote: string; showQr: boolean; qrUrl: string; drinkName: string; customerName: string; orderNumber: string; orderDateTime: string }) {
+function WrapArt({ quote, showQr, qrUrl, drinkName, price, cup, customerName, orderNumber, orderDateTime }: { quote: string; showQr: boolean; qrUrl: string; drinkName: string; price: string; cup: string; customerName: string; orderNumber: string; orderDateTime: string }) {
   return (
     <div className="wrap-art">
       <div className="wrap-block">
