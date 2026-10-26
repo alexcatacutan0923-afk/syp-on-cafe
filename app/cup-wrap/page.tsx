@@ -8,6 +8,92 @@ const FACEBOOK_URL = "https://www.facebook.com/SypOnCafe";
  type PrintRecord = { id: string; printedAt: string; cup: string; drinkName: string; price: string; customerName: string; orderNumber: string; orderDateTime: string; quote: string; };
 const HISTORY_KEY = "sypCupWrapPrintHistoryV1";
 
+const CUP_MENU = [
+  { id: "americano-16", name: "Americano", size: "16oz", price: 69, category: "Coffee", image: "/products/iced-americano-official.webp" },
+  { id: "americano-22", name: "Americano", size: "22oz", price: 79, category: "Coffee", image: "/products/iced-americano-official.webp" },
+  { id: "spanish-16", name: "Spanish Latte", size: "16oz", price: 89, category: "Coffee", image: "/products/spanish-latte.webp", bestseller: true },
+  { id: "spanish-22", name: "Spanish Latte", size: "22oz", price: 109, category: "Coffee", image: "/products/spanish-latte.webp", bestseller: true },
+  { id: "oreo-16", name: "Oreo Latte", size: "16oz", price: 79, category: "Coffee", image: "/products/oreo-latte-corrected.webp" },
+  { id: "oreo-22", name: "Oreo Latte", size: "22oz", price: 99, category: "Coffee", image: "/products/oreo-latte-corrected.webp" },
+  { id: "milo-latte-16", name: "Iced Milo Latte", size: "16oz", price: 79, category: "Coffee", image: "/products/iced-milo-latte.webp" },
+  { id: "milo-latte-22", name: "Iced Milo Latte", size: "22oz", price: 99, category: "Coffee", image: "/products/iced-milo-latte.webp" },
+  { id: "vanilla-16", name: "Vanilla Latte", size: "16oz", price: 89, category: "Coffee", image: "/products/roasted-almond-latte-corrected.webp" },
+  { id: "vanilla-22", name: "Vanilla Latte", size: "22oz", price: 109, category: "Coffee", image: "/products/roasted-almond-latte-corrected.webp" },
+  { id: "french-vanilla-16", name: "French Vanilla Latte", size: "16oz", price: 89, category: "Coffee", image: "/products/french-vanilla-latte.webp" },
+  { id: "french-vanilla-22", name: "French Vanilla Latte", size: "22oz", price: 109, category: "Coffee", image: "/products/french-vanilla-latte.webp" },
+  { id: "almond-16", name: "Roasted Almond Latte", size: "16oz", price: 99, category: "Coffee", image: "/products/roasted-almond-latte-corrected.webp" },
+  { id: "almond-22", name: "Roasted Almond Latte", size: "22oz", price: 119, category: "Coffee", image: "/products/roasted-almond-latte-corrected.webp" },
+  { id: "biscoff-16", name: "Biscoff Latte", size: "16oz", price: 99, category: "Coffee", image: "/products/biscoff-latte.webp" },
+  { id: "biscoff-22", name: "Biscoff Latte", size: "22oz", price: 119, category: "Coffee", image: "/products/biscoff-latte.webp" },
+
+  // Hot Coffee Collection — unified official black SYP cup
+  { id: "hot-americano-8", name: "Hot Americano", size: "8oz", price: 49, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
+  { id: "hot-americano-12", name: "Hot Americano", size: "12oz", price: 69, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
+  { id: "hot-spanish-8", name: "Hot Spanish Latte", size: "8oz", price: 79, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
+  { id: "hot-spanish-12", name: "Hot Spanish Latte", size: "12oz", price: 89, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
+  { id: "hot-oreo-8", name: "Hot Oreo Latte", size: "8oz", price: 69, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
+  { id: "hot-oreo-12", name: "Hot Oreo Latte", size: "12oz", price: 79, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
+  { id: "hot-milo-8", name: "Hot Milo Latte", size: "8oz", price: 69, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
+  { id: "hot-milo-12", name: "Hot Milo Latte", size: "12oz", price: 79, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
+  { id: "hot-mocha-8", name: "Hot Mocha", size: "8oz", price: 79, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
+  { id: "hot-mocha-12", name: "Hot Mocha", size: "12oz", price: 89, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
+  { id: "hot-white-mocha-8", name: "Hot White Mocha", size: "8oz", price: 79, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
+  { id: "hot-white-mocha-12", name: "Hot White Mocha", size: "12oz", price: 89, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
+  { id: "hot-almond-8", name: "Hot Roasted Almond Latte", size: "8oz", price: 89, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
+  { id: "hot-almond-12", name: "Hot Roasted Almond Latte", size: "12oz", price: 99, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
+  { id: "hot-biscoff-8", name: "Hot Biscoff Latte", size: "8oz", price: 89, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
+  { id: "hot-biscoff-12", name: "Hot Biscoff Latte", size: "12oz", price: 99, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
+  { id: "hot-salted-caramel-8", name: "Hot Salted Caramel", size: "8oz", price: 89, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
+  { id: "hot-salted-caramel-12", name: "Hot Salted Caramel", size: "12oz", price: 99, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
+
+  { id: "milo-dino-16", name: "Milo Dino", size: "16oz", price: 79, category: "Milky", image: "/products/milo-dino.webp" },
+  { id: "milo-dino-22", name: "Milo Dino", size: "22oz", price: 99, category: "Milky", image: "/products/milo-dino.webp" },
+  { id: "oreo-milky-16", name: "Oreo Milky", size: "16oz", price: 79, category: "Milky", image: "/products/oreo-milky.webp" },
+  { id: "oreo-milky-22", name: "Oreo Milky", size: "22oz", price: 99, category: "Milky", image: "/products/oreo-milky.webp" },
+  { id: "caramel-macchiato-16", name: "Caramel Macchiato", size: "16oz", price: 99, category: "Milky", image: "/products/caramel-macchiato.webp", bestseller: true },
+  { id: "caramel-macchiato-22", name: "Caramel Macchiato", size: "22oz", price: 119, category: "Milky", image: "/products/caramel-macchiato.webp", bestseller: true },
+  { id: "white-choco-16", name: "Milky White Choco", size: "16oz", price: 99, category: "Milky", image: "/products/milky-white-choco.webp" },
+  { id: "white-choco-22", name: "Milky White Choco", size: "22oz", price: 119, category: "Milky", image: "/products/milky-white-choco.webp" },
+  { id: "milky-choco-16", name: "Milky Choco", size: "16oz", price: 99, category: "Milky", image: "/products/milky-choco.webp" },
+  { id: "milky-choco-22", name: "Milky Choco", size: "22oz", price: 119, category: "Milky", image: "/products/milky-choco.webp" },
+  { id: "matcha-16", name: "Matcha Latte", size: "16oz", price: 109, category: "Matcha", image: "/products/matcha-latte.webp", bestseller: true },
+  { id: "matcha-22", name: "Matcha Latte", size: "22oz", price: 129, category: "Matcha", image: "/products/matcha-latte.webp", bestseller: true },
+  { id: "strawberry-matcha-16", name: "Strawberry Matcha", size: "16oz", price: 109, category: "Matcha", image: "/products/strawberry-matcha.webp" },
+  { id: "strawberry-matcha-22", name: "Strawberry Matcha", size: "22oz", price: 129, category: "Matcha", image: "/products/strawberry-matcha.webp" },
+  { id: "mango-matcha-16", name: "Mango Matcha", size: "16oz", price: 109, category: "Matcha", image: "/products/mango-matcha.webp" },
+  { id: "mango-matcha-22", name: "Mango Matcha", size: "22oz", price: 129, category: "Matcha", image: "/products/mango-matcha.webp" },
+  { id: "blueberry-matcha-16", name: "Blueberry Matcha", size: "16oz", price: 109, category: "Matcha", image: "/products/blueberry-matcha.webp" },
+  { id: "blueberry-matcha-22", name: "Blueberry Matcha", size: "22oz", price: 129, category: "Matcha", image: "/products/blueberry-matcha.webp" },
+  { id: "biscoff-matcha-16", name: "Biscoff Matcha", size: "16oz", price: 119, category: "Matcha", image: "/products/biscoff-matcha.webp" },
+  { id: "biscoff-matcha-22", name: "Biscoff Matcha", size: "22oz", price: 139, category: "Matcha", image: "/products/biscoff-matcha.webp" },
+  { id: "oreo-matcha-16", name: "Oreo Matcha", size: "16oz", price: 119, category: "Matcha", image: "/products/oreo-matcha.webp" },
+  { id: "oreo-matcha-22", name: "Oreo Matcha", size: "22oz", price: 139, category: "Matcha", image: "/products/oreo-matcha.webp" },
+
+  { id: "green-apple-16", name: "Green Apple", size: "16oz", price: 39, category: "Soda", image: "/products/green-apple.webp" },
+  { id: "green-apple-22", name: "Green Apple", size: "22oz", price: 49, category: "Soda", image: "/products/green-apple.webp" },
+  { id: "mango-soda-16", name: "Mango", size: "16oz", price: 39, category: "Soda", image: "/products/mango.webp" },
+  { id: "mango-soda-22", name: "Mango", size: "22oz", price: 49, category: "Soda", image: "/products/mango.webp" },
+  { id: "orange-16", name: "Orange", size: "16oz", price: 39, category: "Soda", image: "/products/orange.webp" },
+  { id: "orange-22", name: "Orange", size: "22oz", price: 49, category: "Soda", image: "/products/orange.webp" },
+  { id: "strawberry-soda-16", name: "Strawberry", size: "16oz", price: 39, category: "Soda", image: "/products/strawberry.webp" },
+  { id: "strawberry-soda-22", name: "Strawberry", size: "22oz", price: 49, category: "Soda", image: "/products/strawberry.webp" },
+  { id: "watermelon-16", name: "Watermelon", size: "16oz", price: 39, category: "Soda", image: "/products/watermelon.webp" },
+  { id: "watermelon-22", name: "Watermelon", size: "22oz", price: 49, category: "Soda", image: "/products/watermelon.webp" },
+  { id: "blueberry-soda-16", name: "Blueberry", size: "16oz", price: 39, category: "Soda", image: "/products/blueberry.webp" },
+  { id: "blueberry-soda-22", name: "Blueberry", size: "22oz", price: 49, category: "Soda", image: "/products/blueberry.webp" },
+  { id: "peach-16", name: "Peach", size: "16oz", price: 39, category: "Soda", image: "/products/peach.webp" },
+  { id: "peach-22", name: "Peach", size: "22oz", price: 49, category: "Soda", image: "/products/peach.webp" },
+
+  { id: "choco-boom-16", name: "SYP Choco Boom", size: "16oz", price: 99, category: "Signature", image: "/products/syp-choco-boom.webp", bestseller: true },
+  { id: "choco-boom-22", name: "SYP Choco Boom", size: "22oz", price: 119, category: "Signature", image: "/products/syp-choco-boom.webp", bestseller: true },
+  { id: "white-rush-16", name: "SYP White Rush", size: "16oz", price: 99, category: "Signature", image: "/products/syp-white-rush.webp" },
+  { id: "white-rush-22", name: "SYP White Rush", size: "22oz", price: 119, category: "Signature", image: "/products/syp-white-rush.webp" },
+
+  { id: "fries-small", name: "SYP Bites", size: "Small", price: 49, category: "Fries", image: "/products/syp-fries.webp" },
+  { id: "fries-medium", name: "SYP Cravings", size: "Medium", price: 79, category: "Fries", image: "/products/syp-fries.webp" },
+  { id: "fries-barkada", name: "SYP Overload", size: "Barkada", price: 119, category: "Fries", image: "/products/syp-fries.webp" },
+] as const;
+
 const QUOTE_STARTS = [
   "Kape muna, ", "Iced coffee kasi ", "Hindi ako tamad, ", "Adulting na naman, ",
   "Puyat pero ", "Walang jowa pero ", "Wallet ko payat, ", "Pahinga saglit, ",
@@ -77,10 +163,14 @@ function getRandomQuote(current = "") {
 }
 
 export default function CupWrapPage() {
-  const [cup, setCup] = useState<"Hot 8oz" | "Hot 12oz" | "16oz" | "22oz">("Hot 8oz");
-  const [price, setPrice] = useState("59");
+  const [selectedProductId, setSelectedProductId] = useState("spanish-22");
+  const [menuSearch, setMenuSearch] = useState("");
+  const selectedProduct = CUP_MENU.find((item) => item.id === selectedProductId) ?? CUP_MENU[0];
+  const cup = selectedProduct.size;
+  const price = String(selectedProduct.price);
+  const drinkName = selectedProduct.name;
+  const filteredMenu = CUP_MENU.filter((item) => (item.name + " " + item.size).toLowerCase().includes(menuSearch.toLowerCase()));
   const [quote, setQuote] = useState(() => getRandomQuote());
-  const [drinkName, setDrinkName] = useState("Spanish Latte");
   const [customerName, setCustomerName] = useState("");
   const [orderNumber, setOrderNumber] = useState("001");
   const [orderDateTime, setOrderDateTime] = useState(() => {
@@ -109,8 +199,8 @@ export default function CupWrapPage() {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       printedAt: new Date().toISOString(),
       cup,
-      drinkName: drinkName.trim() || "YOUR DRINK",
-      price: price.trim(),
+      drinkName,
+      price,
       customerName: customerName.trim(),
       orderNumber: orderNumber.trim() || "—",
       orderDateTime,
@@ -138,7 +228,7 @@ export default function CupWrapPage() {
   };
 
   // Starting estimates only: measure the actual cup before printing.
-  const wrapLength = cup === "Hot 8oz" ? 190 : cup === "Hot 12oz" ? 210 : cup === "16oz" ? 230 : 250;
+  const wrapLength = cup === "8oz" ? 190 : cup === "12oz" ? 210 : cup === "16oz" ? 230 : cup === "22oz" ? 250 : cup === "Small" ? 190 : cup === "Medium" ? 210 : 250;
   const wrapHeight = 45;
   const qrUrl = useMemo(
     () => "https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=1&data=" + encodeURIComponent(FACEBOOK_URL),
@@ -231,12 +321,15 @@ export default function CupWrapPage() {
               </select>
             </div>
             <div className="wrap-field">
-              <label htmlFor="drink-name">Drink name (editable)</label>
-              <input id="drink-name" value={drinkName} onChange={(e) => setDrinkName(e.target.value.slice(0, 40))} maxLength={40} placeholder="e.g. Spanish Latte" />
+              <label htmlFor="menu-search">Search drink from POS menu</label>
+              <input id="menu-search" value={menuSearch} onChange={(e) => setMenuSearch(e.target.value)} placeholder="Type Spanish Latte, Matcha, Hot..." />
             </div>
             <div className="wrap-field">
-              <label htmlFor="drink-price">Price (₱)</label>
-              <input id="drink-price" type="number" min="0" step="1" value={price} onChange={(e) => setPrice(e.target.value)} placeholder="e.g. 59" />
+              <label htmlFor="menu-item">Drink &amp; size — price auto-filled</label>
+              <select id="menu-item" value={selectedProductId} onChange={(e) => setSelectedProductId(e.target.value)} size={Math.min(7, Math.max(3, filteredMenu.length))} style={{height:"auto",minHeight:48}}>
+                {filteredMenu.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.size} — ₱{item.price}</option>)}
+              </select>
+              <p className="wrap-muted">Selected: <strong>{drinkName} · {cup} — ₱{price}</strong>. Hanapin lang at piliin ang exact size; automatic ang presyo mula sa POS menu list.</p>
             </div>
             <div className="wrap-field">
               <label htmlFor="customer-name">Customer name (optional)</label>
@@ -270,7 +363,7 @@ export default function CupWrapPage() {
               <WrapArt quote={quote} showQr={showQr} qrUrl={qrUrl} drinkName={drinkName} price={price} cup={cup} customerName={customerName} orderNumber={orderNumber} orderDateTime={orderDateTime} />
             </div>
             <div className="wrap-instructions wrap-notes">
-              <p><strong>Important:</strong> 190mm (Hot 8oz), 210mm (Hot 12oz), 230mm (16oz), and 250mm (22oz) are shorter starting estimates, not guaranteed fit. Cups vary by brand and taper. Measure around the cup where the strip will sit, then adjust the length in code if needed.</p>
+              <p><strong>Important:</strong> 190mm (8oz), 210mm (12oz), 230mm (16oz), and 250mm (22oz) are starting estimates, not guaranteed fit. Cups vary by brand and taper. Measure around the cup where the strip will sit, then adjust the length in code if needed.</p>
               <p>For ordinary thermal paper, the print will be monochrome (black on paper). The brown/cream color is a design preview; thermal printers do not print brown ink. Use the wrap as a long paper band and secure the ends with tape.</p>
               <p>Facebook destination: <strong>facebook.com/SypOnCafe</strong></p>
             </div>
