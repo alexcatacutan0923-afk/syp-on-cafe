@@ -314,7 +314,7 @@ export default function CupWrapPage() {
           .wrap-shell, .wrap-head, .wrap-grid, .wrap-panel { display:block!important; width:80mm!important; max-width:80mm!important; margin:0!important; padding:0!important; border:0!important; background:white!important; }
           .wrap-head, .wrap-controls, .wrap-preview, .wrap-instructions, .wrap-history { display:none!important; }
           .wrap-print-target { display:block!important; position:fixed!important; left:0!important; top:0!important; width:80mm!important; height:297mm!important; overflow:hidden!important; background:#fff!important; }
-          .wrap-print-art { position:absolute!important; left:50%!important; top:50%!important; width:${wrapLength}mm!important; height:62mm!important; transform-origin:center center!important; transform:translate(-50%,-50%) rotate(90deg)!important; display:grid!important; grid-template-columns:1.05fr 1.05fr 1.1fr .65fr!important; gap:3mm!important; padding:4mm!important; background:#fff!important; color:#000!important; border:1.2mm solid #000!important; outline:0.35mm solid #000!important; outline-offset:1mm!important; print-color-adjust:exact!important; -webkit-print-color-adjust:exact!important; }
+          .wrap-print-art { position:absolute!important; left:50%!important; top:var(--wrap-top, 50%)!important; width:${wrapLength}mm!important; height:62mm!important; transform-origin:center center!important; transform:translate(-50%,-50%) rotate(90deg)!important; display:grid!important; grid-template-columns:1.05fr 1.05fr 1.1fr .65fr!important; gap:3mm!important; padding:4mm!important; background:#fff!important; color:#000!important; border:1.2mm solid #000!important; outline:0.35mm solid #000!important; outline-offset:1mm!important; print-color-adjust:exact!important; -webkit-print-color-adjust:exact!important; }
           .wrap-print-art .wrap-script { font-size:20pt!important; }
           .wrap-print-art .wrap-brand { font-size:20pt!important; }
           .wrap-print-art .wrap-quote { font-size:17pt!important; }
@@ -424,7 +424,7 @@ export default function CupWrapPage() {
             <p className="wrap-muted">Note: browser-local history ito. Naka-save sa parehong device/browser lamang; hindi pa ito shared sa ibang cashier/device. Ang record ay ginagawa kapag pinindot ang print button, hindi nito makukumpirma kung lumabas talaga ang papel.</p>
           </section>
         <div className="wrap-print-target" aria-hidden="true">
-          {(printQueue.length ? printQueue : [makePrintRecord()]).map((item, index) => <div className="wrap-print-art" key={item.id} style={printQueue.length ? {top: `${index * 64 + 31}mm`} : undefined}>
+          {(printQueue.length ? printQueue : [makePrintRecord()]).map((item, index) => <div className="wrap-print-art" key={item.id} style={printQueue.length ? ({"--wrap-top": `${index * 64 + 31}mm`} as React.CSSProperties) : undefined}>
             <div className="wrap-block">
               <div className="wrap-script">Thanks for<br />Supporting<br />Small Business!</div>
             </div>
@@ -432,21 +432,21 @@ export default function CupWrapPage() {
               
               <img className="wrap-print-logo" src={LOGO_URL} alt="SYP ON CAFÉ" />
               <div className="wrap-tag">STREET • ICED • BREWED</div>
-              <div className="wrap-drink">{drinkName || "YOUR DRINK"}</div>
-              <div className="wrap-price">₱{price || "0"} · {cup}</div>
+              <div className="wrap-drink">{item.drinkName || "YOUR DRINK"}</div>
+              <div className="wrap-price">₱{item.price || "0"} · {item.cup}</div>
               <div className="wrap-order-meta">
-                {customerName ? <>FOR: {customerName}<br /></> : null}
-                ORDER #{orderNumber || "—"}
+                {item.customerName ? <>FOR: {item.customerName}<br /></> : null}
+                ORDER #{item.orderNumber || "—"}
               </div>
             </div>
             <div className="wrap-block">
-              <div className="wrap-quote">{quote || "Good Drinks, Better Days"}</div>
+              <div className="wrap-quote">{item.quote || "Good Drinks, Better Days"}</div>
               <div className="wrap-tag">SALAMAT SA SUPPORT, KASYP ♡</div>
             </div>
             <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
               {showQr && <img className="wrap-qr" src={qrUrl} alt="Facebook QR" />}
               <div className="wrap-social">/SypOnCafe</div>
-              <div className="wrap-side-date">{orderDateTime ? new Date(orderDateTime).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" }) : ""}</div>
+              <div className="wrap-side-date">{item.orderDateTime ? new Date(item.orderDateTime).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" }) : ""}</div>
             </div>
           </div>)}
         </div>
