@@ -386,7 +386,7 @@ export default function CupWrapPage() {
             </div>
             <p className="wrap-muted">Nasa print layout: {printQueue.length} wrap(s). Idagdag muna ang bawat drink/quote, pagkatapos pindutin ang Print queued wraps para sabay-sabay.</p>
             <button type="button" className="wrap-btn" onClick={printQueued} disabled={!printQueue.length}>Print queued wraps ({printQueue.length})</button>
-            {printQueue.length > 0 && <button type="button" className="wrap-btn secondary" onClick={() => setPrintQueue([])}>Clear print layout</button>
+            {printQueue.length > 0 && <button type="button" className="wrap-btn secondary" onClick={() => setPrintQueue([])}>Clear print layout</button>}
             <p className="wrap-muted">Print using thermal printer with continuous 80mm paper, portrait feed, and scaling at 100% / Actual size. Test on plain paper first.</p>
           </section>
 
