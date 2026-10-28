@@ -7,6 +7,7 @@ const FACEBOOK_URL = "https://www.facebook.com/SypOnCafe";
 
  type PrintRecord = { id: string; printedAt: string; cup: string; drinkName: string; price: string; customerName: string; orderNumber: string; orderDateTime: string; quote: string; };
 const HISTORY_KEY = "sypCupWrapPrintHistoryV1";
+const ORDER_COUNTER_KEY = "sypCupWrapNextOrderNumberV1";
 
 const CUP_MENU = [
   { id: "americano-16", name: "Americano", size: "16oz", price: 69, category: "Coffee", image: "/products/iced-americano-official.webp" },
@@ -25,6 +26,8 @@ const CUP_MENU = [
   { id: "almond-22", name: "Roasted Almond Latte", size: "22oz", price: 119, category: "Coffee", image: "/products/roasted-almond-latte-corrected.webp" },
   { id: "biscoff-16", name: "Biscoff Latte", size: "16oz", price: 99, category: "Coffee", image: "/products/biscoff-latte.webp" },
   { id: "biscoff-22", name: "Biscoff Latte", size: "22oz", price: 119, category: "Coffee", image: "/products/biscoff-latte.webp" },
+  { id: "salted-caramel-16", name: "Salted Caramel", size: "16oz", price: 89, category: "Coffee", image: "/products/caramel-macchiato.webp" },
+  { id: "salted-caramel-22", name: "Salted Caramel", size: "22oz", price: 109, category: "Coffee", image: "/products/caramel-macchiato.webp" },
 
   // Hot Coffee Collection — unified official black SYP cup
   { id: "hot-americano-8", name: "Hot Americano", size: "8oz", price: 49, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
@@ -43,8 +46,8 @@ const CUP_MENU = [
   { id: "hot-almond-12", name: "Hot Roasted Almond Latte", size: "12oz", price: 99, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
   { id: "hot-biscoff-8", name: "Hot Biscoff Latte", size: "8oz", price: 89, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
   { id: "hot-biscoff-12", name: "Hot Biscoff Latte", size: "12oz", price: 99, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
-  { id: "hot-salted-caramel-8", name: "Hot Salted Caramel", size: "8oz", price: 89, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
-  { id: "hot-salted-caramel-12", name: "Hot Salted Caramel", size: "12oz", price: 99, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
+  { id: "hot-salted-caramel-8", name: "Hot Salted Caramel", size: "8oz", price: 69, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
+  { id: "hot-salted-caramel-12", name: "Hot Salted Caramel", size: "12oz", price: 89, category: "Coffee", image: "/products/hot-coffee-black-cup.webp" },
 
   { id: "milo-dino-16", name: "Milo Dino", size: "16oz", price: 79, category: "Milky", image: "/products/milo-dino.webp" },
   { id: "milo-dino-22", name: "Milo Dino", size: "22oz", price: 99, category: "Milky", image: "/products/milo-dino.webp" },
@@ -173,6 +176,7 @@ export default function CupWrapPage() {
   const [quote, setQuote] = useState(() => getRandomQuote());
   const [customerName, setCustomerName] = useState("");
   const [orderNumber, setOrderNumber] = useState("001");
+  const [printQueue, setPrintQueue] = useState<PrintRecord[]>([]);
   const [orderDateTime, setOrderDateTime] = useState(() => {
     const now = new Date();
     const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
@@ -185,7 +189,18 @@ export default function CupWrapPage() {
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(HISTORY_KEY);
-      if (saved) setHistory(JSON.parse(saved) as PrintRecord[]);
+      if (saved) {
+        const parsed = JSON.parse(saved) as PrintRecord[];
+        setHistory(parsed);
+        const maxOrder = parsed.reduce((max, item) => Math.max(max, Number(item.orderNumber) || 0), 0);
+        const savedNext = Number(window.localStorage.getItem(ORDER_COUNTER_KEY)) || 0;
+        const next = Math.max(maxOrder + 1, savedNext || 1);
+        setOrderNumber(String(next).padStart(3, "0"));
+        window.localStorage.setItem(ORDER_COUNTER_KEY, String(next));
+      } else {
+        const savedNext = Number(window.localStorage.getItem(ORDER_COUNTER_KEY)) || 1;
+        setOrderNumber(String(savedNext).padStart(3, "0"));
+      }
     } catch { /* Ignore unavailable or invalid local history. */ }
   }, []);
 
@@ -194,20 +209,38 @@ export default function CupWrapPage() {
     catch { /* Browser storage may be unavailable. */ }
   }, [history]);
 
+  const makePrintRecord = (): PrintRecord => ({
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    printedAt: new Date().toISOString(), cup, drinkName, price,
+    customerName: customerName.trim(), orderNumber: orderNumber.trim() || "—",
+    orderDateTime, quote: quote.trim(),
+  });
+
   const recordAndPrint = () => {
-    const record: PrintRecord = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      printedAt: new Date().toISOString(),
-      cup,
-      drinkName,
-      price,
-      customerName: customerName.trim(),
-      orderNumber: orderNumber.trim() || "—",
-      orderDateTime,
-      quote: quote.trim(),
-    };
+    const record = makePrintRecord();
+    const next = (Number(orderNumber) || 0) + 1;
+    try { window.localStorage.setItem(ORDER_COUNTER_KEY, String(next)); } catch { /* Ignore unavailable storage. */ }
+    setOrderNumber(String(next).padStart(3, "0"));
     setHistory((previous) => [record, ...previous]);
+    setQuote(getRandomQuote(quote));
     window.setTimeout(() => window.print(), 100);
+  };
+
+  const addToPrintLayout = () => {
+    setPrintQueue((previous) => [...previous, makePrintRecord()]);
+    const next = (Number(orderNumber) || 0) + 1;
+    try { window.localStorage.setItem(ORDER_COUNTER_KEY, String(next)); } catch { /* Ignore unavailable storage. */ }
+    setOrderNumber(String(next).padStart(3, "0"));
+    setQuote(getRandomQuote(quote));
+  };
+
+  const printQueued = () => {
+    if (!printQueue.length) return;
+    setHistory((previous) => [...printQueue.slice().reverse(), ...previous]);
+    window.setTimeout(() => {
+      window.print();
+      setPrintQueue([]);
+    }, 150);
   };
 
   const downloadHistory = () => {
@@ -343,7 +376,13 @@ export default function CupWrapPage() {
             <div className="wrap-field">
               <label><input type="checkbox" checked={showQr} onChange={(e) => setShowQr(e.target.checked)} /> Include Facebook QR</label>
             </div>
-            <button className="wrap-btn" onClick={recordAndPrint}>Print cup wrap + record</button>
+            <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              <button type="button" className="wrap-btn secondary" onClick={addToPrintLayout}>＋ Add to print layout</button>
+              <button type="button" className="wrap-btn" onClick={recordAndPrint}>Print cup wrap + record</button>
+            </div>
+            <p className="wrap-muted">Nasa print layout: {printQueue.length} wrap(s). Idagdag muna ang bawat drink/quote, pagkatapos pindutin ang Print queued wraps para sabay-sabay.</p>
+            <button type="button" className="wrap-btn" onClick={printQueued} disabled={!printQueue.length}>Print queued wraps ({printQueue.length})</button>
+            {printQueue.length > 0 && <button type="button" className="wrap-btn secondary" onClick={() => setPrintQueue([])}>Clear print layout</button>
             <p className="wrap-muted">Print using thermal printer with continuous 80mm paper, portrait feed, and scaling at 100% / Actual size. Test on plain paper first.</p>
           </section>
 
@@ -385,7 +424,7 @@ export default function CupWrapPage() {
             <p className="wrap-muted">Note: browser-local history ito. Naka-save sa parehong device/browser lamang; hindi pa ito shared sa ibang cashier/device. Ang record ay ginagawa kapag pinindot ang print button, hindi nito makukumpirma kung lumabas talaga ang papel.</p>
           </section>
         <div className="wrap-print-target" aria-hidden="true">
-          <div className="wrap-print-art">
+          {(printQueue.length ? printQueue : [makePrintRecord()]).map((item, index) => <div className="wrap-print-art" key={item.id} style={printQueue.length ? {top: `${index * 64 + 31}mm`} : undefined}>
             <div className="wrap-block">
               <div className="wrap-script">Thanks for<br />Supporting<br />Small Business!</div>
             </div>
@@ -409,7 +448,7 @@ export default function CupWrapPage() {
               <div className="wrap-social">/SypOnCafe</div>
               <div className="wrap-side-date">{orderDateTime ? new Date(orderDateTime).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" }) : ""}</div>
             </div>
-          </div>
+          </div>)}
         </div>
       </div>
     </main>
