@@ -227,6 +227,10 @@ export default function CupWrapPage() {
   };
 
   const addToPrintLayout = () => {
+    if (printQueue.length >= 4) {
+      window.alert("Maximum 4 wraps per print batch on the current 297mm print layout. Print this batch first, then add more.");
+      return;
+    }
     setPrintQueue((previous) => [...previous, makePrintRecord()]);
     const next = (Number(orderNumber) || 0) + 1;
     try { window.localStorage.setItem(ORDER_COUNTER_KEY, String(next)); } catch { /* Ignore unavailable storage. */ }
@@ -377,7 +381,7 @@ export default function CupWrapPage() {
               <label><input type="checkbox" checked={showQr} onChange={(e) => setShowQr(e.target.checked)} /> Include Facebook QR</label>
             </div>
             <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-              <button type="button" className="wrap-btn secondary" onClick={addToPrintLayout}>＋ Add to print layout</button>
+              <button type="button" className="wrap-btn secondary" onClick={addToPrintLayout} disabled={printQueue.length >= 4}>＋ Add to print layout</button>
               <button type="button" className="wrap-btn" onClick={recordAndPrint}>Print cup wrap + record</button>
             </div>
             <p className="wrap-muted">Nasa print layout: {printQueue.length} wrap(s). Idagdag muna ang bawat drink/quote, pagkatapos pindutin ang Print queued wraps para sabay-sabay.</p>
