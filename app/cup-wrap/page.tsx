@@ -5,9 +5,10 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 const LOGO_URL = "/IMG_5996.jpeg";
 const FACEBOOK_URL = "https://www.facebook.com/SypOnCafe";
 
- type PrintRecord = { id: string; printedAt: string; cup: string; drinkName: string; price: string; customerName: string; orderNumber: string; orderDateTime: string; quote: string; };
+ type PrintRecord = { id: string; printedAt: string; cup: string; drinkName: string; price: string; customerName: string; orderNumber: string; orderDateTime: string; quote: string; note: string; };
 const HISTORY_KEY = "sypCupWrapPrintHistoryV1";
 const ORDER_COUNTER_KEY = "sypCupWrapNextOrderNumberV1";
+const STARTING_CASH_KEY = "sypCupWrapStartingCashV1";
 
 const CUP_MENU = [
   { id: "americano-16", name: "Americano", size: "16oz", price: 69, category: "Coffee", image: "/products/iced-americano-official.webp" },
@@ -175,6 +176,8 @@ export default function CupWrapPage() {
   const filteredMenu = CUP_MENU.filter((item) => (item.name + " " + item.size).toLowerCase().includes(menuSearch.toLowerCase()));
   const [quote, setQuote] = useState(() => getRandomQuote());
   const [customerName, setCustomerName] = useState("");
+  const [optionalNote, setOptionalNote] = useState("");
+  const [startingCash, setStartingCash] = useState("0");
   const [orderNumber, setOrderNumber] = useState("001");
   const [printQueue, setPrintQueue] = useState<PrintRecord[]>([]);
   const [orderDateTime, setOrderDateTime] = useState(() => {
@@ -188,6 +191,8 @@ export default function CupWrapPage() {
 
   useEffect(() => {
     try {
+      const savedCash = window.localStorage.getItem(STARTING_CASH_KEY);
+      if (savedCash !== null) setStartingCash(savedCash);
       const saved = window.localStorage.getItem(HISTORY_KEY);
       if (saved) {
         const parsed = JSON.parse(saved) as PrintRecord[];
@@ -213,8 +218,20 @@ export default function CupWrapPage() {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     printedAt: new Date().toISOString(), cup, drinkName, price,
     customerName: customerName.trim(), orderNumber: orderNumber.trim() || "—",
-    orderDateTime, quote: quote.trim(),
+    orderDateTime, quote: quote.trim(), note: optionalNote.trim(),
   });
+
+  const resetOrderNumber = () => {
+    if (!window.confirm("I-reset ang order number sa 001? Hindi nito buburahin ang print history.")) return;
+    try { window.localStorage.setItem(ORDER_COUNTER_KEY, "1"); } catch { /* Ignore unavailable storage. */ }
+    setOrderNumber("001");
+  };
+
+  const updateStartingCash = (value: string) => {
+    const normalized = value.replace(/[^0-9.]/g, "");
+    setStartingCash(normalized);
+    try { window.localStorage.setItem(STARTING_CASH_KEY, normalized); } catch { /* Ignore unavailable storage. */ }
+  };
 
   const recordAndPrint = () => {
     const record = makePrintRecord();
@@ -368,6 +385,10 @@ export default function CupWrapPage() {
               <input id="order-number" value={orderNumber} onChange={(e) => setOrderNumber(e.target.value.slice(0, 12))} maxLength={12} placeholder="e.g. 001" />
             </div>
             <div className="wrap-field">
+              <label htmlFor="optional-note">Optional note</label>
+              <input id="optional-note" value={optionalNote} onChange={(e) => setOptionalNote(e.target.value.slice(0, 80))} maxLength={80} placeholder="e.g. less ice, no straw" />
+            </div>
+            <div className="wrap-field">
               <label htmlFor="order-date-time">Order date &amp; time</label>
               <input id="order-date-time" type="datetime-local" value={orderDateTime} onChange={(e) => setOrderDateTime(e.target.value)} />
             </div>
@@ -381,6 +402,7 @@ export default function CupWrapPage() {
               <label><input type="checkbox" checked={showQr} onChange={(e) => setShowQr(e.target.checked)} /> Include Facebook QR</label>
             </div>
             <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+              <button type="button" className="wrap-btn secondary" onClick={resetOrderNumber}>↺ Reset order number</button>
               <button type="button" className="wrap-btn secondary" onClick={addToPrintLayout} disabled={printQueue.length >= 4}>＋ Add to print layout</button>
               <button type="button" className="wrap-btn" onClick={recordAndPrint}>Print cup wrap + record</button>
             </div>
@@ -410,6 +432,15 @@ export default function CupWrapPage() {
             <div className="wrap-field">
               <label htmlFor="shift-label">Shift / staff label</label>
               <input id="shift-label" value={shiftLabel} onChange={(e) => setShiftLabel(e.target.value.slice(0, 40))} maxLength={40} placeholder="e.g. Night shift - Alex" />
+            </div>
+            <div className="wrap-field">
+              <label htmlFor="starting-cash">Starting cash drawer (₱)</label>
+              <input id="starting-cash" inputMode="decimal" value={startingCash} onChange={(e) => updateStartingCash(e.target.value)} placeholder="e.g. 1000" />
+              <p className="wrap-muted">Opening cash na laman ng drawer. Automatic na naka-save sa browser na ito at makikita ulit kapag binuksan ang page sa parehong device.</p>
+            </div>
+            <div style={{padding:"12px 14px",borderRadius:10,background:"#f4eee5",margin:"12px 0"}}>
+              <div className="wrap-muted">SHIFT OPENING CASH</div>
+              <strong style={{fontSize:24}}>₱{(Number(startingCash) || 0).toLocaleString("en-PH", {minimumFractionDigits:2,maximumFractionDigits:2})}</strong>
             </div>
             <div style={{display:"flex",gap:8,flexWrap:"wrap",alignItems:"center",margin:"12px 0"}}>
               <strong>Total recorded prints: {history.length}</strong>
@@ -441,6 +472,7 @@ export default function CupWrapPage() {
               <div className="wrap-order-meta">
                 {item.customerName ? <>FOR: {item.customerName}<br /></> : null}
                 ORDER #{item.orderNumber || "—"}
+                {item.note ? <><br />NOTE: {item.note}</> : null}
               </div>
             </div>
             <div className="wrap-block">
