@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 
 const LOGO_URL = "/IMG_5996.jpeg";
 const FACEBOOK_URL = "https://www.facebook.com/SypOnCafe";
@@ -428,7 +428,7 @@ export default function CupWrapPage() {
             <p className="wrap-muted">Note: browser-local history ito. Naka-save sa parehong device/browser lamang; hindi pa ito shared sa ibang cashier/device. Ang record ay ginagawa kapag pinindot ang print button, hindi nito makukumpirma kung lumabas talaga ang papel.</p>
           </section>
         <div className="wrap-print-target" aria-hidden="true">
-          {(printQueue.length ? printQueue : [makePrintRecord()]).map((item, index) => <div className="wrap-print-art" key={item.id} style={printQueue.length ? ({"--wrap-top": `${index * 64 + 31}mm`} as React.CSSProperties) : undefined}>
+          {(printQueue.length ? printQueue : [makePrintRecord()]).map((item, index) => <div className="wrap-print-art" key={item.id} style={printQueue.length ? ({"--wrap-top": `${index * 64 + 31}mm`} as CSSProperties) : undefined}>
             <div className="wrap-block">
               <div className="wrap-script">Thanks for<br />Supporting<br />Small Business!</div>
             </div>
