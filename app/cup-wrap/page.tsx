@@ -503,17 +503,22 @@ export default function CupWrapPage() {
         .wrap-art .wrap-tag,.wrap-art .wrap-social,.wrap-art .wrap-side-date { color:#000; }
         .wrap-motif { display:block; width:100%; max-width:29mm; height:13mm; color:#000; object-fit:contain; margin:0 auto 1mm; flex-shrink:0; }
         .wrap-art .wrap-block { border-color:var(--wrap-accent); }
-        /* Category-specific all-over coffee journal doodle pattern, optimized for monochrome thermal print */
+        /* Clean, premium category-themed doodles: sparse accents, not noisy wallpaper */
         .wrap-art { position:relative; isolation:isolate; }
-        .wrap-art .wrap-block { position:relative; z-index:1; background-color:rgba(255,255,255,.82); background-image:radial-gradient(circle,rgba(0,0,0,.20) .45px,transparent .7px); background-size:5mm 5mm; }
-        .wrap-art.theme-coffee .wrap-block { background-image:radial-gradient(ellipse at center,transparent 0 2mm,rgba(0,0,0,.23) 2.1mm 2.35mm,transparent 2.45mm),radial-gradient(ellipse at center,rgba(0,0,0,.12) 0 1mm,transparent 1.1mm); background-size:13mm 9mm,8mm 8mm; }
-        .wrap-art.theme-matcha .wrap-block { background-image:radial-gradient(ellipse 2mm 4mm at center,transparent 65%,rgba(0,0,0,.28) 72% 82%,transparent 90%),radial-gradient(circle,rgba(0,0,0,.2) .5px,transparent .8px); background-size:10mm 9mm,4mm 4mm; }
-        .wrap-art.theme-soda .wrap-block { background-image:radial-gradient(circle,transparent 0 1.3mm,rgba(0,0,0,.32) 1.4mm 1.65mm,transparent 1.75mm),radial-gradient(circle,transparent 0 .55mm,rgba(0,0,0,.24) .65mm .85mm,transparent .95mm); background-size:11mm 11mm,6mm 7mm; }
-        .wrap-art.theme-strawberry .wrap-block { background-image:radial-gradient(ellipse 1.5mm 2mm at center,transparent 65%,rgba(0,0,0,.3) 75% 85%,transparent 92%),radial-gradient(circle,rgba(0,0,0,.18) .5px,transparent .8px); background-size:10mm 10mm,4mm 4mm; }
-        .wrap-art.theme-milky .wrap-block { background-image:radial-gradient(circle,transparent 0 1.4mm,rgba(0,0,0,.25) 1.5mm 1.7mm,transparent 1.8mm),radial-gradient(circle,rgba(0,0,0,.16) .5px,transparent .8px); background-size:12mm 12mm,5mm 5mm; }
+        .wrap-art .wrap-block { position:relative; z-index:1; background-color:#fff; background-image:none; }
+        .wrap-art.theme-coffee .wrap-left-panel,
+        .wrap-art.theme-coffee .wrap-right-panel { background-image:radial-gradient(ellipse 3.2mm 1.8mm at 88% 14%,transparent 55%,rgba(0,0,0,.36) 62% 75%,transparent 82%),radial-gradient(ellipse 3.2mm 1.8mm at 78% 22%,transparent 55%,rgba(0,0,0,.28) 62% 75%,transparent 82%); background-size:100% 100%; background-repeat:no-repeat; }
+        .wrap-art.theme-matcha .wrap-left-panel,
+        .wrap-art.theme-matcha .wrap-right-panel { background-image:radial-gradient(ellipse 2mm 4mm at 88% 15%,transparent 58%,rgba(0,0,0,.38) 66% 78%,transparent 86%),radial-gradient(ellipse 1.5mm 3mm at 78% 23%,transparent 58%,rgba(0,0,0,.28) 66% 78%,transparent 86%); background-size:100% 100%; background-repeat:no-repeat; }
+        .wrap-art.theme-soda .wrap-left-panel,
+        .wrap-art.theme-soda .wrap-right-panel { background-image:radial-gradient(circle at 88% 14%,transparent 0 1.6mm,rgba(0,0,0,.36) 1.7mm 1.9mm,transparent 2mm),radial-gradient(circle at 76% 24%,transparent 0 .8mm,rgba(0,0,0,.32) .9mm 1.05mm,transparent 1.15mm),radial-gradient(circle at 93% 29%,transparent 0 .5mm,rgba(0,0,0,.25) .6mm .7mm,transparent .8mm); background-size:100% 100%; background-repeat:no-repeat; }
+        .wrap-art.theme-strawberry .wrap-left-panel,
+        .wrap-art.theme-strawberry .wrap-right-panel { background-image:radial-gradient(ellipse 2mm 2.7mm at 88% 15%,transparent 55%,rgba(0,0,0,.35) 64% 77%,transparent 85%),radial-gradient(ellipse 1.6mm 2.2mm at 78% 23%,transparent 55%,rgba(0,0,0,.28) 64% 77%,transparent 85%); background-size:100% 100%; background-repeat:no-repeat; }
+        .wrap-art.theme-milky .wrap-left-panel,
+        .wrap-art.theme-milky .wrap-right-panel { background-image:radial-gradient(circle at 88% 15%,transparent 0 1.5mm,rgba(0,0,0,.3) 1.6mm 1.8mm,transparent 1.9mm),radial-gradient(circle at 78% 23%,transparent 0 .7mm,rgba(0,0,0,.24) .8mm .95mm,transparent 1.05mm); background-size:100% 100%; background-repeat:no-repeat; }
         .wrap-art .wrap-block > * { position:relative; z-index:2; }
-        .wrap-art .wrap-center-block { background-color:rgba(255,255,255,.94); }
-        .wrap-art .wrap-menu-panel { background-color:rgba(255,255,255,.88); }
+        .wrap-art .wrap-center-block { background-color:#fff; }
+        .wrap-art .wrap-menu-panel { background-color:#fff; }
 
         .wrap-art .wrap-tag, .wrap-art .wrap-social, .wrap-art .wrap-side-date { color:var(--wrap-ink); }
         .wrap-amenities { display:flex; flex-wrap:wrap; gap:5px 8px; font-size:8px; font-weight:800; margin-top:10px; }
