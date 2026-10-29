@@ -576,12 +576,17 @@ export default function CupWrapPage() {
           .wrap-print-art .wrap-brand { font-size:16pt!important; line-height:1!important; }
           .wrap-print-art .wrap-quote { display:block!important; font-size:12pt!important; line-height:1.15!important; max-height:none!important; overflow:visible!important; overflow-wrap:anywhere!important; text-align:center!important; }
           .wrap-print-art .wrap-drink { font-size:16pt!important; line-height:1.05!important; overflow-wrap:anywhere!important; }\n          .wrap-print-art .wrap-product-area { min-height:15mm!important; width:100%!important; padding:2mm 1mm!important; margin-top:2mm!important; border-top:0.35mm solid #000!important; border-bottom:0.35mm solid #000!important; gap:1mm!important; flex-shrink:0!important; }\n          .wrap-print-art .wrap-price { display:block!important; font-size:12pt!important; line-height:1.1!important; margin-top:1mm!important; font-weight:900!important; }\n          .wrap-print-art .wrap-quote-left { display:flex!important; font-size:10pt!important; line-height:1.15!important; min-height:13mm!important; margin-top:auto!important; padding:2mm 1mm!important; overflow-wrap:anywhere!important; }
-          .wrap-print-art .wrap-block { padding:2mm!important; gap:1mm!important; min-width:0!important; border-right:0.3mm dashed #555!important; overflow:hidden!important; }
+          .wrap-print-art .wrap-block { padding:1.2mm!important; gap:0.45mm!important; min-width:0!important; border-right:0.3mm solid #000!important; overflow:hidden!important; }
           .wrap-print-art .wrap-large-quote { font-size:9pt!important; line-height:1.16!important; }
           .wrap-print-art .wrap-doodle,.wrap-print-art .wrap-cup-icon,.wrap-print-art .wrap-cup-doodle,.wrap-print-art .wrap-thought-doodle { font-size:18pt!important; }
           .wrap-print-art .wrap-mini-quote,.wrap-print-art .wrap-tag-us,.wrap-print-art .wrap-made-for { font-size:6.5pt!important; line-height:1.15!important; }
           .wrap-print-art .wrap-menu-heading { font-size:7pt!important; padding:0.8mm 2mm!important; margin-bottom:1mm!important; }
-          .wrap-print-art .wrap-menu-item { font-size:6.2pt!important; line-height:1.13!important; margin-bottom:1.2mm!important; }
+          .wrap-print-art .wrap-menu-panel { justify-content:flex-start!important; gap:0!important; padding-top:1mm!important; padding-bottom:1mm!important; }
+           .wrap-print-art .wrap-menu-heading { font-size:6.2pt!important; padding:0.45mm 1.2mm!important; margin:0 0 0.35mm!important; line-height:1!important; }
+           .wrap-print-art .wrap-menu-item { font-size:5.1pt!important; line-height:1.02!important; margin-bottom:0.2mm!important; padding:0.15mm 0!important; }
+           .wrap-print-art .wrap-menu-item:after { content:none!important; display:none!important; }
+           .wrap-print-art .wrap-hot-heading { margin-top:0.45mm!important; }
+           .wrap-print-art .wrap-menu-beans { font-size:7pt!important; line-height:1!important; margin-top:0!important; }
           .wrap-print-art .wrap-qr { display:block!important; width:18mm!important; height:18mm!important; min-width:18mm!important; min-height:18mm!important; object-fit:contain!important; }
           .wrap-print-art .wrap-right-panel { border-right:0!important; }
           .wrap-print-art.theme-coffee,.wrap-print-art.theme-strawberry,.wrap-print-art.theme-soda,.wrap-print-art.theme-matcha,.wrap-print-art.theme-milky { background:#fff!important; color:#000!important; border-color:#000!important; outline-color:#000!important; }
@@ -772,7 +777,6 @@ function WrapArt({ quote, showQr, qrUrl, drinkName, price, cup, customerName, or
         <div className="wrap-menu-beans" aria-hidden="true">◉ ◉</div>
       </div>
       <div className="wrap-block wrap-center-block" style={{alignItems:"center",textAlign:"center"}}>
-        <div className="wrap-cup-icon" aria-hidden="true">☕</div>
         <img className="wrap-print-logo" src={LOGO_URL} alt="SYP ON CAFÉ" />
         <div className="wrap-brand">SYP ON CAFÉ</div>
         <div className="wrap-tag">— STREET • ICED • BREWED —</div>
