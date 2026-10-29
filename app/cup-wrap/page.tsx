@@ -513,7 +513,7 @@ export default function CupWrapPage() {
         .wrap-brand { font-size:clamp(16px,2.5vw,27px); font-weight:900; letter-spacing:.03em; line-height:1; }
         .wrap-tag { font-size:9px; font-weight:800; letter-spacing:.12em; margin-top:5px; }
         .wrap-drink { font-size:clamp(17px,2.5vw,30px); font-weight:900; text-align:center; line-height:1.05; overflow-wrap:anywhere; }
-        .wrap-price { font-size:clamp(12px,1.8vw,18px); font-weight:900; text-align:center; margin-top:3px; }
+        .wrap-price { font-size:clamp(12px,1.8vw,18px); font-weight:900; text-align:center; margin-top:3px; }\n        .wrap-product-area { width:100%; min-height:12mm; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:1mm; border-top:1px solid #000; border-bottom:1px solid #000; padding:2mm 1mm; margin-top:2mm; }\n        .wrap-quote-left { margin-top:auto; padding-top:2mm; min-height:10mm; display:flex; align-items:center; justify-content:center; }
         .wrap-order-meta { font-size:8px; font-weight:800; line-height:1.4; margin-top:5px; overflow-wrap:anywhere; }
         .wrap-quote { font-family:Georgia,serif; font-size:clamp(10px,1.4vw,16px); font-style:italic; font-weight:800; line-height:1.12; overflow-wrap:anywhere; text-align:center; }
         .wrap-logo { display:none!important; }
@@ -536,7 +536,7 @@ export default function CupWrapPage() {
           .wrap-print-art .wrap-script { font-size:15pt!important; line-height:1.08!important; }
           .wrap-print-art .wrap-brand { font-size:16pt!important; line-height:1!important; }
           .wrap-print-art .wrap-quote { display:block!important; font-size:12pt!important; line-height:1.15!important; max-height:none!important; overflow:visible!important; overflow-wrap:anywhere!important; text-align:center!important; }
-          .wrap-print-art .wrap-drink { font-size:16pt!important; line-height:1.05!important; overflow-wrap:anywhere!important; }
+          .wrap-print-art .wrap-drink { font-size:16pt!important; line-height:1.05!important; overflow-wrap:anywhere!important; }\n          .wrap-print-art .wrap-product-area { min-height:15mm!important; width:100%!important; padding:2mm 1mm!important; margin-top:2mm!important; border-top:0.35mm solid #000!important; border-bottom:0.35mm solid #000!important; gap:1mm!important; flex-shrink:0!important; }\n          .wrap-print-art .wrap-price { display:block!important; font-size:12pt!important; line-height:1.1!important; margin-top:1mm!important; font-weight:900!important; }\n          .wrap-print-art .wrap-quote-left { display:flex!important; font-size:10pt!important; line-height:1.15!important; min-height:13mm!important; margin-top:auto!important; padding:2mm 1mm!important; overflow-wrap:anywhere!important; }
           .wrap-print-art.theme-coffee,.wrap-print-art.theme-strawberry,.wrap-print-art.theme-soda,.wrap-print-art.theme-matcha,.wrap-print-art.theme-milky { background:#fff!important; color:#000!important; border-color:#000!important; outline-color:#000!important; }
            .wrap-print-art .wrap-block { border-color:#000!important; }
            .wrap-print-art .wrap-tag,.wrap-print-art .wrap-social,.wrap-print-art .wrap-side-date { color:#000!important; }
@@ -713,21 +713,24 @@ function WrapArt({ quote, showQr, qrUrl, drinkName, price, cup, customerName, or
         <div className="wrap-script">Thank you ♥<br />for supporting<br />local &amp; choosing<br />SYP ON CAFÉ.</div>
         <WrapMotif theme={theme} />
         <div className="wrap-amenities"><span>FREE WI-FI</span><span>BOARD GAMES</span><span>YOUTUBE &amp; NETFLIX</span></div>
+        <div className="wrap-quote wrap-quote-left">{quote || "Good Drinks, Better Days"}</div>
       </div>
-      <div className="wrap-block" style={{alignItems:"center",textAlign:"center"}}>
+      <div className="wrap-block wrap-center-block" style={{alignItems:"center",textAlign:"center"}}>
         <WrapMotif theme={theme} />
         <img className="wrap-print-logo" src={LOGO_URL} alt="SYP ON CAFÉ" />
         <div className="wrap-brand">SYP ON CAFÉ</div>
         <div className="wrap-tag">— STREET • ICED • BREWED —</div>
-        <div className="wrap-drink">{drinkName || "YOUR DRINK"}</div>
-        <div className="wrap-order-box">ORDER #{orderNumber || "—"}<br />{cup} · ₱{price}</div>
+        <div className="wrap-product-area">
+          <div className="wrap-drink">{drinkName || "YOUR DRINK"}</div>
+          <div className="wrap-price">₱{price || "—"} · {cup}</div>
+        </div>
+        <div className="wrap-order-box">ORDER #{orderNumber || "—"}</div>
         {customerName ? <div className="wrap-order-meta">FOR: {customerName}</div> : null}
       </div>
-      <div className="wrap-block" style={{borderRight:0,paddingRight:0,alignItems:"center",textAlign:"center"}}>
+      <div className="wrap-block wrap-right-block" style={{borderRight:0,paddingRight:0,alignItems:"center",textAlign:"center"}}>
         <div className="wrap-stamp-title">Scan to<br />collect stamps!</div>
         {showQr && <img className="wrap-qr" src={qrUrl} alt="SYP loyalty registration QR" />}
         <div className="wrap-social">f  ◎  ♪ @SypOnCafe</div>
-        <div className="wrap-quote">{quote || "Good Drinks, Better Days"}</div>
         <div className="wrap-side-date">{orderDateTime ? new Date(orderDateTime).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" }) : ""}</div>
       </div>
     </div>
