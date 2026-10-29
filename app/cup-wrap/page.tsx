@@ -98,72 +98,103 @@ const CUP_MENU = [
   { id: "fries-barkada", name: "SYP Overload", size: "Barkada", price: 119, category: "Fries", image: "/products/syp-fries.webp" },
 ] as const;
 
-const QUOTE_STARTS = [
-  "Kape muna, ", "Iced coffee kasi ", "Hindi ako tamad, ", "Adulting na naman, ",
-  "Puyat pero ", "Walang jowa pero ", "Wallet ko payat, ", "Pahinga saglit, ",
-  "Kung stressed ka, ", "Dasurv mo ’to, ", "Bawal sumuko, ", "Ang buhay ay ",
-  "Love yourself, ", "Kape ang sagot, ", "Pagod na ang beshie, ", "Trabaho nang trabaho, ",
-  "Laban lang, ", "Manifesting na ", "Budget kuno, ", "Sabi ko isa lang, ",
-  "Nagtitipid ako, ", "May problema? ", "Hindi lahat ng ", "Kung walang plot twist, ",
-  "Lowbat na ako, ", "Puso ko marupok, ", "Minsan kailangan lang ", "Wag kang mag-alala, ",
-  "Chill ka lang, ", "Main character ka, ", "Kape muna bago ", "Gising pa rin dahil ",
-  "Sana all, ", "Walang forever pero ", "Petsa de peligro, ", "Ang importante, ",
-  "Kung pagod ka na, ", "Hindi man mayaman, ", "Self-care muna, ", "Buhay ay maikli, ",
-  "Kape ang therapy, ", "May exam bukas, ", "May deadline mamaya, ", "Hindi ako late, ",
-  "Sabi ng puso ko, ", "Sabi ng utak ko, ", "Nandito para sa kape, ", "Tambay responsibly, ",
-  "Konting sip lang, ", "Kaya pa ’yan, ", "Walang perfect, ", "Laban mga ka-SYP, ",
-  "Kalmado lang kunwari, ", "Ngiti muna, ", "Hinga nang malalim, ", "Kapag may sahod, ",
-  "Kapag walang sahod, ", "Ang tunay na plot twist, ", "Minsan ang sagot ay ", "Sana kasing tamis ng kape "
-];
+type QuoteCategory = "Coffee" | "Matcha" | "Soda" | "Milky" | "Fries";
 
-const QUOTE_ENDINGS = [
-  "ang problema, bukas na.", "kape muna bago breakdown.", "pero cute pa rin.", "at least may caffeine.",
-  "bahala na si future me.", "ang bills, hindi nawawala.", "pero laban pa rin.", "deserve ko ng extra shot.",
-  "hindi kasama sa budget.", "pero masarap ang buhay.", "wag lang maubusan ng yelo.", "kaya natin ’to, besh.",
-  "at least may iced coffee.", "sa susunod na sweldo na.", "sana all may pahinga.", "wag lang i-chat ang ex.",
-  "pahinga, hindi pagsuko.", "ang importante, may kape.", "puso lang ang walang sukli.", "kaya pala kailangan ng large.",
-  "pero order muna tayo.", "hindi bayad ang overthink.", "may free therapy sa bawat sip.", "bukas na ang pagiging productive.",
-  "hindi lahat nadadaan sa tulog.", "pero may pag-asa pa.", "kape muna bago desisyon.", "mas okay kapag may kasama.",
-  "ang tunay na love language ay fries.", "hindi dapat minamadali ang happiness.", "pero ubos na ang allowance.",
-  "pahingi naman ng plot armor.", "sana pati sweldo, extra large.", "pero hindi tayo susuko.", "at least hindi tubig ang order.",
-  "wag kalimutang mag-water din.", "konting arte, malaking saya.", "may resibo ang kaligayahan.", "basta may kape, may laban.",
-  "hindi lahat ng tahimik ay okay.", "pero okay lang magpahinga.", "ang stress, walang loyalty card.", "ang saya, dagdagan ng pearls.",
-  "piliin ang peace at cheese fries.", "hindi kasama ang problema sa refill.", "mas masarap kapag libre—charot.", "puro ka na lang 'next time'.",
-  "pero sige, one day at a time.", "ang importante, hindi ka nag-give up.", "may caffeine, may chance.", "hindi ito gastos, investment sa mood.",
-  "wag puro seen, mag-reply ka rin.", "pero hindi tayo marupok ngayon.", "sana all may extra income.", "hindi lahat ng tanong kailangan sagutin.",
-  "ang tunay na glow-up ay tulog.", "sana may add-to-cart sa sahod.", "pero chill muna tayo tonight.", "kaya order ka na, deserve mo ’yan.",
-  "hindi lahat ng desisyon dapat 3AM.", "may bukas pa para magpaka-responsable.", "wag lang maubos ang pasensya.", "basta wag kalimutan ang sarili.",
-  "at least may dahilan para ngumiti.", "pero wag kalimutan magbayad, besh.", "sana all may stable na Wi-Fi.", "dahan-dahan lang, hindi karera ang buhay.",
-  "may kape na, kulang na lang peace of mind.", "at least masaya ang taste buds.", "ang importante, may pang-order ulit.",
-  "pahinga ka rin, hindi ka robot.", "hindi ka weak, kailangan mo lang ng kape.", "kahit sabog, present pa rin.",
-  "kung di kaya ngayon, sip muna.", "wag gawing personality ang puyat.", "pero ang saya maging KasYP.",
-  "kaya ngumiti ka naman diyan.", "ang budget ay suggestion lang—joke!", "pero wag na nating bilangin ang calories.",
-  "sana may promo rin sa responsibilities.", "may bayad ang stress, walang overtime.", "tuloy lang kahit loading ang utak.",
-  "ang tunay na flex ay may peace of mind.", "hindi man perfect, at least may caffeine.", "basta masarap, walang debate.",
-  "sana pati problema may closing time.", "pwedeng mapagod, bawal mawalan ng kape.", "at least may magandang cup ka.",
-  "wag i-overthink ang straw.", "hindi ka nag-iisa, may iced coffee ka.", "small wins count, pati first sip.",
-  "ang bukas ay problema ni bukas.", "pero tonight, tambay muna.", "kaya mo ’yan, wag lang walang tulog.",
-  "sana lahat ng red flag ay kulay brown sugar.", "mas okay ang mixed feelings kapag mixed coffee.",
-  "ang love life ay seasonal, kape ay available.", "kung walang lambing, dagdagan ng whipped cream.",
-  "wag i-judge ang order, i-enjoy ang sip.", "hindi lahat ng malaki ay problema—minsan 22oz.",
-  "ang tunay na commitment ay bumalik sa SYP.", "at least hindi ka nag-order ng sama ng loob.",
-  "kape ang plot twist na deserve mo.", "tama na ang drama, dagdagan ang crema.",
-  "kung may problema, upuan muna natin.", "pwedeng magpahinga habang nagcha-charge ang phone.",
-  "mas masarap ang buhay kapag may tambayan.", "ang tunay na rich ay may oras mag-chill.",
-  "sana ang deadline marunong mag-adjust.", "wag magmadali, natutunaw din ang yelo.",
-  "kung walang clue, iced coffee muna.", "hindi lahat ng cravings dapat pigilan.",
-  "basta wag lang 'last order' na pala.", "may kape, may kwento, may dahilan bumalik."
-];
+const QUOTES_BY_CATEGORY: Record<QuoteCategory, string[]> = {
+  Coffee: [
+    "Kape muna bago magdesisyon.",
+    "Hindi lahat ng puyat, dahil sa trabaho. Minsan dahil sa kape.",
+    "One sip at a time. Kakayanin din ang araw na ’to.",
+    "Kung magulo ang mundo, timplahan muna ng kape.",
+    "Coffee first. Overthink later.",
+    "Hindi man maayos ang lahat, at least masarap ang kape.",
+    "Para sa mga gising pa kahit pagod na.",
+    "May mga bagay na mas madaling harapin pagkatapos ng unang sip.",
+    "Kape ang pahinga ng utak na ayaw tumigil.",
+    "Late-night thoughts, extra coffee shots.",
+    "Hindi lahat ng kailangan ay sagot. Minsan kape lang.",
+    "Ang tunay na plot twist? Masarap pala ang araw na ’to.",
+    "Kape muna, saka natin problemahin ang problema.",
+    "Strong coffee for the soft-hearted.",
+    "Kung puyat ka rin, cheers sa ating dalawa."
+  ],
+  Matcha: [
+    "Matcha muna. Dahan-dahan lang ang buhay.",
+    "Green flag today: matcha ang order mo.",
+    "Stay calm and sip matcha.",
+    "Hindi lahat green flag, pero itong matcha oo.",
+    "Matcha mood: soft, chill, at medyo sosyal.",
+    "A little green, a little peace.",
+    "Kung magulo ang isip, hanap muna ng matcha moment.",
+    "Matcha ka muna bago ka mag-overthink.",
+    "Green tea, clear mind… sana all.",
+    "Soft life starts with one good sip.",
+    "Hindi minamadali ang happiness, pati matcha.",
+    "Matcha made me do it.",
+    "Mas kalmado ang mundo kapag may matcha sa kamay.",
+    "Your daily dose of green goodness.",
+    "Kung kailangan mo ng sign para mag-matcha, ito na ’yon."
+  ],
+  Soda: [
+    "Pop, fizz, sip! Good vibes muna.",
+    "Bubbly drink para sa bubbly mood.",
+    "Bawat fizz, bawas stress.",
+    "Soda muna bago sumabog sa inis.",
+    "Stay cool. Keep it bubbly.",
+    "Kung flat ang mood, dagdagan ng fizz.",
+    "Sparkling vibes lang tayo today.",
+    "Isang sip, parang mini celebration.",
+    "Life’s better with a little sparkle.",
+    "Chill ka lang, hindi pa ubos ang yelo.",
+    "Sweet, fizzy, at walang kailangang i-overthink.",
+    "Fizz happens. Sip happens. Smile na lang.",
+    "Para sa mga gustong mag-refresh ng mood.",
+    "More bubbles, less troubles.",
+    "Palamig muna ng ulo, soda muna."
+  ],
+  Milky: [
+    "Milky comfort para sa pagod na puso.",
+    "Hindi lahat ng comfort may yakap. Minsan malamig at milky lang.",
+    "Sweet sip, soft mood.",
+    "Kung gusto mo ng lambing, start with something milky.",
+    "Creamy, dreamy, at deserve mo ’to.",
+    "A little sweetness can change the mood.",
+    "Milky drink, less overthinking.",
+    "Hindi man sweet ang araw, at least ang iniinom mo.",
+    "Soft heart, creamy drink.",
+    "Minsan ang sagot ay chocolate. Minsan white chocolate.",
+    "Comfort drink para sa main character na pagod na.",
+    "Life’s messy. Make it creamy.",
+    "Isang creamy sip muna bago bumalik sa realidad.",
+    "Sweetness level: deserve ko ’to.",
+    "Kung kailangan ng pahinga, milky muna."
+  ],
+  Fries: [
+    "Fries muna bago seryosong usapan.",
+    "Ang tunay na love language ay share ng fries.",
+    "Good friends share fries. Best friends order extra.",
+    "Stress fries? Approved.",
+    "Walang problema na hindi kayang samahan ng fries.",
+    "Crispy outside, soft inside—relate ka ba?",
+    "Isang fry pa. Last na talaga… siguro.",
+    "Fries are cheaper than overthinking.",
+    "Kung may fries, may dahilan para mag-stay.",
+    "Small bites, big happiness."
+  ]
+};
 
-function getRandomQuote(current = "") {
-  for (let attempt = 0; attempt < 12; attempt += 1) {
-    const start = QUOTE_STARTS[Math.floor(Math.random() * QUOTE_STARTS.length)];
-    const ending = QUOTE_ENDINGS[Math.floor(Math.random() * QUOTE_ENDINGS.length)];
-    const candidate = start + ending;
-    if (candidate !== current) return candidate;
-  }
-  return QUOTE_STARTS[Math.floor(Math.random() * QUOTE_STARTS.length)] +
-    QUOTE_ENDINGS[Math.floor(Math.random() * QUOTE_ENDINGS.length)];
+function getQuoteCategory(product: { category: string }): QuoteCategory {
+  if (product.category === "Matcha") return "Matcha";
+  if (product.category === "Soda") return "Soda";
+  if (product.category === "Fries") return "Fries";
+  if (product.category === "Milky" || product.category === "Signature") return "Milky";
+  return "Coffee";
+}
+
+function getRandomQuote(category: QuoteCategory, current = "") {
+  const quotes = QUOTES_BY_CATEGORY[category];
+  const choices = quotes.filter((item) => item !== current);
+  return choices[Math.floor(Math.random() * choices.length)] ?? quotes[0];
 }
 
 export default function CupWrapPage() {
@@ -174,7 +205,7 @@ export default function CupWrapPage() {
   const price = String(selectedProduct.price);
   const drinkName = selectedProduct.name;
   const filteredMenu = CUP_MENU.filter((item) => (item.name + " " + item.size).toLowerCase().includes(menuSearch.toLowerCase()));
-  const [quote, setQuote] = useState(() => getRandomQuote());
+  const [quote, setQuote] = useState(() => getRandomQuote(getQuoteCategory(CUP_MENU.find((item) => item.id === "spanish-22") ?? CUP_MENU[0])));
   const [customerName, setCustomerName] = useState("");
   const [optionalNote, setOptionalNote] = useState("");
   const [startingCash, setStartingCash] = useState("0");
@@ -239,7 +270,7 @@ export default function CupWrapPage() {
     try { window.localStorage.setItem(ORDER_COUNTER_KEY, String(next)); } catch { /* Ignore unavailable storage. */ }
     setOrderNumber(String(next).padStart(3, "0"));
     setHistory((previous) => [record, ...previous]);
-    setQuote(getRandomQuote(quote));
+    setQuote(getRandomQuote(getQuoteCategory(selectedProduct), quote));
     window.setTimeout(() => window.print(), 100);
   };
 
@@ -367,11 +398,11 @@ export default function CupWrapPage() {
             <p className="wrap-muted">Compact cup wrap for 80mm thermal roll paper. Includes hot 8oz/12oz, price, and a shorter layout. Measure your cup before printing.</p>
             <div className="wrap-field">
               <label htmlFor="menu-search">Search drink from POS menu</label>
-              <input id="menu-search" value={menuSearch} onChange={(e) => setMenuSearch(e.target.value)} placeholder="Type Spanish Latte, Matcha, Hot..." />
+              <input id="menu-search" value={menuSearch} onChange={(e) => setMenuSearch(e.target.value)} placeholder="Type Spanish Latte, Matcha, Soda..." />
             </div>
             <div className="wrap-field">
               <label htmlFor="menu-item">Drink &amp; size — price auto-filled</label>
-              <select id="menu-item" value={selectedProductId} onChange={(e) => setSelectedProductId(e.target.value)} size={Math.min(7, Math.max(3, filteredMenu.length))} style={{height:"auto",minHeight:48}}>
+              <select id="menu-item" value={selectedProductId} onChange={(e) => { const nextId = e.target.value; const nextProduct = CUP_MENU.find((item) => item.id === nextId) ?? CUP_MENU[0]; setSelectedProductId(nextId); setQuote(getRandomQuote(getQuoteCategory(nextProduct), quote)); }} size={Math.min(7, Math.max(3, filteredMenu.length))} style={{height:"auto",minHeight:48}}>
                 {filteredMenu.map((item) => <option key={item.id} value={item.id}>{item.name} · {item.size} — ₱{item.price}</option>)}
               </select>
               <p className="wrap-muted">Selected: <strong>{drinkName} · {cup} — ₱{price}</strong>. Hanapin lang at piliin ang exact size; automatic ang presyo mula sa POS menu list.</p>
@@ -393,10 +424,10 @@ export default function CupWrapPage() {
               <input id="order-date-time" type="datetime-local" value={orderDateTime} onChange={(e) => setOrderDateTime(e.target.value)} />
             </div>
             <div className="wrap-field">
-              <label htmlFor="main-quote">Large quote · 1,000+ random Tagalog/Taglish combinations</label>
+              <label htmlFor="main-quote">Drink-matched quote · curated per category</label>
               <input id="main-quote" value={quote} onChange={(e) => setQuote(e.target.value.slice(0, 120))} maxLength={120} />
               <button type="button" className="wrap-btn secondary" onClick={() => setQuote(getRandomQuote(quote))}>🎲 Random funny quote</button>
-              <p className="wrap-muted">Automatic random quote pag-open ng page. Pindutin ulit ang button para sa bagong funny line, o i-edit ang text kung gusto mo.</p>
+              <p className="wrap-muted">Automatic na tugma ang quote sa napiling drink category. Matcha = matcha lines, Coffee = coffee lines, Soda = fizzy lines, Milky/Signature = creamy lines. Puwede mo pa ring i-edit ang quote.</p>
             </div>
             <div className="wrap-field">
               <label><input type="checkbox" checked={showQr} onChange={(e) => setShowQr(e.target.checked)} /> Include Facebook QR</label>
