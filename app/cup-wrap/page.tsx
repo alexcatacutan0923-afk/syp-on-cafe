@@ -428,7 +428,7 @@ export default function CupWrapPage() {
     const next = (Number(orderNumber) || 0) + 1;
     try { window.localStorage.setItem(ORDER_COUNTER_KEY, String(next)); } catch { /* Ignore unavailable storage. */ }
     setOrderNumber(String(next).padStart(3, "0"));
-    setQuote(getRandomQuote(quote));
+    setQuote(getRandomQuote(getQuoteCategory(selectedProduct), quote));
   };
 
   const printQueued = () => {
