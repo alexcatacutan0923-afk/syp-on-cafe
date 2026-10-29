@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 
 const LOGO_URL = "/IMG_5996.jpeg";
 const FACEBOOK_URL = "https://www.facebook.com/SypOnCafe";
-const LOYALTY_URL = "https://tinyurl.com/SYP-ON-CAFE-REGISTER";
+const LOYALTY_URL = "https://syponcafe.shop/member-register";
 
  type PrintRecord = { id: string; printedAt: string; cup: string; drinkName: string; price: string; category?: string; theme?: string; customerName: string; orderNumber: string; orderDateTime: string; quote: string; note: string; };
 const HISTORY_KEY = "sypCupWrapPrintHistoryV1";
@@ -500,7 +500,7 @@ export default function CupWrapPage() {
         .wrap-art.theme-coffee,.wrap-art.theme-strawberry,.wrap-art.theme-soda,.wrap-art.theme-matcha,.wrap-art.theme-milky { background:#fff; color:#000; border-color:#000; outline-color:#000; }
         .wrap-art .wrap-block { border-color:#000; }
         .wrap-art .wrap-tag,.wrap-art .wrap-social,.wrap-art .wrap-side-date { color:#000; }
-        .wrap-motif { display:block; width:100%; max-width:34mm; height:18mm; color:#000; margin:0 auto 1mm; }
+        .wrap-motif { display:block; width:100%; max-width:29mm; height:13mm; color:#000; margin:0 auto 1mm; flex-shrink:0; }
         .wrap-art .wrap-block { border-color:var(--wrap-accent); }
         .wrap-art .wrap-tag, .wrap-art .wrap-social, .wrap-art .wrap-side-date { color:var(--wrap-ink); }
         .wrap-amenities { display:flex; flex-wrap:wrap; gap:5px 8px; font-size:8px; font-weight:800; margin-top:10px; }
@@ -514,7 +514,7 @@ export default function CupWrapPage() {
         .wrap-drink { font-size:clamp(17px,2.5vw,30px); font-weight:900; text-align:center; line-height:1.05; overflow-wrap:anywhere; }
         .wrap-price { font-size:clamp(12px,1.8vw,18px); font-weight:900; text-align:center; margin-top:3px; }
         .wrap-order-meta { font-size:8px; font-weight:800; line-height:1.4; margin-top:5px; overflow-wrap:anywhere; }
-        .wrap-quote { font-family:Georgia,serif; font-size:clamp(12px,1.8vw,19px); font-style:italic; font-weight:800; line-height:1.12; }
+        .wrap-quote { font-family:Georgia,serif; font-size:clamp(10px,1.4vw,16px); font-style:italic; font-weight:800; line-height:1.12; overflow-wrap:anywhere; text-align:center; }
         .wrap-logo { display:none!important; }
         .wrap-print-logo { display:block; width:34mm; max-width:100%; height:13mm; object-fit:contain; object-position:center; filter:grayscale(1) contrast(2); margin:0 auto 1mm; }
         .wrap-qr { width:54px; height:54px; object-fit:contain; background:white; padding:2px; }
@@ -532,25 +532,25 @@ export default function CupWrapPage() {
           .wrap-head, .wrap-controls, .wrap-preview, .wrap-instructions, .wrap-history { display:none!important; }
           .wrap-print-target { display:block!important; position:fixed!important; left:0!important; top:0!important; width:80mm!important; height:297mm!important; overflow:hidden!important; background:#fff!important; }
           .wrap-print-art { position:absolute!important; left:50%!important; top:var(--wrap-top, 50%)!important; width:${wrapLength}mm!important; height:62mm!important; transform-origin:center center!important; transform:translate(-50%,-50%) rotate(90deg)!important; display:grid!important; grid-template-columns:1fr 1.25fr 1fr!important; gap:3mm!important; padding:4mm!important; background:#fff!important; color:#000!important; border:1.2mm solid #000!important; outline:0.35mm solid #000!important; outline-offset:1mm!important; print-color-adjust:exact!important; -webkit-print-color-adjust:exact!important; }
-          .wrap-print-art .wrap-script { font-size:20pt!important; }
-          .wrap-print-art .wrap-brand { font-size:20pt!important; }
-          .wrap-print-art .wrap-quote { font-size:17pt!important; }
-          .wrap-print-art .wrap-drink { font-size:17pt!important; }
+          .wrap-print-art .wrap-script { font-size:10pt!important; line-height:1.05!important; }
+          .wrap-print-art .wrap-brand { font-size:11pt!important; line-height:1!important; }
+          .wrap-print-art .wrap-quote { display:block!important; font-size:8pt!important; line-height:1.12!important; max-height:22mm!important; overflow:hidden!important; overflow-wrap:anywhere!important; }
+          .wrap-print-art .wrap-drink { font-size:10pt!important; line-height:1.05!important; overflow-wrap:anywhere!important; }
           .wrap-print-art.theme-coffee,.wrap-print-art.theme-strawberry,.wrap-print-art.theme-soda,.wrap-print-art.theme-matcha,.wrap-print-art.theme-milky { background:#fff!important; color:#000!important; border-color:#000!important; outline-color:#000!important; }
            .wrap-print-art .wrap-block { border-color:#000!important; }
            .wrap-print-art .wrap-tag,.wrap-print-art .wrap-social,.wrap-print-art .wrap-side-date { color:#000!important; }
            .wrap-print-art .wrap-amenities span { border-color:#000!important; }
-           .wrap-print-art .wrap-stamp-title { font-size:10pt!important; }
+           .wrap-print-art .wrap-stamp-title { font-size:8pt!important; line-height:1.05!important; }
            .wrap-print-art .wrap-order-box { border-color:#000!important; }
            .wrap-print-art .wrap-price { font-size:12pt!important; font-weight:900!important; text-align:center!important; margin-top:1mm!important; }
           .wrap-print-art .wrap-order-meta { font-size:6pt!important; }
           .wrap-print-art .wrap-logo { display:none!important; }
-          .wrap-print-art .wrap-print-logo { width:35mm!important; height:15mm!important; object-fit:contain!important; filter:grayscale(1) contrast(2)!important; margin:0 auto 1mm!important; }
+          .wrap-print-art .wrap-print-logo { width:22mm!important; height:9mm!important; object-fit:contain!important; filter:grayscale(1) contrast(2)!important; margin:0 auto 0.5mm!important; }
           
           .wrap-print-art .wrap-side-date { font-size:7pt!important; }
-          .wrap-print-art .wrap-qr { width:16mm!important; height:16mm!important; }
+          .wrap-print-art .wrap-qr { width:13mm!important; height:13mm!important; flex-shrink:0!important; }
           .wrap-print-art .wrap-social { font-size:6pt!important; }
-          .wrap-print-art .wrap-tag { font-size:8pt!important; }
+          .wrap-print-art .wrap-tag { font-size:5pt!important; letter-spacing:.04em!important; margin-top:1mm!important; }\n          .wrap-print-art .wrap-motif { width:22mm!important; max-width:22mm!important; height:9mm!important; margin:0 auto 0.5mm!important; flex-shrink:0!important; }\n          .wrap-print-art .wrap-block { min-width:0!important; padding-right:2mm!important; justify-content:space-evenly!important; overflow:hidden!important; }\n          .wrap-print-art .wrap-amenities { font-size:4.5pt!important; gap:1mm!important; margin-top:1mm!important; }\n          .wrap-print-art .wrap-amenities span { padding:0.5mm 1mm!important; }\n          .wrap-print-art .wrap-order-box { font-size:6pt!important; padding:1mm!important; margin-top:1mm!important; }\n          .wrap-print-art .wrap-social,.wrap-print-art .wrap-side-date,.wrap-print-art .wrap-order-meta { font-size:4.5pt!important; margin-top:0.5mm!important; }
         }
       `}</style>
 
@@ -693,13 +693,12 @@ export default function CupWrapPage() {
 
 
 function WrapMotif({ theme }: { theme: string }) {
-  if (theme === "strawberry") return <svg className="wrap-motif" viewBox="0 0 180 80" aria-label="Strawberries" role="img"><g fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M40 22 C25 8 12 22 26 34 C12 50 30 72 49 76 C69 69 83 49 70 34 C84 20 70 8 56 22 C50 16 45 16 40 22Z"/><path d="M40 22 Q30 10 43 15 L50 20 Q62 10 66 19 L56 26 M50 20 L50 13"/><path d="M105 30 C91 18 81 31 92 41 C81 55 94 72 110 76 C128 69 140 52 127 41 C139 29 126 18 115 30Z"/><path d="M104 30 Q96 20 107 22 L114 29 Q124 20 129 28 L116 35"/><g fill="black"><circle cx="36" cy="39" r="1.8"/><circle cx="57" cy="39" r="1.8"/><circle cx="47" cy="52" r="1.8"/><circle cx="38" cy="62" r="1.8"/><circle cx="59" cy="62" r="1.8"/><circle cx="103" cy="45" r="1.5"/><circle cx="120" cy="45" r="1.5"/><circle cx="111" cy="59" r="1.5"/></g></g></svg>;
-  if (theme === "coffee") return <svg className="wrap-motif" viewBox="0 0 180 80" aria-label="Coffee beans" role="img"><g fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round"><g transform="rotate(-25 48 40)"><ellipse cx="48" cy="40" rx="19" ry="30"/><path d="M36 14 Q64 34 37 65"/></g><g transform="rotate(18 91 40)"><ellipse cx="91" cy="40" rx="18" ry="28"/><path d="M81 14 Q105 36 82 65"/></g><g transform="rotate(35 132 42)"><ellipse cx="132" cy="42" rx="16" ry="25"/><path d="M123 19 Q144 40 124 64"/></g></g></svg>;
-  if (theme === "soda") return <svg className="wrap-motif" viewBox="0 0 180 80" aria-label="Soda bubbles" role="img"><g fill="none" stroke="black" strokeWidth="2.5"><circle cx="42" cy="40" r="19"/><circle cx="88" cy="24" r="12"/><circle cx="122" cy="48" r="23"/><circle cx="153" cy="20" r="7"/><path d="M35 35q5 -8 10 -2 M115 42q6 -9 12 -2"/></g></svg>;
-  if (theme === "matcha") return <svg className="wrap-motif" viewBox="0 0 180 80" aria-label="Matcha leaves" role="img"><g fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M90 72 Q88 40 90 9 M89 39 Q59 37 45 15 Q75 11 89 39 M90 54 Q120 52 137 25 Q108 24 90 54 M52 18L81 35 M130 28L97 48"/></g></svg>;
-  return <svg className="wrap-motif" viewBox="0 0 180 80" aria-label="Drink sparkle" role="img"><g fill="none" stroke="black" strokeWidth="2.5"><path d="M42 20l5 13 13 5 -13 5 -5 13 -5 -13 -13 -5 13 -5Z M127 12l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4Z"/><circle cx="91" cy="58" r="11"/></g></svg>;
+  if (theme === "strawberry") return <svg className="wrap-motif" viewBox="0 0 180 80" aria-label="Detailed strawberry illustration" role="img"><g stroke="black" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path fill="white" d="M42 24 C31 17 19 23 22 34 C10 48 23 67 43 75 C63 68 77 48 64 34 C67 22 54 17 42 24Z"/><path fill="white" d="M42 25 C30 14 26 9 20 13 C29 23 33 26 42 28 C45 17 52 9 61 13 C59 22 51 26 42 28 C42 17 42 12 42 8"/><path fill="none" d="M25 36 Q34 41 31 49 M60 36 Q51 43 55 50 M31 57 Q40 62 42 70 M52 57 Q46 63 45 70"/><path fill="white" d="M105 29 C95 22 84 28 87 39 C77 51 89 68 106 75 C123 68 136 51 125 39 C128 28 116 22 105 29Z"/><path fill="white" d="M105 29 C96 19 91 17 87 20 C92 27 98 30 105 32 C108 23 115 18 123 21 C120 28 113 31 105 32"/><path fill="none" d="M90 42 Q98 46 96 53 M121 42 Q113 47 116 54 M97 60 Q103 64 105 70"/><g fill="black" stroke="none"><ellipse cx="32" cy="35" rx="1.2" ry="2"/><ellipse cx="48" cy="35" rx="1.2" ry="2"/><ellipse cx="40" cy="43" rx="1.2" ry="2"/><ellipse cx="29" cy="49" rx="1.2" ry="2"/><ellipse cx="53" cy="50" rx="1.2" ry="2"/><ellipse cx="39" cy="57" rx="1.2" ry="2"/><ellipse cx="49" cy="63" rx="1.2" ry="2"/><ellipse cx="99" cy="40" rx="1.1" ry="1.8"/><ellipse cx="112" cy="39" rx="1.1" ry="1.8"/><ellipse cx="105" cy="47" rx="1.1" ry="1.8"/><ellipse cx="94" cy="53" rx="1.1" ry="1.8"/><ellipse cx="117" cy="54" rx="1.1" ry="1.8"/><ellipse cx="104" cy="61" rx="1.1" ry="1.8"/></g></g></svg>;
+  if (theme === "coffee") return <svg className="wrap-motif" viewBox="0 0 180 80" aria-label="Detailed coffee bean illustration" role="img"><g stroke="black" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><g transform="rotate(-24 48 40)"><path fill="white" d="M48 9 C67 9 70 28 62 43 C55 59 46 71 36 64 C22 54 28 30 34 18 C38 11 43 9 48 9Z"/><path fill="none" strokeWidth="3" d="M35 17 C52 26 56 42 38 61"/><path fill="none" d="M39 23 Q45 29 46 35 M35 39 Q39 44 39 49"/></g><g transform="rotate(14 94 40)"><path fill="white" d="M94 12 C111 12 116 28 109 43 C102 59 93 70 83 63 C70 54 75 31 81 20 C84 14 89 12 94 12Z"/><path fill="none" strokeWidth="3" d="M82 19 C99 28 102 43 85 61"/><path fill="none" d="M86 25 Q91 31 92 37 M82 41 Q86 46 86 51"/></g><g transform="rotate(32 139 42)"><path fill="white" d="M139 18 C154 18 159 32 153 45 C147 58 139 67 130 61 C119 53 124 34 129 25 C132 20 136 18 139 18Z"/><path fill="none" strokeWidth="2.6" d="M130 25 C144 32 147 44 132 59"/></g></g></svg>;
+  if (theme === "soda") return <svg className="wrap-motif" viewBox="0 0 180 80" aria-label="Soda bubbles" role="img"><g fill="none" stroke="black" strokeWidth="2"><circle cx="42" cy="43" r="17"/><circle cx="78" cy="23" r="10"/><circle cx="103" cy="51" r="22"/><circle cx="143" cy="25" r="13"/><circle cx="158" cy="59" r="6"/><path d="M35 37q5 -8 10 -2 M73 19q3 -5 6 -1 M94 44q6 -9 12 -2 M137 20q4 -6 7 -1"/></g></svg>;
+  if (theme === "matcha") return <svg className="wrap-motif" viewBox="0 0 180 80" aria-label="Matcha leaves" role="img"><g fill="white" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M89 72 Q84 43 90 8 Q105 29 89 72Z"/><path d="M88 45 Q57 48 38 18 Q69 13 88 45Z"/><path d="M91 57 Q121 56 145 27 Q113 23 91 57Z"/><path d="M49 25L80 42 M133 32L99 51 M90 20L89 62" fill="none"/></g></svg>;
+  return <svg className="wrap-motif" viewBox="0 0 180 80" aria-label="Drink sparkle" role="img"><g fill="none" stroke="black" strokeWidth="2"><path d="M42 20l5 13 13 5 -13 5 -5 13 -5 -13 -13 -5 13 -5Z M127 12l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4Z"/><circle cx="91" cy="58" r="11"/></g></svg>;
 }
-
 function WrapArt({ quote, showQr, qrUrl, drinkName, price, cup, customerName, orderNumber, orderDateTime, theme }: { quote: string; showQr: boolean; qrUrl: string; drinkName: string; price: string; cup: string; customerName: string; orderNumber: string; orderDateTime: string; theme: string }) {
   return (
     <div className={`wrap-art theme-${theme}`}>
