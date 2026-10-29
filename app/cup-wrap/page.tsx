@@ -497,7 +497,7 @@ export default function CupWrapPage() {
         .wrap-btn { border:0; border-radius:9px; padding:12px 14px; background:#62442e; color:white; font-weight:800; cursor:pointer; }
         .wrap-btn.secondary { background:#eee1d0; color:#62442e; }
         .wrap-preview { overflow-x:auto; padding:14px; background:#e7d8c6; border-radius:12px; }
-        .wrap-art { width:100%; min-width:540px; aspect-ratio:250 / 62; display:grid; grid-template-columns:1fr 1.25fr 1fr; gap:9px; align-items:center; padding:10px 14px; background:#fff; color:#000; border:2px solid #000; outline:1px solid #000; outline-offset:3px; border-radius:4px; }
+        .wrap-art { width:100%; min-width:540px; aspect-ratio:250 / 62; display:grid; grid-template-columns:1fr 1.03fr 1.18fr .92fr 1fr; gap:0; align-items:center; padding:10px 14px; background:#fff; color:#000; border:2px solid #000; outline:1px solid #000; outline-offset:3px; border-radius:4px; }
         .wrap-art.theme-coffee,.wrap-art.theme-strawberry,.wrap-art.theme-soda,.wrap-art.theme-matcha,.wrap-art.theme-milky { background:#fff; color:#000; border-color:#000; outline-color:#000; }
         .wrap-art .wrap-block { border-color:#000; }
         .wrap-art .wrap-tag,.wrap-art .wrap-social,.wrap-art .wrap-side-date { color:#000; }
@@ -514,6 +514,20 @@ export default function CupWrapPage() {
         .wrap-tag { font-size:9px; font-weight:800; letter-spacing:.12em; margin-top:5px; }
         .wrap-drink { font-size:clamp(17px,2.5vw,30px); font-weight:900; text-align:center; line-height:1.05; overflow-wrap:anywhere; }
         .wrap-price { font-size:clamp(12px,1.8vw,18px); font-weight:900; text-align:center; margin-top:3px; }\n        .wrap-product-area { width:100%; min-height:12mm; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:1mm; border-top:1px solid #000; border-bottom:1px solid #000; padding:2mm 1mm; margin-top:2mm; }\n        .wrap-quote-left { margin-top:auto; padding-top:2mm; min-height:10mm; display:flex; align-items:center; justify-content:center; }
+        .wrap-art .wrap-block { border-right:1px dashed #777; padding:2mm; gap:1mm; }
+        .wrap-left-panel,.wrap-right-panel { text-align:center; align-items:center; }
+        .wrap-large-quote { font-family:Arial,sans-serif; font-size:clamp(11px,1.45vw,18px); font-weight:700; line-height:1.16; }
+        .wrap-doodle,.wrap-cup-icon,.wrap-cup-doodle,.wrap-thought-doodle { font-size:clamp(16px,2.1vw,28px); line-height:1; text-align:center; }
+        .wrap-mini-quote,.wrap-tag-us,.wrap-made-for { font-size:clamp(7px,.85vw,11px); font-weight:800; text-align:center; line-height:1.2; }
+        .wrap-menu-heading { align-self:flex-start; border:1px solid #000; border-radius:99px; padding:1mm 3mm; font-size:clamp(8px,1vw,12px); font-weight:900; margin-bottom:1mm; }
+        .wrap-menu-item { display:flex; flex-direction:column; font-size:clamp(7px,.78vw,10px); line-height:1.16; margin-bottom:1.4mm; }
+        .wrap-menu-item strong { font-size:1.05em; }
+        .wrap-hot-heading { margin-top:1mm; }
+        .wrap-menu-beans { font-size:12px; text-align:right; }
+        .wrap-qr-panel { align-items:center; text-align:center; }
+        .wrap-plus { font-size:10px; }
+        .wrap-tag-us { border-top:1px solid #000; padding-top:2mm; margin-top:1mm; }
+        .wrap-right-panel { border-right:0!important; }
         .wrap-order-meta { font-size:8px; font-weight:800; line-height:1.4; margin-top:5px; overflow-wrap:anywhere; }
         .wrap-quote { font-family:Georgia,serif; font-size:clamp(10px,1.4vw,16px); font-style:italic; font-weight:800; line-height:1.12; overflow-wrap:anywhere; text-align:center; }
         .wrap-logo { display:none!important; }
@@ -532,11 +546,19 @@ export default function CupWrapPage() {
           .wrap-shell, .wrap-head, .wrap-grid, .wrap-panel { display:block!important; width:80mm!important; max-width:80mm!important; margin:0!important; padding:0!important; border:0!important; background:white!important; }
           .wrap-head, .wrap-controls, .wrap-preview, .wrap-instructions, .wrap-history { display:none!important; }
           .wrap-print-target { display:block!important; position:fixed!important; left:0!important; top:0!important; width:80mm!important; height:297mm!important; overflow:hidden!important; background:#fff!important; }
-          .wrap-print-art { position:absolute!important; left:50%!important; top:var(--wrap-top, 50%)!important; width:${wrapLength}mm!important; height:62mm!important; transform-origin:center center!important; transform:translate(-50%,-50%) rotate(90deg)!important; display:grid!important; grid-template-columns:1fr 1.25fr 1fr!important; gap:3mm!important; padding:4mm!important; background:#fff!important; color:#000!important; border:1.2mm solid #000!important; outline:0.35mm solid #000!important; outline-offset:1mm!important; print-color-adjust:exact!important; -webkit-print-color-adjust:exact!important; }
+          .wrap-print-art { position:absolute!important; left:50%!important; top:var(--wrap-top, 50%)!important; width:${wrapLength}mm!important; height:62mm!important; transform-origin:center center!important; transform:translate(-50%,-50%) rotate(90deg)!important; display:grid!important; grid-template-columns:1fr 1.03fr 1.18fr .92fr 1fr!important; gap:0!important; padding:4mm!important; background:#fff!important; color:#000!important; border:1.2mm solid #000!important; outline:0.35mm solid #000!important; outline-offset:1mm!important; print-color-adjust:exact!important; -webkit-print-color-adjust:exact!important; }
           .wrap-print-art .wrap-script { font-size:15pt!important; line-height:1.08!important; }
           .wrap-print-art .wrap-brand { font-size:16pt!important; line-height:1!important; }
           .wrap-print-art .wrap-quote { display:block!important; font-size:12pt!important; line-height:1.15!important; max-height:none!important; overflow:visible!important; overflow-wrap:anywhere!important; text-align:center!important; }
           .wrap-print-art .wrap-drink { font-size:16pt!important; line-height:1.05!important; overflow-wrap:anywhere!important; }\n          .wrap-print-art .wrap-product-area { min-height:15mm!important; width:100%!important; padding:2mm 1mm!important; margin-top:2mm!important; border-top:0.35mm solid #000!important; border-bottom:0.35mm solid #000!important; gap:1mm!important; flex-shrink:0!important; }\n          .wrap-print-art .wrap-price { display:block!important; font-size:12pt!important; line-height:1.1!important; margin-top:1mm!important; font-weight:900!important; }\n          .wrap-print-art .wrap-quote-left { display:flex!important; font-size:10pt!important; line-height:1.15!important; min-height:13mm!important; margin-top:auto!important; padding:2mm 1mm!important; overflow-wrap:anywhere!important; }
+          .wrap-print-art .wrap-block { padding:2mm!important; gap:1mm!important; min-width:0!important; border-right:0.3mm dashed #555!important; overflow:hidden!important; }
+          .wrap-print-art .wrap-large-quote { font-size:9pt!important; line-height:1.16!important; }
+          .wrap-print-art .wrap-doodle,.wrap-print-art .wrap-cup-icon,.wrap-print-art .wrap-cup-doodle,.wrap-print-art .wrap-thought-doodle { font-size:18pt!important; }
+          .wrap-print-art .wrap-mini-quote,.wrap-print-art .wrap-tag-us,.wrap-print-art .wrap-made-for { font-size:6.5pt!important; line-height:1.15!important; }
+          .wrap-print-art .wrap-menu-heading { font-size:7pt!important; padding:0.8mm 2mm!important; margin-bottom:1mm!important; }
+          .wrap-print-art .wrap-menu-item { font-size:6.2pt!important; line-height:1.13!important; margin-bottom:1.2mm!important; }
+          .wrap-print-art .wrap-qr { display:block!important; width:18mm!important; height:18mm!important; min-width:18mm!important; min-height:18mm!important; object-fit:contain!important; }
+          .wrap-print-art .wrap-right-panel { border-right:0!important; }
           .wrap-print-art.theme-coffee,.wrap-print-art.theme-strawberry,.wrap-print-art.theme-soda,.wrap-print-art.theme-matcha,.wrap-print-art.theme-milky { background:#fff!important; color:#000!important; border-color:#000!important; outline-color:#000!important; }
            .wrap-print-art .wrap-block { border-color:#000!important; }
            .wrap-print-art .wrap-tag,.wrap-print-art .wrap-social,.wrap-print-art .wrap-side-date { color:#000!important; }
@@ -707,31 +729,55 @@ function WrapMotif({ theme }: { theme: string }) {
   return <svg className="wrap-motif" viewBox="0 0 180 80" aria-label="Drink sparkle" role="img"><g fill="none" stroke="black" strokeWidth="2"><path d="M42 20l5 13 13 5 -13 5 -5 13 -5 -13 -13 -5 13 -5Z M127 12l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4Z"/><circle cx="91" cy="58" r="11"/></g></svg>;
 }
 function WrapArt({ quote, showQr, qrUrl, drinkName, price, cup, customerName, orderNumber, orderDateTime, theme }: { quote: string; showQr: boolean; qrUrl: string; drinkName: string; price: string; cup: string; customerName: string; orderNumber: string; orderDateTime: string; theme: string }) {
+  const menuItems = [
+    { name: "SPANISH LATTE", small: "₱89", large: "₱109" },
+    { name: "MATCHA LATTE", small: "₱89", large: "₱109" },
+    { name: "DARK CHOCOLATE", small: "₱89", large: "₱109" },
+    { name: "SALTED CARAMEL", small: "₱89", large: "₱109" },
+  ];
   return (
     <div className={`wrap-art theme-${theme}`}>
-      <div className="wrap-block">
-        <div className="wrap-script">Thank you ♥<br />for supporting<br />local &amp; choosing<br />SYP ON CAFÉ.</div>
-        <WrapMotif theme={theme} />
+      <div className="wrap-block wrap-left-panel">
+        <div className="wrap-doodle" aria-hidden="true">✦</div>
+        <div className="wrap-quote wrap-large-quote">{quote || "Ako na gumagawa ng problema, ako rin ang stress. ☺"}</div>
+        <div className="wrap-doodle wrap-cup-doodle" aria-hidden="true">☕</div>
+        <div className="wrap-mini-quote">OVERTHINK BUT MAKE IT COFFEE.</div>
         <div className="wrap-amenities"><span>FREE WI-FI</span><span>BOARD GAMES</span><span>YOUTUBE &amp; NETFLIX</span></div>
-        <div className="wrap-quote wrap-quote-left">{quote || "Good Drinks, Better Days"}</div>
+      </div>
+      <div className="wrap-block wrap-menu-panel">
+        <div className="wrap-menu-heading">OUR DRINKS</div>
+        {menuItems.map((item) => <div className="wrap-menu-item" key={item.name}>
+          <strong>{item.name}</strong><span>16oz&nbsp;&nbsp; {item.small}</span><span>22oz&nbsp;&nbsp; {item.large}</span>
+        </div>)}
+        <div className="wrap-menu-heading wrap-hot-heading">HOT DRINKS</div>
+        <div className="wrap-menu-item"><strong>HOT SALTED CARAMEL</strong><span>8oz&nbsp;&nbsp; ₱69</span><span>12oz&nbsp; ₱89</span></div>
+        <div className="wrap-menu-beans" aria-hidden="true">◉ ◉</div>
       </div>
       <div className="wrap-block wrap-center-block" style={{alignItems:"center",textAlign:"center"}}>
-        <WrapMotif theme={theme} />
+        <div className="wrap-cup-icon" aria-hidden="true">☕</div>
         <img className="wrap-print-logo" src={LOGO_URL} alt="SYP ON CAFÉ" />
         <div className="wrap-brand">SYP ON CAFÉ</div>
         <div className="wrap-tag">— STREET • ICED • BREWED —</div>
         <div className="wrap-product-area">
+          <div className="wrap-order-box">ORDER #{orderNumber || "001"}</div>
           <div className="wrap-drink">{drinkName || "YOUR DRINK"}</div>
-          <div className="wrap-price">₱{price || "—"} · {cup}</div>
+          <div className="wrap-price">{cup} · ₱{price || "—"}</div>
         </div>
-        <div className="wrap-order-box">ORDER #{orderNumber || "—"}</div>
-        {customerName ? <div className="wrap-order-meta">FOR: {customerName}</div> : null}
+        {customerName ? <div className="wrap-order-meta">MADE FOR {customerName}</div> : <div className="wrap-made-for">✦ MADE FOR YOU ✦</div>}
+        {orderDateTime ? <div className="wrap-side-date">{new Date(orderDateTime).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" })}</div> : null}
       </div>
-      <div className="wrap-block wrap-right-block" style={{borderRight:0,paddingRight:0,alignItems:"center",textAlign:"center"}}>
-        <div className="wrap-stamp-title">Scan to<br />collect stamps!</div>
+      <div className="wrap-block wrap-qr-panel">
+        <div className="wrap-stamp-title">Scan<br />&amp; Follow us!</div>
+        <div className="wrap-plus" aria-hidden="true">＋ ♡</div>
         {showQr && <img className="wrap-qr" src={qrUrl} alt="SYP loyalty registration QR" />}
-        <div className="wrap-social">f  ◎  ♪ @SypOnCafe</div>
-        <div className="wrap-side-date">{orderDateTime ? new Date(orderDateTime).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" }) : ""}</div>
+        <div className="wrap-social">● f  ◎  ♪ @SypOnCafe</div>
+        <div className="wrap-tag-us">TAG US IN YOUR<br />COFFEE MOMENT ☺</div>
+      </div>
+      <div className="wrap-block wrap-right-panel">
+        <div className="wrap-doodle" aria-hidden="true">♡ ✦</div>
+        <div className="wrap-quote wrap-large-quote">{getRandomQuote(getQuoteCategory(drinkName || "coffee"), quote) || "Walang problema? Wait lang, hahanap ang utak ko."}</div>
+        <div className="wrap-thought-doodle" aria-hidden="true">☁</div>
+        <div className="wrap-mini-quote">GOOD DRINKS<br />BETTER DAYS ♡</div>
       </div>
     </div>
   );
