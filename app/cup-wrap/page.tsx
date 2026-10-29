@@ -496,12 +496,11 @@ export default function CupWrapPage() {
         .wrap-btn { border:0; border-radius:9px; padding:12px 14px; background:#62442e; color:white; font-weight:800; cursor:pointer; }
         .wrap-btn.secondary { background:#eee1d0; color:#62442e; }
         .wrap-preview { overflow-x:auto; padding:14px; background:#e7d8c6; border-radius:12px; }
-        .wrap-art { --wrap-bg:#fff; --wrap-ink:#171717; --wrap-accent:#b89616; width:100%; min-width:540px; aspect-ratio:250 / 62; display:grid; grid-template-columns:1fr 1.25fr 1fr; gap:9px; align-items:center; padding:10px 14px; background:var(--wrap-bg); color:var(--wrap-ink); border:2px solid var(--wrap-accent); outline:1px solid var(--wrap-accent); outline-offset:3px; border-radius:4px; }
-        .wrap-art.theme-coffee { --wrap-bg:#080808; --wrap-ink:#d6b72b; --wrap-accent:#d6b72b; }
-        .wrap-art.theme-strawberry { --wrap-bg:#fbe0e5; --wrap-ink:#c9476b; --wrap-accent:#c9476b; }
-        .wrap-art.theme-soda { --wrap-bg:#edfaff; --wrap-ink:#218ac8; --wrap-accent:#218ac8; }
-        .wrap-art.theme-matcha { --wrap-bg:#eff4df; --wrap-ink:#557b3b; --wrap-accent:#557b3b; }
-        .wrap-art.theme-milky { --wrap-bg:#f5ecdf; --wrap-ink:#745033; --wrap-accent:#745033; }
+        .wrap-art { width:100%; min-width:540px; aspect-ratio:250 / 62; display:grid; grid-template-columns:1fr 1.25fr 1fr; gap:9px; align-items:center; padding:10px 14px; background:#fff; color:#000; border:2px solid #000; outline:1px solid #000; outline-offset:3px; border-radius:4px; }
+        .wrap-art.theme-coffee,.wrap-art.theme-strawberry,.wrap-art.theme-soda,.wrap-art.theme-matcha,.wrap-art.theme-milky { background:#fff; color:#000; border-color:#000; outline-color:#000; }
+        .wrap-art .wrap-block { border-color:#000; }
+        .wrap-art .wrap-tag,.wrap-art .wrap-social,.wrap-art .wrap-side-date { color:#000; }
+        .wrap-motif { display:block; width:100%; max-width:34mm; height:18mm; color:#000; margin:0 auto 1mm; }
         .wrap-art .wrap-block { border-color:var(--wrap-accent); }
         .wrap-art .wrap-tag, .wrap-art .wrap-social, .wrap-art .wrap-side-date { color:var(--wrap-ink); }
         .wrap-amenities { display:flex; flex-wrap:wrap; gap:5px 8px; font-size:8px; font-weight:800; margin-top:10px; }
@@ -665,9 +664,11 @@ export default function CupWrapPage() {
           {(printQueue.length ? printQueue : [makePrintRecord()]).map((item, index) => <div className={`wrap-print-art theme-${item.theme || getWrapTheme(item.category || "Coffee", item.drinkName)}`} key={item.id} style={printQueue.length ? ({"--wrap-top": `${index * 64 + 31}mm`} as CSSProperties) : undefined}>
             <div className="wrap-block">
               <div className="wrap-script">Thank you ♥<br />for supporting<br />local &amp; choosing<br />SYP ON CAFÉ.</div>
+              <WrapMotif theme={item.theme || getWrapTheme(item.category || "Coffee", item.drinkName)} />
               <div className="wrap-amenities"><span>FREE WI-FI</span><span>BOARD GAMES</span><span>YOUTUBE &amp; NETFLIX</span></div>
             </div>
             <div className="wrap-block" style={{alignItems:"center",textAlign:"center"}}>
+              <WrapMotif theme={item.theme || getWrapTheme(item.category || "Coffee", item.drinkName)} />
               <img className="wrap-print-logo" src={LOGO_URL} alt="SYP ON CAFÉ" />
               <div className="wrap-brand">SYP ON CAFÉ</div>
               <div className="wrap-tag">— STREET • ICED • BREWED —</div>
@@ -690,14 +691,25 @@ export default function CupWrapPage() {
   );
 }
 
+
+function WrapMotif({ theme }: { theme: string }) {
+  if (theme === "strawberry") return <svg className="wrap-motif" viewBox="0 0 180 80" aria-label="Strawberries" role="img"><g fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M40 22 C25 8 12 22 26 34 C12 50 30 72 49 76 C69 69 83 49 70 34 C84 20 70 8 56 22 C50 16 45 16 40 22Z"/><path d="M40 22 Q30 10 43 15 L50 20 Q62 10 66 19 L56 26 M50 20 L50 13"/><path d="M105 30 C91 18 81 31 92 41 C81 55 94 72 110 76 C128 69 140 52 127 41 C139 29 126 18 115 30Z"/><path d="M104 30 Q96 20 107 22 L114 29 Q124 20 129 28 L116 35"/><g fill="black"><circle cx="36" cy="39" r="1.8"/><circle cx="57" cy="39" r="1.8"/><circle cx="47" cy="52" r="1.8"/><circle cx="38" cy="62" r="1.8"/><circle cx="59" cy="62" r="1.8"/><circle cx="103" cy="45" r="1.5"/><circle cx="120" cy="45" r="1.5"/><circle cx="111" cy="59" r="1.5"/></g></g></svg>;
+  if (theme === "coffee") return <svg className="wrap-motif" viewBox="0 0 180 80" aria-label="Coffee beans" role="img"><g fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round"><g transform="rotate(-25 48 40)"><ellipse cx="48" cy="40" rx="19" ry="30"/><path d="M36 14 Q64 34 37 65"/></g><g transform="rotate(18 91 40)"><ellipse cx="91" cy="40" rx="18" ry="28"/><path d="M81 14 Q105 36 82 65"/></g><g transform="rotate(35 132 42)"><ellipse cx="132" cy="42" rx="16" ry="25"/><path d="M123 19 Q144 40 124 64"/></g></g></svg>;
+  if (theme === "soda") return <svg className="wrap-motif" viewBox="0 0 180 80" aria-label="Soda bubbles" role="img"><g fill="none" stroke="black" strokeWidth="2.5"><circle cx="42" cy="40" r="19"/><circle cx="88" cy="24" r="12"/><circle cx="122" cy="48" r="23"/><circle cx="153" cy="20" r="7"/><path d="M35 35q5 -8 10 -2 M115 42q6 -9 12 -2"/></g></svg>;
+  if (theme === "matcha") return <svg className="wrap-motif" viewBox="0 0 180 80" aria-label="Matcha leaves" role="img"><g fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M90 72 Q88 40 90 9 M89 39 Q59 37 45 15 Q75 11 89 39 M90 54 Q120 52 137 25 Q108 24 90 54 M52 18L81 35 M130 28L97 48"/></g></svg>;
+  return <svg className="wrap-motif" viewBox="0 0 180 80" aria-label="Drink sparkle" role="img"><g fill="none" stroke="black" strokeWidth="2.5"><path d="M42 20l5 13 13 5 -13 5 -5 13 -5 -13 -13 -5 13 -5Z M127 12l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4Z"/><circle cx="91" cy="58" r="11"/></g></svg>;
+}
+
 function WrapArt({ quote, showQr, qrUrl, drinkName, price, cup, customerName, orderNumber, orderDateTime, theme }: { quote: string; showQr: boolean; qrUrl: string; drinkName: string; price: string; cup: string; customerName: string; orderNumber: string; orderDateTime: string; theme: string }) {
   return (
     <div className={`wrap-art theme-${theme}`}>
       <div className="wrap-block">
         <div className="wrap-script">Thank you ♥<br />for supporting<br />local &amp; choosing<br />SYP ON CAFÉ.</div>
+        <WrapMotif theme={theme} />
         <div className="wrap-amenities"><span>FREE WI-FI</span><span>BOARD GAMES</span><span>YOUTUBE &amp; NETFLIX</span></div>
       </div>
       <div className="wrap-block" style={{alignItems:"center",textAlign:"center"}}>
+        <WrapMotif theme={theme} />
         <img className="wrap-print-logo" src={LOGO_URL} alt="SYP ON CAFÉ" />
         <div className="wrap-brand">SYP ON CAFÉ</div>
         <div className="wrap-tag">— STREET • ICED • BREWED —</div>
