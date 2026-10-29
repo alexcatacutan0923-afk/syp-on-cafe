@@ -503,6 +503,18 @@ export default function CupWrapPage() {
         .wrap-art .wrap-tag,.wrap-art .wrap-social,.wrap-art .wrap-side-date { color:#000; }
         .wrap-motif { display:block; width:100%; max-width:29mm; height:13mm; color:#000; object-fit:contain; margin:0 auto 1mm; flex-shrink:0; }
         .wrap-art .wrap-block { border-color:var(--wrap-accent); }
+        /* Category-specific all-over coffee journal doodle pattern, optimized for monochrome thermal print */
+        .wrap-art { position:relative; isolation:isolate; }
+        .wrap-art .wrap-block { position:relative; z-index:1; background-color:rgba(255,255,255,.82); background-image:radial-gradient(circle,rgba(0,0,0,.20) .45px,transparent .7px); background-size:5mm 5mm; }
+        .wrap-art.theme-coffee .wrap-block { background-image:radial-gradient(ellipse at center,transparent 0 2mm,rgba(0,0,0,.23) 2.1mm 2.35mm,transparent 2.45mm),radial-gradient(ellipse at center,rgba(0,0,0,.12) 0 1mm,transparent 1.1mm); background-size:13mm 9mm,8mm 8mm; }
+        .wrap-art.theme-matcha .wrap-block { background-image:radial-gradient(ellipse 2mm 4mm at center,transparent 65%,rgba(0,0,0,.28) 72% 82%,transparent 90%),radial-gradient(circle,rgba(0,0,0,.2) .5px,transparent .8px); background-size:10mm 9mm,4mm 4mm; }
+        .wrap-art.theme-soda .wrap-block { background-image:radial-gradient(circle,transparent 0 1.3mm,rgba(0,0,0,.32) 1.4mm 1.65mm,transparent 1.75mm),radial-gradient(circle,transparent 0 .55mm,rgba(0,0,0,.24) .65mm .85mm,transparent .95mm); background-size:11mm 11mm,6mm 7mm; }
+        .wrap-art.theme-strawberry .wrap-block { background-image:radial-gradient(ellipse 1.5mm 2mm at center,transparent 65%,rgba(0,0,0,.3) 75% 85%,transparent 92%),radial-gradient(circle,rgba(0,0,0,.18) .5px,transparent .8px); background-size:10mm 10mm,4mm 4mm; }
+        .wrap-art.theme-milky .wrap-block { background-image:radial-gradient(circle,transparent 0 1.4mm,rgba(0,0,0,.25) 1.5mm 1.7mm,transparent 1.8mm),radial-gradient(circle,rgba(0,0,0,.16) .5px,transparent .8px); background-size:12mm 12mm,5mm 5mm; }
+        .wrap-art .wrap-block > * { position:relative; z-index:2; }
+        .wrap-art .wrap-center-block { background-color:rgba(255,255,255,.94); }
+        .wrap-art .wrap-menu-panel { background-color:rgba(255,255,255,.88); }
+
         .wrap-art .wrap-tag, .wrap-art .wrap-social, .wrap-art .wrap-side-date { color:var(--wrap-ink); }
         .wrap-amenities { display:flex; flex-wrap:wrap; gap:5px 8px; font-size:8px; font-weight:800; margin-top:10px; }
         .wrap-amenities span { border:1px solid currentColor; border-radius:999px; padding:3px 5px; }
@@ -564,7 +576,7 @@ export default function CupWrapPage() {
           .wrap-print-page { display:block!important; position:relative!important; width:80mm!important; height:297mm!important; margin:0!important; padding:0!important; overflow:hidden!important; page-break-after:always!important; break-after:page!important; background:#fff!important; }
           .wrap-print-art { position:absolute!important; left:50%!important; top:50%!important; width:${wrapLength}mm!important; min-width:0!important; height:62mm!important; aspect-ratio:auto!important; transform-origin:center center!important; transform:translate(-50%,-50%) rotate(90deg)!important; display:grid!important; grid-template-columns:1fr 1.03fr 1.18fr .92fr 1fr!important; gap:0!important; padding:4mm!important; box-sizing:border-box!important; background:#fff!important; color:#000!important; border:1.2mm solid #000!important; outline:0.35mm solid #000!important; outline-offset:1mm!important; print-color-adjust:exact!important; -webkit-print-color-adjust:exact!important; }
           .wrap-print-art { outline:0!important; outline-offset:0!important; border:0.5mm solid #000!important; align-items:stretch!important; padding:2.5mm!important; }
-          .wrap-print-art .wrap-block { border-right:0!important; border-left:0!important; padding:1.5mm!important; gap:1mm!important; justify-content:center!important; min-width:0!important; min-height:0!important; overflow:hidden!important; }
+          .wrap-print-art .wrap-block { border-right:0!important; border-left:0!important; background-color:#fff!important; padding:1.5mm!important; gap:1mm!important; justify-content:center!important; min-width:0!important; min-height:0!important; overflow:hidden!important; }
           .wrap-print-art .wrap-block:last-child { border-right:0!important; }
           .wrap-print-art .wrap-doodle,.wrap-print-art .wrap-thought-doodle,.wrap-print-art .wrap-cup-doodle { display:block!important; color:#000!important; font-size:13pt!important; text-align:center!important; margin:1mm auto!important; }
           .wrap-print-art .wrap-menu-item { padding:0.6mm 0!important; }
@@ -588,12 +600,12 @@ export default function CupWrapPage() {
            .wrap-print-art .wrap-hot-heading { margin-top:0.45mm!important; }
            .wrap-print-art .wrap-menu-beans { font-size:7pt!important; line-height:1!important; margin-top:0!important; }
            .wrap-print-art .wrap-left-panel:before,.wrap-print-art .wrap-right-panel:before { content:"✧  ·  ✦  ·  ✧"; display:block!important; font-size:7pt!important; line-height:1!important; margin:0 auto 1mm!important; letter-spacing:.12em!important; }
-           .wrap-print-art .wrap-center-block:after { content:"✦  SYP COFFEE JOURNAL  ✦"; display:block!important; font-size:5.5pt!important; font-weight:800!important; letter-spacing:.08em!important; margin-top:1mm!important; }
+           .wrap-print-art .wrap-center-block:after { content:"✧  MADE WITH LOVE  ✧"; display:block!important; font-size:5.5pt!important; font-weight:800!important; letter-spacing:.08em!important; margin-top:1mm!important; }
            .wrap-print-art .wrap-qr-panel:after { content:"SCAN • SIP • REPEAT"; display:block!important; font-size:5.5pt!important; font-weight:800!important; letter-spacing:.08em!important; margin-top:1mm!important; }
           .wrap-print-art .wrap-qr { display:block!important; width:18mm!important; height:18mm!important; min-width:18mm!important; min-height:18mm!important; object-fit:contain!important; }
           .wrap-print-art .wrap-right-panel { border-right:0!important; }
           .wrap-print-art.theme-coffee,.wrap-print-art.theme-strawberry,.wrap-print-art.theme-soda,.wrap-print-art.theme-matcha,.wrap-print-art.theme-milky { background:#fff!important; color:#000!important; border-color:#000!important; outline-color:#000!important; }
-           .wrap-print-art .wrap-block { border-color:#000!important; }
+           .wrap-print-art .wrap-block { border-color:#000!important; background-color:#fff!important; }
            .wrap-print-art .wrap-tag,.wrap-print-art .wrap-social,.wrap-print-art .wrap-side-date { color:#000!important; }
            .wrap-print-art .wrap-amenities span { border-color:#000!important; }
            .wrap-print-art .wrap-stamp-title { font-size:12pt!important; line-height:1.05!important; }
