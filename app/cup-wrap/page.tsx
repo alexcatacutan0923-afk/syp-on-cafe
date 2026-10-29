@@ -547,7 +547,7 @@ export default function CupWrapPage() {
           .wrap-head, .wrap-controls, .wrap-preview, .wrap-instructions, .wrap-history { display:none!important; }
           .wrap-print-target { display:block!important; position:static!important; width:80mm!important; max-width:80mm!important; height:auto!important; overflow:visible!important; background:#fff!important; }
           .wrap-print-page { display:block!important; position:relative!important; width:80mm!important; height:297mm!important; margin:0!important; padding:0!important; overflow:hidden!important; page-break-after:always!important; break-after:page!important; background:#fff!important; }
-          .wrap-print-art { position:absolute!important; left:50%!important; top:50%!important; width:${wrapLength}mm!important; height:62mm!important; transform-origin:center center!important; transform:translate(-50%,-50%) rotate(90deg)!important; display:grid!important; grid-template-columns:1fr 1.03fr 1.18fr .92fr 1fr!important; gap:0!important; padding:4mm!important; box-sizing:border-box!important; background:#fff!important; color:#000!important; border:1.2mm solid #000!important; outline:0.35mm solid #000!important; outline-offset:1mm!important; print-color-adjust:exact!important; -webkit-print-color-adjust:exact!important; }
+          .wrap-print-art { position:absolute!important; left:50%!important; top:50%!important; width:${wrapLength}mm!important; min-width:0!important; height:62mm!important; aspect-ratio:auto!important; transform-origin:center center!important; transform:translate(-50%,-50%) rotate(90deg)!important; display:grid!important; grid-template-columns:1fr 1.03fr 1.18fr .92fr 1fr!important; gap:0!important; padding:4mm!important; box-sizing:border-box!important; background:#fff!important; color:#000!important; border:1.2mm solid #000!important; outline:0.35mm solid #000!important; outline-offset:1mm!important; print-color-adjust:exact!important; -webkit-print-color-adjust:exact!important; }
           .wrap-print-art .wrap-script { font-size:15pt!important; line-height:1.08!important; }
           .wrap-print-art .wrap-brand { font-size:16pt!important; line-height:1!important; }
           .wrap-print-art .wrap-quote { display:block!important; font-size:12pt!important; line-height:1.15!important; max-height:none!important; overflow:visible!important; overflow-wrap:anywhere!important; text-align:center!important; }
@@ -691,30 +691,23 @@ export default function CupWrapPage() {
             <p className="wrap-muted">Note: browser-local history ito. Naka-save sa parehong device/browser lamang; hindi pa ito shared sa ibang cashier/device. Ang record ay ginagawa kapag pinindot ang print button, hindi nito makukumpirma kung lumabas talaga ang papel.</p>
           </section>
         <div className="wrap-print-target" aria-hidden="true">
-          {(printQueue.length ? printQueue : [makePrintRecord()]).map((item) => <div className="wrap-print-page" key={item.id}><div className={`wrap-print-art theme-${item.theme || getWrapTheme(item.category || "Coffee", item.drinkName)}`}>
-            <div className="wrap-block">
-              <div className="wrap-script">Thank you ♥<br />for supporting<br />local &amp; choosing<br />SYP ON CAFÉ.</div>
-              <WrapMotif theme={item.theme || getWrapTheme(item.category || "Coffee", item.drinkName)} />
-              <div className="wrap-amenities"><span>FREE WI-FI</span><span>BOARD GAMES</span><span>YOUTUBE &amp; NETFLIX</span></div>
+          {(printQueue.length ? printQueue : [makePrintRecord()]).map((item) => (
+            <div className="wrap-print-page" key={item.id}>
+              <WrapArt
+                printMode
+                quote={item.quote || "Good Drinks, Better Days"}
+                showQr={showQr}
+                qrUrl={qrUrl}
+                drinkName={item.drinkName}
+                price={item.price}
+                cup={item.cup}
+                customerName={item.customerName}
+                orderNumber={item.orderNumber}
+                orderDateTime={item.orderDateTime}
+                theme={item.theme || getWrapTheme(item.category || "Coffee", item.drinkName)}
+              />
             </div>
-            <div className="wrap-block" style={{alignItems:"center",textAlign:"center"}}>
-              <WrapMotif theme={item.theme || getWrapTheme(item.category || "Coffee", item.drinkName)} />
-              <img className="wrap-print-logo" src={LOGO_URL} alt="SYP ON CAFÉ" />
-              <div className="wrap-brand">SYP ON CAFÉ</div>
-              <div className="wrap-tag">— STREET • ICED • BREWED —</div>
-              <div className="wrap-drink">{item.drinkName || "YOUR DRINK"}</div>
-              <div className="wrap-order-box">ORDER #{item.orderNumber || "—"}<br />{item.cup} · ₱{item.price || "0"}</div>
-              {item.customerName ? <div className="wrap-order-meta">FOR: {item.customerName}</div> : null}
-              {item.note ? <div className="wrap-order-meta">NOTE: {item.note}</div> : null}
-            </div>
-            <div className="wrap-block" style={{borderRight:0,paddingRight:0,alignItems:"center",textAlign:"center"}}>
-              <div className="wrap-stamp-title">Scan to<br />collect stamps!</div>
-              {showQr && <img className="wrap-qr" src={qrUrl} alt="SYP loyalty registration QR" />}
-              <div className="wrap-social">f  ◎  ♪ @SypOnCafe</div>
-              <div className="wrap-quote">{item.quote || "Good Drinks, Better Days"}</div>
-              <div className="wrap-side-date">{item.orderDateTime ? new Date(item.orderDateTime).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" }) : ""}</div>
-            </div>
-          </div></div>)}
+          ))}
         </div>
       </div>
     </main>
@@ -729,7 +722,7 @@ function WrapMotif({ theme }: { theme: string }) {
   if (theme === "matcha") return <svg className="wrap-motif" viewBox="0 0 180 80" aria-label="Matcha leaves" role="img"><g fill="white" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M89 72 Q84 43 90 8 Q105 29 89 72Z"/><path d="M88 45 Q57 48 38 18 Q69 13 88 45Z"/><path d="M91 57 Q121 56 145 27 Q113 23 91 57Z"/><path d="M49 25L80 42 M133 32L99 51 M90 20L89 62" fill="none"/></g></svg>;
   return <svg className="wrap-motif" viewBox="0 0 180 80" aria-label="Drink sparkle" role="img"><g fill="none" stroke="black" strokeWidth="2"><path d="M42 20l5 13 13 5 -13 5 -5 13 -5 -13 -13 -5 13 -5Z M127 12l4 10 10 4 -10 4 -4 10 -4 -10 -10 -4 10 -4Z"/><circle cx="91" cy="58" r="11"/></g></svg>;
 }
-function WrapArt({ quote, showQr, qrUrl, drinkName, price, cup, customerName, orderNumber, orderDateTime, theme }: { quote: string; showQr: boolean; qrUrl: string; drinkName: string; price: string; cup: string; customerName: string; orderNumber: string; orderDateTime: string; theme: string }) {
+function WrapArt({ quote, showQr, qrUrl, drinkName, price, cup, customerName, orderNumber, orderDateTime, theme, printMode = false }: { quote: string; showQr: boolean; qrUrl: string; drinkName: string; price: string; cup: string; customerName: string; orderNumber: string; orderDateTime: string; theme: string; printMode?: boolean }) {
   const menuItems = [
     { name: "SPANISH LATTE", small: "₱89", large: "₱109" },
     { name: "MATCHA LATTE", small: "₱89", large: "₱109" },
@@ -737,10 +730,10 @@ function WrapArt({ quote, showQr, qrUrl, drinkName, price, cup, customerName, or
     { name: "SALTED CARAMEL", small: "₱89", large: "₱109" },
   ];
   return (
-    <div className={`wrap-art theme-${theme}`}>
+    <div className={`wrap-art ${printMode ? "wrap-print-art" : ""} theme-${theme}`}>
       <div className="wrap-block wrap-left-panel">
         <div className="wrap-doodle" aria-hidden="true">✦</div>
-        <div className="wrap-quote wrap-large-quote">{quote || "Ako na gumagawa ng problema, ako rin ang stress. ☺"}</div>
+        <div className="wrap-quote wrap-large-quote">Ako na gumagawa ng problema, ako rin ang stress. ☺</div>
         <div className="wrap-doodle wrap-cup-doodle" aria-hidden="true">☕</div>
         <div className="wrap-mini-quote">OVERTHINK BUT MAKE IT COFFEE.</div>
         <div className="wrap-amenities"><span>FREE WI-FI</span><span>BOARD GAMES</span><span>YOUTUBE &amp; NETFLIX</span></div>
@@ -776,7 +769,7 @@ function WrapArt({ quote, showQr, qrUrl, drinkName, price, cup, customerName, or
       </div>
       <div className="wrap-block wrap-right-panel">
         <div className="wrap-doodle" aria-hidden="true">♡ ✦</div>
-        <div className="wrap-quote wrap-large-quote">{getRandomQuote(theme === "matcha" ? "Matcha" : theme === "soda" ? "Soda" : theme === "milky" ? "Milky" : "Coffee", quote) || "Walang problema? Wait lang, hahanap ang utak ko."}</div>
+        <div className="wrap-quote wrap-large-quote">{quote || "Walang problema? Wait lang, hahanap ang utak ko."}</div>
         <div className="wrap-thought-doodle" aria-hidden="true">☁</div>
         <div className="wrap-mini-quote">GOOD DRINKS<br />BETTER DAYS ♡</div>
       </div>
