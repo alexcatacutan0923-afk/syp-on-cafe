@@ -426,7 +426,7 @@ export default function CupWrapPage() {
             <div className="wrap-field">
               <label htmlFor="main-quote">Drink-matched quote · curated per category</label>
               <input id="main-quote" value={quote} onChange={(e) => setQuote(e.target.value.slice(0, 120))} maxLength={120} />
-              <button type="button" className="wrap-btn secondary" onClick={() => setQuote(getRandomQuote(quote))}>🎲 Random funny quote</button>
+              <button type="button" className="wrap-btn secondary" onClick={() => setQuote(getRandomQuote(getQuoteCategory(selectedProduct), quote))}>🎲 Random funny quote</button>
               <p className="wrap-muted">Automatic na tugma ang quote sa napiling drink category. Matcha = matcha lines, Coffee = coffee lines, Soda = fizzy lines, Milky/Signature = creamy lines. Puwede mo pa ring i-edit ang quote.</p>
             </div>
             <div className="wrap-field">
