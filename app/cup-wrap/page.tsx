@@ -545,8 +545,9 @@ export default function CupWrapPage() {
           .wrap-page { padding:0!important; margin:0!important; }
           .wrap-shell, .wrap-head, .wrap-grid, .wrap-panel { display:block!important; width:80mm!important; max-width:80mm!important; margin:0!important; padding:0!important; border:0!important; background:white!important; }
           .wrap-head, .wrap-controls, .wrap-preview, .wrap-instructions, .wrap-history { display:none!important; }
-          .wrap-print-target { display:block!important; position:fixed!important; left:0!important; top:0!important; width:80mm!important; height:297mm!important; overflow:hidden!important; background:#fff!important; }
-          .wrap-print-art { position:absolute!important; left:50%!important; top:var(--wrap-top, 50%)!important; width:${wrapLength}mm!important; height:62mm!important; transform-origin:center center!important; transform:translate(-50%,-50%) rotate(90deg)!important; display:grid!important; grid-template-columns:1fr 1.03fr 1.18fr .92fr 1fr!important; gap:0!important; padding:4mm!important; background:#fff!important; color:#000!important; border:1.2mm solid #000!important; outline:0.35mm solid #000!important; outline-offset:1mm!important; print-color-adjust:exact!important; -webkit-print-color-adjust:exact!important; }
+          .wrap-print-target { display:block!important; position:static!important; width:80mm!important; max-width:80mm!important; height:auto!important; overflow:visible!important; background:#fff!important; }
+          .wrap-print-page { display:block!important; position:relative!important; width:80mm!important; height:297mm!important; margin:0!important; padding:0!important; overflow:hidden!important; page-break-after:always!important; break-after:page!important; background:#fff!important; }
+          .wrap-print-art { position:absolute!important; left:50%!important; top:50%!important; width:${wrapLength}mm!important; height:62mm!important; transform-origin:center center!important; transform:translate(-50%,-50%) rotate(90deg)!important; display:grid!important; grid-template-columns:1fr 1.03fr 1.18fr .92fr 1fr!important; gap:0!important; padding:4mm!important; box-sizing:border-box!important; background:#fff!important; color:#000!important; border:1.2mm solid #000!important; outline:0.35mm solid #000!important; outline-offset:1mm!important; print-color-adjust:exact!important; -webkit-print-color-adjust:exact!important; }
           .wrap-print-art .wrap-script { font-size:15pt!important; line-height:1.08!important; }
           .wrap-print-art .wrap-brand { font-size:16pt!important; line-height:1!important; }
           .wrap-print-art .wrap-quote { display:block!important; font-size:12pt!important; line-height:1.15!important; max-height:none!important; overflow:visible!important; overflow-wrap:anywhere!important; text-align:center!important; }
@@ -690,7 +691,7 @@ export default function CupWrapPage() {
             <p className="wrap-muted">Note: browser-local history ito. Naka-save sa parehong device/browser lamang; hindi pa ito shared sa ibang cashier/device. Ang record ay ginagawa kapag pinindot ang print button, hindi nito makukumpirma kung lumabas talaga ang papel.</p>
           </section>
         <div className="wrap-print-target" aria-hidden="true">
-          {(printQueue.length ? printQueue : [makePrintRecord()]).map((item, index) => <div className={`wrap-print-art theme-${item.theme || getWrapTheme(item.category || "Coffee", item.drinkName)}`} key={item.id} style={printQueue.length ? ({"--wrap-top": `${index * 64 + 31}mm`} as CSSProperties) : undefined}>
+          {(printQueue.length ? printQueue : [makePrintRecord()]).map((item) => <div className="wrap-print-page" key={item.id}><div className={`wrap-print-art theme-${item.theme || getWrapTheme(item.category || "Coffee", item.drinkName)}`}>
             <div className="wrap-block">
               <div className="wrap-script">Thank you ♥<br />for supporting<br />local &amp; choosing<br />SYP ON CAFÉ.</div>
               <WrapMotif theme={item.theme || getWrapTheme(item.category || "Coffee", item.drinkName)} />
@@ -713,7 +714,7 @@ export default function CupWrapPage() {
               <div className="wrap-quote">{item.quote || "Good Drinks, Better Days"}</div>
               <div className="wrap-side-date">{item.orderDateTime ? new Date(item.orderDateTime).toLocaleString("en-PH", { dateStyle: "medium", timeStyle: "short" }) : ""}</div>
             </div>
-          </div>)}
+          </div></div>)}
         </div>
       </div>
     </main>
