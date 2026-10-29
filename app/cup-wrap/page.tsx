@@ -775,7 +775,7 @@ function WrapArt({ quote, showQr, qrUrl, drinkName, price, cup, customerName, or
       </div>
       <div className="wrap-block wrap-right-panel">
         <div className="wrap-doodle" aria-hidden="true">♡ ✦</div>
-        <div className="wrap-quote wrap-large-quote">{getRandomQuote(getQuoteCategory(drinkName || "coffee"), quote) || "Walang problema? Wait lang, hahanap ang utak ko."}</div>
+        <div className="wrap-quote wrap-large-quote">{getRandomQuote(theme === "matcha" ? "Matcha" : theme === "soda" ? "Soda" : theme === "milky" ? "Milky" : "Coffee", quote) || "Walang problema? Wait lang, hahanap ang utak ko."}</div>
         <div className="wrap-thought-doodle" aria-hidden="true">☁</div>
         <div className="wrap-mini-quote">GOOD DRINKS<br />BETTER DAYS ♡</div>
       </div>
