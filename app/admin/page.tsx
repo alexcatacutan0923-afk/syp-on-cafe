@@ -1561,6 +1561,14 @@ export default function AdminPage() {
   </Link>
 
   <Link
+    href="/admin/delivery-pins"
+    onClick={() => setMobileSidebarOpen(false)}
+    className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300"
+  >
+    📍 Delivery Pin Manager
+  </Link>
+
+  <Link
     href="/admin#store-settings"
     onClick={() => setMobileSidebarOpen(false)}
     className="rounded-xl px-4 py-3 text-neutral-300 hover:bg-white/5 hover:text-amber-300"
