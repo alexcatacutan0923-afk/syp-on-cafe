@@ -150,8 +150,8 @@ begin
      or p_longitude < -180 or p_longitude > 180 then
     raise exception 'Please choose a valid location on the map';
   end if;
-  if length(regexp_replace(coalesce(p_customer_mobile, ''), '\\s', '', 'g')) <> 11
-     or regexp_replace(coalesce(p_customer_mobile, ''), '\\s', '', 'g') !~ '^09[0-9]{9}
+  if length(regexp_replace(coalesce(p_customer_mobile, ''), '\s', '', 'g')) <> 11
+     or regexp_replace(coalesce(p_customer_mobile, ''), '\s', '', 'g') !~ '^09[0-9]{9}
 
   update public.delivery_pin_links d
   set latitude = p_latitude,
