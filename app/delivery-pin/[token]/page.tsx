@@ -138,7 +138,7 @@ export default function DeliveryPinPage() {
     event.preventDefault(); setError(""); setNotice("");
     if (!address.trim()) { setError("Please enter the complete delivery address."); return; }
     if (!landmark.trim()) { setError("Please enter a landmark or delivery instruction."); return; }
-    if (!/^09\\d{9}$/.test(customerMobile.replace(/\\s+/g, "").trim())) { setError("Please enter a valid Philippine mobile number (09XXXXXXXXX)."); return; }
+    if (!/^09\d{9}$/.test(customerMobile.replace(/\s+/g, "").trim())) { setError("Please enter a valid Philippine mobile number (09XXXXXXXXX)."); return; }
     setSaving(true);
     const { data, error: rpcError } = await supabase.rpc("save_delivery_pin", {
       p_token: token, p_latitude: latitude, p_longitude: longitude,
