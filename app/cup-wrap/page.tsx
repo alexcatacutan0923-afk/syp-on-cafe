@@ -392,7 +392,7 @@ export default function CupWrapPage() {
 
   const makePrintRecord = (): PrintRecord => ({
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    printedAt: new Date().toISOString(), cup, drinkName, price, category: selectedProduct.category,
+    printedAt: new Date().toISOString(), cup, drinkName, price, category: selectedProduct.name.toLowerCase().includes("strawberry") ? "Strawberry" : selectedProduct.category,
     customerName: customerName.trim(), orderNumber: orderNumber.trim() || "—",
     orderDateTime, quote: quote.trim(), note: optionalNote.trim(),
   });
@@ -682,16 +682,17 @@ export default function CupWrapPage() {
 function WrapMotif({ category }: { category: string }) {
   const kind = category.toLowerCase();
   if (kind === "matcha") return <div className="wrap-motif"><svg viewBox="0 0 120 100" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M18 82C32 52 57 24 101 12 91 54 61 83 18 82Z"/><path d="M22 79 91 22M43 62l-3-22M61 47l-1-19M72 39l20 1"/></svg><svg viewBox="0 0 120 100" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><path d="M12 82C28 50 57 28 103 20 89 62 57 86 12 82Z"/><path d="m17 80 76-54M42 62l-5-20M61 48l1-17"/></svg></div>;
+  if (kind === "strawberry") return <div className="wrap-motif"><svg viewBox="0 0 120 100" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M60 35C32 28 25 53 37 76c8 16 38 16 46 0 12-23 5-48-23-41Z"/><path d="M60 35c-5-15-18-18-28-13 7 12 17 17 28 13ZM60 35c4-17 18-22 29-16-7 13-17 18-29 16Z"/><path d="m47 51 2 3m12 4 2 3m-17 8 2 3m19-1 2 3m7-20 2 3"/></svg></div>;
   if (kind === "soda" || kind === "fries") return <div className="wrap-motif"><svg viewBox="0 0 120 100" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><circle cx="34" cy="58" r="19"/><circle cx="34" cy="58" r="7"/><circle cx="83" cy="30" r="10"/><circle cx="82" cy="73" r="5"/><path d="M70 8v10M65 13h10M104 55v12M98 61h12M12 15v8M8 19h8"/></svg></div>;
   if (kind === "milky" || kind === "signature") return <div className="wrap-motif"><svg viewBox="0 0 120 100" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 56h76l-9 30H29Z"/><path d="M30 56c0-19 14-33 28-33s28 14 28 33M60 23c-8-10 9-13 2-21M78 29c-5-8 7-10 4-17"/><path d="M42 68h32"/></svg></div>;
-  return <div className="wrap-motif"><svg viewBox="0 0 120 100" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="34" cy="36" rx="13" ry="23" transform="rotate(35 34 36)"/><path d="M23 51 45 21"/><ellipse cx="77" cy="63" rx="13" ry="23" transform="rotate(35 77 63)"/><path d="M66 78 88 48"/><path d="M70 12c9-9 19-7 24 0-8 8-17 8-24 0Z"/></svg><div className="wrap-motif-label">Coffee • Crafted • Fresh</div></div>;
+  return <div className="wrap-motif"><svg viewBox="0 0 120 100" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="34" cy="36" rx="13" ry="23" transform="rotate(35 34 36)"/><path d="M23 51 45 21"/><ellipse cx="77" cy="63" rx="13" ry="23" transform="rotate(35 77 63)"/><path d="M66 78 88 48"/><path d="M70 12c9-9 19-7 24 0-8 8-17 8-24 0Z"/></svg></div>;
 }
 
 function WrapArt({ quote, showQr, qrUrl, drinkName, price, cup, customerName, orderNumber, orderDateTime }: { quote: string; showQr: boolean; qrUrl: string; drinkName: string; price: string; cup: string; customerName: string; orderNumber: string; orderDateTime: string }) {
-  const category = CUP_MENU.find((item) => item.name === drinkName)?.category || (drinkName.toLowerCase().includes("matcha") ? "Matcha" : drinkName.toLowerCase().includes("strawberry") ? "Soda" : "Coffee");
+  const category = CUP_MENU.find((item) => item.name === drinkName)?.category || (drinkName.toLowerCase().includes("matcha") ? "Matcha" : drinkName.toLowerCase().includes("strawberry") ? "Strawberry" : "Coffee");
   return <div className="wrap-art">
     <div className="wrap-block"><WrapMotif category={category} /><div className="wrap-motif-label">Made for your moment</div></div>
-    <div className="wrap-block" style={{textAlign:"center"}}><img className="wrap-print-logo" src={LOGO_URL} alt="SYP ON CAFÉ" /><div className="wrap-tag">STREET • ICED • BREWED</div><div className="wrap-drink">{drinkName || "YOUR DRINK"}</div><div className="wrap-price">₱{price} · {cup}</div><div className="wrap-order-meta>{customerName ? `FOR: ${customerName} · ` : ""}ORDER #${orderNumber || "—"}</div></div>
+    <div className="wrap-block" style={{textAlign:"center"}}><img className="wrap-print-logo" src={LOGO_URL} alt="SYP ON CAFÉ" /><div className="wrap-tag">STREET • ICED • BREWED</div><div className="wrap-drink">{drinkName || "YOUR DRINK"}</div><div className="wrap-price">₱{price} · {cup}</div><div className="wrap-order-meta">{customerName ? `FOR: ${customerName} · ` : ""}ORDER #{orderNumber || "—"}</div></div>
     <div className="wrap-block"><div className="wrap-quote-bubble"><div className="wrap-quote">{quote || "Good Drinks, Better Days"}</div></div><div className="wrap-tag">GOOD DRINKS, BETTER DAYS ♡</div></div>
     <div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",zIndex:1}}>{showQr && <img className="wrap-qr" src={qrUrl} alt="Facebook QR" />}<div className="wrap-social">/SypOnCafe</div><div className="wrap-side-date">{orderDateTime ? new Date(orderDateTime).toLocaleString("en-PH", { dateStyle:"medium", timeStyle:"short" }) : ""}</div></div>
   </div>;
