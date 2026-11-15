@@ -1,519 +1,119 @@
-
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const LOGO_URL = "/IMG_5996.jpeg";
+const QR_TARGET = "https://syponcafe.shop/member-register";
 
-// Palitan ng eksaktong Facebook page URL kapag available na.
-const QR_TARGET = "https://www.facebook.com/";
+const MENU = [
+  ["Americano","16oz",69,"Coffee"],["Americano","22oz",79,"Coffee"],
+  ["Spanish Latte","16oz",89,"Coffee"],["Spanish Latte","22oz",109,"Coffee"],
+  ["Oreo Latte","16oz",79,"Coffee"],["Oreo Latte","22oz",99,"Coffee"],
+  ["Iced Milo Latte","16oz",79,"Coffee"],["Iced Milo Latte","22oz",99,"Coffee"],
+  ["Vanilla Latte","16oz",89,"Coffee"],["Vanilla Latte","22oz",109,"Coffee"],
+  ["French Vanilla Latte","16oz",89,"Coffee"],["French Vanilla Latte","22oz",109,"Coffee"],
+  ["Roasted Almond Latte","16oz",99,"Coffee"],["Roasted Almond Latte","22oz",119,"Coffee"],
+  ["Biscoff Latte","16oz",99,"Coffee"],["Biscoff Latte","22oz",119,"Coffee"],
+  ["Salted Caramel","16oz",89,"Coffee"],["Salted Caramel","22oz",109,"Coffee"],
+  ["Hot Americano","8oz",49,"Coffee"],["Hot Americano","12oz",69,"Coffee"],
+  ["Hot Spanish Latte","8oz",79,"Coffee"],["Hot Spanish Latte","12oz",89,"Coffee"],
+  ["Hot Oreo Latte","8oz",69,"Coffee"],["Hot Oreo Latte","12oz",79,"Coffee"],
+  ["Hot Milo Latte","8oz",69,"Coffee"],["Hot Milo Latte","12oz",79,"Coffee"],
+  ["Hot Salted Caramel","8oz",69,"Coffee"],["Hot Salted Caramel","12oz",89,"Coffee"],
+  ["Milo Dino","16oz",79,"Milky"],["Milo Dino","22oz",99,"Milky"],
+  ["Oreo Milky","16oz",79,"Milky"],["Oreo Milky","22oz",99,"Milky"],
+  ["Caramel Macchiato","16oz",99,"Milky"],["Caramel Macchiato","22oz",119,"Milky"],
+  ["Milky White Choco","16oz",99,"Milky"],["Milky White Choco","22oz",119,"Milky"],
+  ["Milky Choco","16oz",99,"Milky"],["Milky Choco","22oz",119,"Milky"],
+  ["Matcha Latte","16oz",109,"Matcha"],["Matcha Latte","22oz",129,"Matcha"],
+  ["Strawberry Matcha","16oz",109,"Matcha"],["Strawberry Matcha","22oz",129,"Matcha"],
+  ["Mango Matcha","16oz",109,"Matcha"],["Mango Matcha","22oz",129,"Matcha"],
+  ["Blueberry Matcha","16oz",109,"Matcha"],["Blueberry Matcha","22oz",129,"Matcha"],
+  ["Biscoff Matcha","16oz",119,"Matcha"],["Biscoff Matcha","22oz",139,"Matcha"],
+  ["Oreo Matcha","16oz",119,"Matcha"],["Oreo Matcha","22oz",139,"Matcha"],
+  ["Green Apple","16oz",39,"Soda"],["Green Apple","22oz",49,"Soda"],
+  ["Mango Soda","16oz",39,"Soda"],["Mango Soda","22oz",49,"Soda"],
+  ["Orange Soda","16oz",39,"Soda"],["Orange Soda","22oz",49,"Soda"],
+  ["Strawberry Soda","16oz",39,"Soda"],["Strawberry Soda","22oz",49,"Soda"],
+  ["Watermelon Soda","16oz",39,"Soda"],["Watermelon Soda","22oz",49,"Soda"],
+  ["Blueberry Soda","16oz",39,"Soda"],["Blueberry Soda","22oz",49,"Soda"],
+  ["Peach Soda","16oz",39,"Soda"],["Peach Soda","22oz",49,"Soda"],
+  ["SYP Choco Boom","16oz",99,"Signature"],["SYP Choco Boom","22oz",119,"Signature"],
+  ["SYP White Rush","16oz",99,"Signature"],["SYP White Rush","22oz",119,"Signature"],
+  ["SYP Bites","Small",49,"Fries"],["SYP Cravings","Medium",79,"Fries"],["SYP Overload","Barkada",119,"Fries"],
+] as const;
 
-type Sticker = {
-  id: number;
-  customer: string;
-  drink: string;
-  price: string;
-  quote: string;
-  createdAt: string;
+const QUOTES: Record<string,string[]> = {
+  Coffee:["Walang forever, pero may refill.","Puyat is my personality.","Kape muna bago mag-drama.","Mukha lang mayaman, GCash lang meron.","Hindi ako tamad, low battery lang.","Lord, bigyan Mo ako ng pera, hindi pagsubok.","Kape ang love language ko.","Ang sahod ay bisita lang.","Coffee first. Overthink later.","Puyat responsibly.","Kape muna bago mag-reply ng 'noted'.","Small cup, big plans. Large cup, bigger plans."],
+  Matcha:["Green flag ang matcha. Siya, hindi sure.","Matcha muna bago mag overthink.","Stay calm and sip matcha.","Hindi lahat ng green ay green flag.","Matcha made my day.","Soft life, strong matcha.","Matcha ka ba? You make my day."],
+  Soda:["Fizz the day away.","Bubbly outside, pagod inside.","Good vibes, extra ice.","Pop, sip, repeat.","Walang bubbles ang buhay kung walang saya.","Chill ka lang, may yelo pa."],
+  Milky:["Sweet tooth, soft mood.","Creamy comfort in every sip.","Milk tea? No, milky coffee era.","Soft heart, extra toppings.","Deserve mo 'yan. Period."],
+  Signature:["One of a kind, just like this sip.","Main character energy, signature drink.","SYP once, crave twice.","Made special, just like you.","Good drinks, better days."],
+  Fries:["Fries before guys.","Kahit walang ka-share, order ka pa rin.","Crunch time!","Stress fries are self-care.","Share mo? Pag-isipan mo muna."]
 };
 
-const QUOTES = [
-  "Kape muna, may magandang bukas.",
-  "Dahan-dahan lang, hindi ka nahuhuli.",
-  "Laban lang, KasYP!",
-  "Pahinga rin, hindi kailangang perfect.",
-  "One sip at a time.",
-  "You deserve this little break.",
-  "Better days are brewing.",
-  "Kape, hinga, laban ulit.",
-  "Small wins are still wins.",
-  "Chill ka lang, hindi ka nag-iisa.",
-  "Ang kape, hindi nang-iiwan.",
-  "Kape muna bago mag-overthink.",
-  "Hindi tamad, naka-power saving mode.",
-  "Low battery, high caffeine.",
-  "Coffee first, chismis later.",
-  "Puyat responsibly.",
-  "Kape ang love language ko.",
-  "Walang forever, pero may refill.",
-  "Life update: buhay pa, antok lang.",
-  "Petsa de peligro pero may iced coffee.",
-  "Hindi ako bitter, dark roast lang.",
-  "Sana all may good morning.",
-  "Kape at chika: essential needs.",
-  "Pagod na maging strong independent.",
-  "Ang sahod parang bisita, saglit lang.",
-  "Walang budget pero may cravings.",
-  "Basta may kape, may pag-asa.",
-  "Your story is still unfolding.",
-  "You are doing better than you think.",
-  "Choose peace over pressure.",
-  "Hindi mo kailangang maging okay agad.",
-  "Your peace is worth protecting.",
-  "Grow at your own pace.",
-  "You are more than your bad days.",
-  "Rest is part of the journey.",
-  "You can start over anytime.",
-  "Keep going, kahit dahan-dahan.",
-  "Trust your effort.",
-  "Hindi man mabilis, basta umuusad.",
-  "Your future self will thank you.",
-  "Dream big, start small.",
-  "May bunga rin ang tiyaga.",
-  "One day at a time.",
-  "Make room for good things.",
-  "Hindi lahat kailangang sagutin ngayon.",
-  "May peace sa pagbitaw.",
-  "Hindi ka mahina dahil napagod ka.",
-  "You deserve love without confusion.",
-  "Some endings make room for peace.",
-  "Choose yourself without guilt.",
-  "Be gentle with your own heart.",
-  "Healing is not a race.",
-  "Keep your heart soft and boundaries strong.",
-  "Kape at kwento hanggang gumaan.",
-  "Late nights, warm lights, good vibes.",
-  "Good coffee, better company.",
-  "Tambay now, worry less.",
-  "A little café, a little peace.",
-  "Chill lang, KasYP.",
-  "Sa SYP, pahinga muna ang mundo.",
-  "Dito, puwedeng maging ikaw lang.",
-  "Salamat sa pagdaan, KasYP.",
-  "Bawat higop, may munting saya.",
-  "Your happy place, one sip away.",
-  "Made with coffee, served with care.",
-  "Good coffee, good mood.",
-  "Take a sip, make a memory.",
-  "Small cup, big comfort.",
-  "Kape mo, moment mo.",
-  "Life's better with a little ice.",
-  "A good day starts with a good sip.",
-  "Kahit simpleng araw, puwedeng maging special.",
-  "Sip happens. Enjoy it anyway.",
-  "Esmeringhoy, kape muna bago magkalat.",
-  "Kape na lang, wala namang tayo.",
-  "Sana all may ka-talking stage.",
-  "Hindi ako marupok, kulang lang sa lambing.",
-  "Lord, bigyan Mo ako ng pera.",
-  "Nagtipid ako today. Bukas ulit.",
-  "Kape ang sagot kahit di alam ang tanong.",
-  "Hindi ako late, cinematic entrance lang.",
-  "Gusto ko ng peace, hindi dagdag problema.",
-  "Kape muna bago magpanggap na okay.",
-  "Walang jowa, pero may loyalty card.",
-  "Kung may problema, dagdagan ng pearls.",
-  "Nag-pray ako ng sign, nag-story siya.",
-  "Ang alarm ko parang suggestion lang.",
-  "Kape ang breakfast at emotional support.",
-  "Tambay muna, baka may plot twist.",
-  "Pahinga, recharge, repeat.",
-  "Keep showing up for your dreams.",
-  "May magandang bukas pagkatapos ng mahabang gabi.",
-  "A little coffee, a little courage.",
-  "Choose joy in the little things.",
-  "Make tonight a little lighter.",
-  "Thanks for being part of our story.",
-  "Every cup holds a new beginning.",
-  "Stay kind, stay caffeinated.",
-  "Kape na may kasamang good vibes.",
-  "Mas masaya ang kape kapag may kasama.",
-];
-
-const QR_URL =
-  "https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=1&data=" +
-  encodeURIComponent(QR_TARGET);
-
-function makeQuote(previous: string[] = []) {
-  const available = QUOTES.filter((quote) => !previous.includes(quote));
-  const pool = available.length ? available : QUOTES;
-  return pool[Math.floor(Math.random() * pool.length)];
-}
-
-function timeNow() {
-  return new Intl.DateTimeFormat("en-PH", {
-    timeZone: "Asia/Manila",
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date());
-}
+type Sticker = { id:number; customer:string; drink:string; size:string; price:number; category:string; sugar:string; ice:string; note:string; quote:string; createdAt:string; orderNo:string };
+const QR_URL = "https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=1&data="+encodeURIComponent(QR_TARGET);
+const stamp = () => new Intl.DateTimeFormat("en-PH",{timeZone:"Asia/Manila",dateStyle:"medium",timeStyle:"short"}).format(new Date());
 
 export default function StickerStudioPage() {
-  const [customer, setCustomer] = useState("");
-  const [drink, setDrink] = useState("");
-  const [price, setPrice] = useState("");
-  const [quantity, setQuantity] = useState(1);
-  const [stickers, setStickers] = useState<Sticker[]>([]);
-  const [history, setHistory] = useState<Sticker[]>([]);
-  const [nextId, setNextId] = useState(1);
-  const [notice, setNotice] = useState("");
-  const [printing, setPrinting] = useState(false);
-  const [ready, setReady] = useState(false);
+  const [search,setSearch]=useState("");
+  const [selected,setSelected]=useState(0);
+  const [customer,setCustomer]=useState("");
+  const [sugar,setSugar]=useState("100% sugar");
+  const [ice,setIce]=useState("Regular ice");
+  const [note,setNote]=useState("");
+  const [orderNo,setOrderNo]=useState("001");
+  const [quantity,setQuantity]=useState(1);
+  const [quote,setQuote]=useState(QUOTES.Coffee[0]);
+  const [queue,setQueue]=useState<Sticker[]>([]);
+  const [history,setHistory]=useState<Sticker[]>([]);
+  const [nextId,setNextId]=useState(1);
+  const [ready,setReady]=useState(false);
+  const [notice,setNotice]=useState("");
 
-  useEffect(() => {
-    try {
-      const queue = localStorage.getItem("syp-studio-queue");
-      const savedHistory = localStorage.getItem("syp-studio-history");
-      const savedId = localStorage.getItem("syp-studio-next-id");
+  useEffect(()=>{try{const q=localStorage.getItem("syp-signature-queue");const h=localStorage.getItem("syp-signature-history");const n=localStorage.getItem("syp-signature-id");if(q)setQueue(JSON.parse(q));if(h)setHistory(JSON.parse(h));if(n)setNextId(Number(n)||1);}catch{}setReady(true);},[]);
+  useEffect(()=>{if(!ready)return;localStorage.setItem("syp-signature-queue",JSON.stringify(queue));localStorage.setItem("syp-signature-history",JSON.stringify(history));localStorage.setItem("syp-signature-id",String(nextId));},[queue,history,nextId,ready]);
 
-      if (queue) setStickers(JSON.parse(queue));
-      if (savedHistory) setHistory(JSON.parse(savedHistory));
-      if (savedId) setNextId(Math.max(1, Number(savedId) || 1));
-    } catch {
-      // Ignore invalid saved browser data.
-    }
-    setReady(true);
-  }, []);
-
-  useEffect(() => {
-    if (!ready) return;
-    localStorage.setItem("syp-studio-queue", JSON.stringify(stickers));
-    localStorage.setItem("syp-studio-history", JSON.stringify(history));
-    localStorage.setItem("syp-studio-next-id", String(nextId));
-  }, [stickers, history, nextId, ready]);
-
-  function addStickers() {
-    if (!drink.trim()) {
-      setNotice("Ilagay muna ang pangalan ng drink.");
-      return;
-    }
-
-    const count = Math.max(1, Math.min(100, quantity));
-    const used = stickers.map((sticker) => sticker.quote);
-    const added: Sticker[] = [];
-
-    for (let i = 0; i < count; i++) {
-      const quote = makeQuote(used);
-      used.push(quote);
-
-      added.push({
-        id: nextId + i,
-        customer: customer.trim(),
-        drink: drink.trim(),
-        price: price.trim(),
-        quote,
-        createdAt: timeNow(),
-      });
-    }
-
-    setStickers((current) => [...current, ...added]);
-    setNextId((current) => current + count);
-    setNotice(`${count} sticker(s) added sa print queue.`);
-  }
-
-  function changeQuote(id: number) {
-    const used = stickers
-      .filter((sticker) => sticker.id !== id)
-      .map((sticker) => sticker.quote);
-
-    setStickers((current) =>
-      current.map((sticker) =>
-        sticker.id === id
-          ? { ...sticker, quote: makeQuote(used) }
-          : sticker,
-      ),
-    );
-  }
-
-  function removeSticker(id: number) {
-    setStickers((current) => current.filter((item) => item.id !== id));
-    setNotice("Inalis ang sticker sa queue.");
-  }
-
-  function clearQueue() {
-    if (!window.confirm("I-clear lahat ng stickers sa print queue?")) return;
-    setStickers([]);
-    setNotice("Na-clear na ang print queue.");
-  }
-
-  function printStickers(id?: number) {
-    if (printing) return;
-
-    const selected = id === undefined
-      ? stickers
-      : stickers.filter((sticker) => sticker.id === id);
-
-    if (!selected.length) {
-      setNotice("Walang sticker na ipi-print.");
-      return;
-    }
-
-    setPrinting(true);
-    document.body.classList.toggle("syp-print-one", id !== undefined);
-
-    document.querySelectorAll<HTMLElement>(".syp-print-sheet").forEach((node) => {
-      node.classList.toggle(
-        "syp-selected",
-        id !== undefined && Number(node.dataset.stickerId) === id,
-      );
-    });
-
-    const finish = () => {
-      document.body.classList.remove("syp-print-one");
-      document.querySelectorAll<HTMLElement>(".syp-print-sheet").forEach((node) => {
-        node.classList.remove("syp-selected");
-      });
-      setPrinting(false);
-    };
-
-    const afterPrint = () => {
-      finish();
-      setHistory((current) => [
-        ...selected,
-        ...current.filter((old) => !selected.some((item) => item.id === old.id)),
-      ].slice(0, 200));
-      setStickers((current) =>
-        current.filter((item) => !selected.some((done) => done.id === item.id)),
-      );
-      setNotice(
-        "Natapos ang print dialog. Nailipat ang sticker sa history para puwedeng i-reprint.",
-      );
-    };
-
-    window.addEventListener("afterprint", afterPrint, { once: true });
-
-    window.setTimeout(() => {
-      window.print();
-      // Fallback cleanup for browsers that don't fire afterprint.
-      window.setTimeout(() => {
-        if (document.body.classList.contains("syp-print-one")) finish();
-      }, 60000);
-    }, 100);
-  }
-
-  function reprint(sticker: Sticker) {
-    const copy = { ...sticker, id: nextId };
-    setNextId((current) => current + 1);
-    setStickers((current) => [...current, copy]);
-    setNotice("Naibalik sa queue. Pindutin ang Print / reprint.");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  function clearHistory() {
-    if (!window.confirm("Burahin ang buong print history?")) return;
-    setHistory([]);
-    setNotice("Na-clear ang print history.");
-  }
-
-  return (
-    <main className="syp-studio">
-      <style jsx global>{`
-        * { box-sizing: border-box; }
-        body { margin: 0; background: #f4eee5; color: #2c2119; font-family: Arial, sans-serif; }
-        .syp-studio { min-height: 100vh; padding: 24px; }
-        .syp-header, .syp-layout { max-width: 1180px; margin: 0 auto 20px; }
-        .syp-header { display:flex; align-items:center; justify-content:space-between; gap:16px; }
-        .syp-brand { display:flex; align-items:center; gap:12px; }
-        .syp-brand img { width:54px; height:54px; object-fit:contain; background:white; border-radius:10px; }
-        .syp-brand h1 { margin:0; font-size:clamp(22px,4vw,30px); }
-        .syp-brand p { margin:5px 0 0; font-size:10px; font-weight:800; letter-spacing:.13em; color:#80644c; }
-        .syp-layout { display:grid; grid-template-columns:minmax(260px,340px) minmax(0,1fr); gap:18px; align-items:start; }
-        .syp-panel { min-width:0; background:#fffdf9; border:1px solid #e8d9c6; border-radius:16px; padding:18px; }
-        .syp-panel h2 { margin:0 0 6px; font-size:18px; }
-        .syp-muted { margin:0 0 16px; font-size:12px; line-height:1.5; color:#877461; }
-        .syp-field { display:grid; gap:6px; margin-bottom:13px; }
-        .syp-field label { font-size:10px; font-weight:800; color:#80644c; text-transform:uppercase; letter-spacing:.07em; }
-        .syp-field input { width:100%; min-width:0; border:1px solid #dfcfbd; border-radius:9px; padding:11px; font-size:14px; background:white; color:#2c2119; }
-        .syp-btn { border:0; border-radius:9px; padding:11px 13px; background:#62442e; color:white; font-size:12px; font-weight:800; cursor:pointer; }
-        .syp-btn.light { background:#efe3d3; color:#62442e; }
-        .syp-btn:disabled { opacity:.5; cursor:not-allowed; }
-        .syp-actions { display:flex; flex-wrap:wrap; gap:7px; margin-top:12px; }
-        .syp-notice { margin-top:12px; padding:10px; border-radius:8px; background:#f5ead8; color:#6d4c2e; font-size:12px; }
-        .syp-list { display:grid; gap:12px; }
-        .syp-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:center; padding:12px; border:1px solid #e8d9c6; border-radius:12px; }
-        .syp-thumb { width:100%; aspect-ratio:70 / 50; overflow:hidden; border:1px dashed #cdbba5; background:white; }
-        .syp-row-actions { display:flex; flex-direction:column; gap:6px; }
-        .syp-small { border:1px solid #d8c4ad; background:white; color:#67472f; padding:8px; border-radius:7px; font-size:10px; font-weight:800; cursor:pointer; }
-        .syp-print-sheet { display:none; width:70mm; height:50mm; overflow:hidden; background:white; }
-        .syp-art { width:70mm; height:50mm; overflow:hidden; padding:2mm; background:white; color:#000; display:grid; grid-template-columns:15mm minmax(0,1fr) 15mm; grid-template-rows:minmax(0,1fr) 12mm; gap:1mm; font-family:Arial,sans-serif; print-color-adjust:exact; -webkit-print-color-adjust:exact; }
-        .syp-logo { grid-column:1; grid-row:1; width:14mm; height:14mm; object-fit:contain; }
-        .syp-copy { grid-column:2; grid-row:1; min-width:0; overflow:hidden; }
-        .syp-wordmark { font-size:7pt; font-weight:900; white-space:nowrap; }
-        .syp-tagline { margin-top:.5mm; font-size:4.5pt; font-weight:800; white-space:nowrap; }
-        .syp-drink { margin-top:2mm; font-size:20pt; line-height:1; font-weight:900; letter-spacing:-.04em; overflow-wrap:anywhere; }
-        .syp-price { margin-top:1.5mm; font-size:11pt; font-weight:900; }
-        .syp-customer { margin-top:1mm; font-size:5.5pt; font-weight:700; overflow-wrap:anywhere; }
-        .syp-qr { grid-column:3; grid-row:1; width:15mm; display:flex; flex-direction:column; align-items:center; }
-        .syp-qr img { width:14mm; height:14mm; object-fit:contain; }
-        .syp-qr span { font-size:4.5pt; font-weight:900; margin-top:.5mm; }
-        .syp-quote { grid-column:1 / 4; grid-row:2; border-top:.4mm solid #000; padding-top:1mm; display:flex; gap:1mm; align-items:center; overflow:hidden; }
-        .syp-quote-mark { font-size:15pt; font-weight:900; }
-        .syp-quote-text { font-size:7pt; line-height:1.15; font-weight:800; overflow-wrap:anywhere; }
-        .syp-quote-footer { margin-top:.7mm; display:flex; justify-content:space-between; gap:1mm; font-size:4pt; font-weight:700; }
-        .syp-history { display:grid; gap:8px; margin-top:12px; }
-        .syp-history-row { display:flex; justify-content:space-between; align-items:center; gap:8px; border-bottom:1px solid #eee2d5; padding:9px 0; font-size:12px; }
-        @media(max-width:800px) { .syp-layout { grid-template-columns:1fr; } .syp-studio { padding:14px; } }
-        @media(max-width:480px) { .syp-row { grid-template-columns:1fr; } .syp-row-actions { flex-direction:row; flex-wrap:wrap; } .syp-header { align-items:flex-start; } }
-        @page { size:70mm 50mm; margin:0; }
-        @media print {
-          html, body { width:70mm !important; margin:0 !important; padding:0 !important; background:white !important; overflow:visible !important; }
-          body, body * { visibility:hidden !important; }
-          .syp-print-sheet, .syp-print-sheet * { visibility:visible !important; }
-          .syp-studio, .syp-layout, .syp-panel, .syp-list { display:block !important; width:70mm !important; min-width:0 !important; max-width:none !important; margin:0 !important; padding:0 !important; border:0 !important; border-radius:0 !important; box-shadow:none !important; background:white !important; }
-          .syp-header, .syp-form, .syp-panel-head, .syp-row-actions, .syp-thumb, .syp-notice, .syp-actions, .syp-muted, .syp-history { display:none !important; }
-          .syp-row { display:block !important; width:70mm !important; margin:0 !important; padding:0 !important; border:0 !important; break-inside:avoid !important; page-break-inside:avoid !important; }
-          .syp-print-sheet { display:block !important; width:70mm !important; height:50mm !important; margin:0 !important; padding:0 !important; overflow:hidden !important; break-after:page !important; page-break-after:always !important; }
-          .syp-row:last-child .syp-print-sheet { break-after:auto !important; page-break-after:auto !important; }
-          body.syp-print-one .syp-print-sheet { display:none !important; break-after:auto !important; page-break-after:auto !important; }
-          body.syp-print-one .syp-print-sheet.syp-selected { display:block !important; }
-          .syp-art { width:70mm !important; height:50mm !important; }
-        }
-      `}</style>
-
-      <header className="syp-header">
-        <div className="syp-brand">
-          <img src={LOGO_URL} alt="SYP ON CAFÉ logo" />
-          <div>
-            <h1>SYP Sticker Studio</h1>
-            <p>STREET • ICED • BREWED</p>
-          </div>
-        </div>
-        <a href="/" style={{ color: "#62442e", fontWeight: 800, fontSize: 12 }}>
-          ← Back
-        </a>
-      </header>
-
-      <div className="syp-layout">
-        <section className="syp-panel syp-form">
-          <h2>Create stickers</h2>
-          <p className="syp-muted">
-            Gumawa ng stickers para sa drinks. Walang login at walang POS connection.
-          </p>
-
-          <div className="syp-field">
-            <label htmlFor="syp-customer">Customer name (optional)</label>
-            <input id="syp-customer" value={customer} onChange={(e) => setCustomer(e.target.value)} maxLength={35} placeholder="Walk-in / customer name" />
-          </div>
-
-          <div className="syp-field">
-            <label htmlFor="syp-drink">Drink name *</label>
-            <input id="syp-drink" value={drink} onChange={(e) => setDrink(e.target.value)} maxLength={35} placeholder="Oreo Matcha" />
-          </div>
-
-          <div className="syp-field">
-            <label htmlFor="syp-price">Price (optional)</label>
-            <input id="syp-price" value={price} onChange={(e) => setPrice(e.target.value)} maxLength={12} placeholder="₱109" />
-          </div>
-
-          <div className="syp-field">
-            <label htmlFor="syp-quantity">Quantity</label>
-            <input id="syp-quantity" type="number" min={1} max={100} value={quantity} onChange={(e) => setQuantity(Math.max(1, Math.min(100, Number(e.target.value) || 1)))} />
-          </div>
-
-          <button className="syp-btn" type="button" onClick={addStickers}>
-            + Add to print queue
-          </button>
-
-          <div className="syp-actions">
-            <button className="syp-btn light" type="button" onClick={() => { setCustomer(""); setDrink(""); setPrice(""); setQuantity(1); setNotice("Form cleared."); }}>
-              Clear form
-            </button>
-            <button className="syp-btn light" type="button" onClick={clearQueue}>
-              Clear queue
-            </button>
-          </div>
-
-          {notice && <div className="syp-notice" role="status">{notice}</div>}
-        </section>
-
-        <section className="syp-panel">
-          <div className="syp-panel-head" style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-            <div>
-              <h2>Print queue</h2>
-              <p className="syp-muted">Label size: 70 × 50 mm · Print at 100% / Actual size.</p>
-            </div>
-            <strong>{stickers.length}</strong>
-          </div>
-
-          {!stickers.length ? (
-            <p className="syp-muted">Wala pang sticker. Gumawa ng sticker sa form.</p>
-          ) : (
-            <div className="syp-list">
-              {stickers.map((sticker) => (
-                <div className="syp-row" key={sticker.id}>
-                  <div className="syp-thumb">
-                    <StickerArt sticker={sticker} />
-                  </div>
-                  <div className="syp-row-actions">
-                    <button className="syp-small" disabled={printing} onClick={() => printStickers(sticker.id)}>Print / reprint</button>
-                    <button className="syp-small" disabled={printing} onClick={() => changeQuote(sticker.id)}>Random quote</button>
-                    <button className="syp-small" disabled={printing} onClick={() => removeSticker(sticker.id)}>Remove</button>
-                  </div>
-                  <div className="syp-print-sheet" data-sticker-id={sticker.id}>
-                    <StickerArt sticker={sticker} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="syp-actions">
-            <button className="syp-btn" disabled={!stickers.length || printing} onClick={() => printStickers()}>
-              {printing ? "Preparing print..." : "Print all stickers"}
-            </button>
-          </div>
-
-          <div style={{ marginTop: 24 }}>
-            <h2>Print history</h2>
-            <p className="syp-muted">Naka-save sa browser na ito. Puwede mong ibalik ang sticker sa queue para i-reprint.</p>
-            {!history.length ? (
-              <p className="syp-muted">Wala pang print history.</p>
-            ) : (
-              <div className="syp-history">
-                {history.map((sticker, index) => (
-                  <div className="syp-history-row" key={`${sticker.id}-${index}`}>
-                    <div>
-                      <strong>{sticker.drink}</strong>
-                      <div style={{ color: "#877461", fontSize: 10 }}>
-                        {sticker.customer || "Walk-in"} · {sticker.createdAt}
-                      </div>
-                    </div>
-                    <button className="syp-small" disabled={printing} onClick={() => reprint(sticker)}>Reprint</button>
-                  </div>
-                ))}
-                <button className="syp-btn light" onClick={clearHistory}>Clear history</button>
-              </div>
-            )}
-          </div>
-
-          <p className="syp-muted" style={{ marginTop: 20, marginBottom: 0 }}>
-            Sa print dialog, piliin ang 70 × 50 mm, Actual size / 100%, margins: none, at i-off ang headers at footers.
-          </p>
-        </section>
-      </div>
-    </main>
-  );
+  const filtered=useMemo(()=>MENU.map((m,i)=>({m,i})).filter(({m})=>m[0].toLowerCase().includes(search.toLowerCase())||m[3].toLowerCase().includes(search.toLowerCase())),[search]);
+  const product=MENU[selected] ?? MENU[0];
+  function randomQuote(category:string){const list=QUOTES[category]||QUOTES.Coffee;setQuote(list[Math.floor(Math.random()*list.length)]);}
+  function add(){const count=Math.max(1,Math.min(100,quantity));const item:Sticker={id:nextId,customer:customer.trim(),drink:product[0],size:product[1],price:product[2],category:product[3],sugar,ice,note:note.trim(),quote,createdAt:stamp(),orderNo};const made=Array.from({length:count},(_,i)=>({...item,id:nextId+i,quote:i===0?quote:(QUOTES[item.category]||QUOTES.Coffee)[Math.floor(Math.random()*(QUOTES[item.category]||QUOTES.Coffee).length)]}));setQueue(q=>[...q,...made]);setNextId(n=>n+count);setNotice(count+" sticker(s) added to queue.");}
+  function print(ids?:number[]){const selectedItems=ids?queue.filter(x=>ids.includes(x.id)):queue;if(!selectedItems.length)return;const done=()=>{setHistory(h=>[...selectedItems,...h].slice(0,250));setQueue(q=>q.filter(x=>!selectedItems.some(y=>y.id===x.id)));setNotice("Print dialog finished. Nasa history na ang stickers.");window.removeEventListener("afterprint",done);};window.addEventListener("afterprint",done,{once:true});window.print();window.setTimeout(()=>window.removeEventListener("afterprint",done),60000);}
+  function reprint(s:Sticker){setQueue(q=>[...q,{...s,id:nextId}]);setNextId(n=>n+1);window.scrollTo({top:0,behavior:"smooth"});}
+  return <main className="studio">
+    <style jsx global>{`
+      *{box-sizing:border-box}body{margin:0;background:#f3ede4;color:#2e241c;font-family:Arial,sans-serif}.studio{min-height:100vh;padding:22px}.head,.layout{max-width:1200px;margin:0 auto 18px}.head{display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{display:flex;align-items:center;gap:13px}.brand img{width:58px;height:58px;object-fit:contain;background:#fff;border-radius:12px}.brand h1{font-size:25px;margin:0}.brand p{font-size:10px;letter-spacing:.18em;font-weight:800;color:#876b51;margin:5px 0}.layout{display:grid;grid-template-columns:minmax(270px,360px) minmax(0,1fr);gap:18px;align-items:start}.panel{background:#fffdf9;border:1px solid #e6d8c8;border-radius:16px;padding:18px;min-width:0}.panel h2{font-size:18px;margin:0 0 6px}.muted{font-size:12px;line-height:1.5;color:#897762;margin:0 0 15px}.field{display:grid;gap:6px;margin:0 0 12px}.field label{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#80644c}.field input,.field select{width:100%;min-width:0;border:1px solid #ddcbb7;border-radius:9px;background:white;padding:11px;font-size:14px;color:#30251c}.btn{border:0;border-radius:9px;background:#65472f;color:white;padding:11px 14px;font-weight:800;font-size:12px;cursor:pointer}.btn.alt{background:#efe4d6;color:#65472f}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.notice{margin-top:12px;padding:10px;background:#f4e9d9;border-radius:8px;font-size:12px;color:#684a31}.queue{display:grid;gap:12px}.queue-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;border:1px solid #eadfD2;border-radius:12px;padding:12px}.preview{width:100%;aspect-ratio:80/70;overflow:hidden;background:white;border:1px dashed #cdbba5}.small{font-size:11px;color:#6b4c33}.queue-buttons{display:flex;flex-direction:column;gap:6px}.smallbtn{border:1px solid #d8c5b0;border-radius:7px;background:#fff;padding:8px;color:#684a31;font-weight:800;font-size:10px;cursor:pointer}.history{margin-top:24px;display:grid;gap:8px}.history-row{display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid #eee4d9;padding:8px 0;font-size:12px}
+      .art{width:80mm;height:70mm;background:white;color:#000;overflow:hidden;padding:2.5mm;display:flex;flex-direction:column;font-family:Arial,sans-serif;print-color-adjust:exact;-webkit-print-color-adjust:exact}.art-top{display:flex;align-items:center;justify-content:space-between;border-bottom:.45mm solid #000;padding-bottom:1.5mm;gap:2mm}.art-logo{width:17mm;height:14mm;object-fit:contain}.art-brand{flex:1;text-align:center}.art-brand strong{display:block;font-size:13pt;letter-spacing:.02em}.art-brand span{font-size:5.5pt;font-weight:800;letter-spacing:.14em}.art-qr{width:13mm;height:13mm;object-fit:contain}.art-order{font-size:6pt;font-weight:900;text-align:center;margin-top:1.4mm;letter-spacing:.12em}.art-drink{font-size:20pt;line-height:1.05;text-align:center;font-weight:900;overflow-wrap:anywhere;margin:1.5mm 0 .8mm}.art-price{text-align:center;font-size:13pt;font-weight:900}.art-meta{display:flex;justify-content:center;gap:3mm;font-size:6.5pt;font-weight:800;margin-top:1mm;flex-wrap:wrap}.art-customer{text-align:center;font-size:7pt;font-weight:800;margin-top:1mm}.art-note{text-align:center;font-size:6pt;margin-top:.8mm}.art-quote{border-top:.45mm solid #000;border-bottom:.45mm solid #000;margin-top:auto;padding:1.5mm 1mm;text-align:center;font-size:9pt;font-weight:900;line-height:1.15;min-height:12mm;display:flex;align-items:center;justify-content:center}.art-foot{display:flex;justify-content:space-between;align-items:center;font-size:5pt;font-weight:800;padding-top:1mm;letter-spacing:.04em}.print-sheet{display:none}
+      @media(max-width:800px){.layout{grid-template-columns:1fr}.studio{padding:13px}}@media(max-width:480px){.head{align-items:flex-start}.queue-row{grid-template-columns:1fr}.queue-buttons{flex-direction:row;flex-wrap:wrap}}
+      @page{size:80mm 70mm;margin:0}@media print{html,body{width:80mm!important;margin:0!important;padding:0!important;background:white!important}body,body *{visibility:hidden!important}.print-sheet,.print-sheet *{visibility:visible!important}.studio,.layout,.panel,.queue{display:block!important;width:80mm!important;max-width:none!important;margin:0!important;padding:0!important;border:0!important;background:white!important}.head,.form-panel,.panel-head,.queue-buttons,.preview,.notice,.actions,.muted,.history{display:none!important}.queue-row{display:block!important;width:80mm!important;margin:0!important;padding:0!important;border:0!important;break-inside:avoid!important}.print-sheet{display:block!important;width:80mm!important;height:70mm!important;break-after:page!important;page-break-after:always!important;overflow:hidden!important}.queue-row:last-child .print-sheet{break-after:auto!important;page-break-after:auto!important}.art{width:80mm!important;height:70mm!important}}
+    `}</style>
+    <header className="head"><div className="brand"><img src={LOGO_URL} alt="SYP logo"/><div><h1>SYP Signature Sticker Studio</h1><p>STREET • ICED • BREWED</p></div></div><a href="/" style={{color:"#65472f",fontSize:12,fontWeight:800}}>← Back</a></header>
+    <div className="layout">
+      <section className="panel form-panel"><h2>Create signature sticker</h2><p className="muted">Piliin ang drink sa menu. Automatic ang drink name, size at presyo gaya ng Cup Wrap Studio.</p>
+        <div className="field"><label>Search menu</label><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search drink / category"/></div>
+        <div className="field"><label>Drink & size — auto price</label><select size={Math.min(7,Math.max(3,filtered.length))} value={String(selected)} onChange={e=>{const idx=Number(e.target.value);setSelected(idx);randomQuote(MENU[idx][3]);}}>{filtered.map(({m,i})=><option key={i} value={i}>{m[0]} · {m[1]} — ₱{m[2]}</option>)}</select></div>
+        <p className="muted">Selected: <strong>{product[0]} · {product[1]} — ₱{product[2]}</strong></p>
+        <div className="field"><label>Customer name (optional)</label><input value={customer} onChange={e=>setCustomer(e.target.value.slice(0,35))} placeholder="Walk-in / customer name"/></div>
+        <div className="field"><label>Order number</label><input value={orderNo} onChange={e=>setOrderNo(e.target.value.slice(0,12))}/></div>
+        <div className="field"><label>Sugar level</label><select value={sugar} onChange={e=>setSugar(e.target.value)}><option>100% sugar</option><option>75% sugar</option><option>50% sugar</option><option>25% sugar</option><option>No sugar</option><option>Regular</option></select></div>
+        <div className="field"><label>Ice level</label><select value={ice} onChange={e=>setIce(e.target.value)}><option>Regular ice</option><option>Less ice</option><option>Extra ice</option><option>No ice</option><option>Hot</option></select></div>
+        <div className="field"><label>Optional note</label><input value={note} onChange={e=>setNote(e.target.value.slice(0,50))} placeholder="e.g. no straw, less foam"/></div>
+        <div className="field"><label>Signature quote</label><input value={quote} onChange={e=>setQuote(e.target.value.slice(0,100))}/><button className="btn alt" type="button" onClick={()=>randomQuote(product[3])}>🎲 Random {product[3]} quote</button></div>
+        <div className="field"><label>Quantity</label><input type="number" min="1" max="100" value={quantity} onChange={e=>setQuantity(Math.max(1,Math.min(100,Number(e.target.value)||1)))}/></div>
+        <div className="actions"><button className="btn" onClick={add}>＋ Add to print queue</button><button className="btn alt" onClick={()=>{setCustomer("");setNote("");setQuantity(1);setNotice("Form cleared.");}}>Clear form</button><button className="btn alt" onClick={()=>{if(confirm("Clear print queue?"))setQueue([]);}}>Clear queue</button></div>
+        {notice&&<div className="notice" role="status">{notice}</div>}
+      </section>
+      <section className="panel"><div className="panel-head" style={{display:"flex",justifyContent:"space-between"}}><div><h2>Print queue</h2><p className="muted">80mm wide × 70mm high · Portrait · Actual size 100%</p></div><strong>{queue.length}</strong></div>
+        {!queue.length?<p className="muted">Wala pang sticker sa queue.</p>:<div className="queue">{queue.map(s=><div className="queue-row" key={s.id}><div className="preview"><StickerArt sticker={s}/></div><div className="queue-buttons"><button className="smallbtn" onClick={()=>print([s.id])}>Print / reprint</button><button className="smallbtn" onClick={()=>setQueue(q=>q.map(x=>x.id===s.id?{...x,quote:(QUOTES[x.category]||QUOTES.Coffee)[Math.floor(Math.random()*(QUOTES[x.category]||QUOTES.Coffee).length)]}:x))}>Random quote</button><button className="smallbtn" onClick={()=>setQueue(q=>q.filter(x=>x.id!==s.id))}>Remove</button></div><div className="print-sheet"><StickerArt sticker={s}/></div></div>)}</div>}
+        <div className="actions"><button className="btn" disabled={!queue.length} onClick={()=>print()}>Print all stickers</button></div>
+        <div className="history"><h2>Print history</h2><p className="muted">Saved sa browser na ito. Puwedeng i-reprint anytime.</p>{history.slice(0,40).map((s,i)=><div className="history-row" key={s.id+"-"+i}><span><strong>{s.drink}</strong><br/><span className="small">#{s.orderNo} · {s.customer||"Walk-in"} · {s.createdAt}</span></span><button className="smallbtn" onClick={()=>reprint(s)}>Reprint</button></div>)}{history.length===0&&<p className="muted">Wala pang print history.</p>}</div>
+        <p className="muted" style={{marginTop:18}}>Printer setup: 80mm × 70mm, Portrait, Actual size / 100%, margins none, headers & footers off. I-test muna sa plain paper.</p>
+      </section>
+    </div>
+  </main>;
 }
 
-function StickerArt({ sticker }: { sticker: Sticker }) {
-  const qrUrl =
-    "https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=1&data=" +
-    encodeURIComponent(QR_TARGET);
-
-  return (
-    <div className="syp-art">
-      <img className="syp-logo" src={LOGO_URL} alt="SYP ON CAFÉ" />
-      <div className="syp-copy">
-        <div className="syp-wordmark">SYP ON CAFÉ</div>
-        <div className="syp-tagline">STREET • ICED • BREWED</div>
-        {sticker.customer && <div className="syp-customer">FOR: {sticker.customer}</div>}
-        <div className="syp-drink">{sticker.drink}</div>
-        {sticker.price && <div className="syp-price">{sticker.price.startsWith("₱") ? sticker.price : `₱${sticker.price}`}</div>}
-      </div>
-      <div className="syp-qr">
-        <img src={qrUrl} alt="Scan SYP QR code" />
-        <span>SCAN SYP</span>
-      </div>
-      <div className="syp-quote">
-        <span className="syp-quote-mark">“</span>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div className="syp-quote-text">{sticker.quote}</div>
-          <div className="syp-quote-footer">
-            <span>{sticker.createdAt}</span>
-            <span>SYP ON CAFÉ</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+function StickerArt({sticker}:{sticker:Sticker}){
+  return <div className="art"><div className="art-top"><img className="art-logo" src={LOGO_URL} alt="SYP"/><div className="art-brand"><strong>SYP ON CAFÉ</strong><span>STREET • ICED • BREWED</span></div><img className="art-qr" src={QR_URL} alt="Membership QR"/></div><div className="art-order">ORDER #{sticker.orderNo||"001"} · {sticker.createdAt}</div><div className="art-drink">{sticker.drink}</div><div className="art-price">₱{sticker.price} <span style={{fontSize:"7pt"}}>· {sticker.size}</span></div>{sticker.customer&&<div className="art-customer">MADE FOR {sticker.customer}</div>}<div className="art-meta"><span>{sticker.sugar}</span><span>•</span><span>{sticker.ice}</span></div>{sticker.note&&<div className="art-note">NOTE: {sticker.note}</div>}<div className="art-quote">“{sticker.quote}”</div><div className="art-foot"><span>THANK YOU, KASYP!</span><span>SYP ON CAFÉ</span></div></div>;
 }
