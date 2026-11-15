@@ -60,7 +60,7 @@ export default function StickerStudioPage() {
   const [search,setSearch]=useState("");
   const [selected,setSelected]=useState(0);
   const [customer,setCustomer]=useState("");
-  const [sugar,setSugar]=useState("100% sugar");
+  const [sugar,setSugar]=useState("Regular sugar");
   const [ice,setIce]=useState("Regular ice");
   const [note,setNote]=useState("");
   const [orderNo,setOrderNo]=useState("001");
@@ -72,13 +72,13 @@ export default function StickerStudioPage() {
   const [ready,setReady]=useState(false);
   const [notice,setNotice]=useState("");
 
-  useEffect(()=>{try{const q=localStorage.getItem("syp-signature-queue");const h=localStorage.getItem("syp-signature-history");const n=localStorage.getItem("syp-signature-id");if(q)setQueue(JSON.parse(q));if(h)setHistory(JSON.parse(h));if(n)setNextId(Number(n)||1);}catch{}setReady(true);},[]);
-  useEffect(()=>{if(!ready)return;localStorage.setItem("syp-signature-queue",JSON.stringify(queue));localStorage.setItem("syp-signature-history",JSON.stringify(history));localStorage.setItem("syp-signature-id",String(nextId));},[queue,history,nextId,ready]);
+  useEffect(()=>{try{const q=localStorage.getItem("syp-signature-queue");const h=localStorage.getItem("syp-signature-history");const n=localStorage.getItem("syp-signature-id");if(q)setQueue(JSON.parse(q));if(h)setHistory(JSON.parse(h));if(n)setNextId(Number(n)||1);const savedOrder=localStorage.getItem("syp-signature-order-no");if(savedOrder)setOrderNo(savedOrder);}catch{}setReady(true);},[]);
+  useEffect(()=>{if(!ready)return;localStorage.setItem("syp-signature-queue",JSON.stringify(queue));localStorage.setItem("syp-signature-history",JSON.stringify(history));localStorage.setItem("syp-signature-id",String(nextId));localStorage.setItem("syp-signature-order-no",orderNo);},[queue,history,nextId,ready]);
 
   const filtered=useMemo(()=>MENU.map((m,i)=>({m,i})).filter(({m})=>m[0].toLowerCase().includes(search.toLowerCase())||m[3].toLowerCase().includes(search.toLowerCase())),[search]);
   const product=MENU[selected] ?? MENU[0];
   function randomQuote(category:string){const list=QUOTES[category]||QUOTES.Coffee;setQuote(list[Math.floor(Math.random()*list.length)]);}
-  function add(){const count=Math.max(1,Math.min(100,quantity));const item:Sticker={id:nextId,customer:customer.trim(),drink:product[0],size:product[1],price:product[2],category:product[3],sugar,ice,note:note.trim(),quote,createdAt:stamp(),orderNo};const made=Array.from({length:count},(_,i)=>({...item,id:nextId+i,quote:i===0?quote:(QUOTES[item.category]||QUOTES.Coffee)[Math.floor(Math.random()*(QUOTES[item.category]||QUOTES.Coffee).length)]}));setQueue(q=>[...q,...made]);setNextId(n=>n+count);setNotice(count+" sticker(s) added to queue.");}
+  function add(){const count=Math.max(1,Math.min(100,quantity));const list=QUOTES[product[3]]||QUOTES.Coffee;const item:Sticker={id:nextId,customer:customer.trim(),drink:product[0],size:product[1],price:product[2],category:product[3],sugar,ice,note:note.trim(),quote,createdAt:stamp(),orderNo};const made=Array.from({length:count},(_,i)=>({...item,id:nextId+i,quote:list[Math.floor(Math.random()*list.length)]}));setQueue(q=>[...q,...made]);setNextId(n=>n+count);setQuote(made[made.length-1].quote);setOrderNo(String((Number.parseInt(orderNo,10)||0)+1).toString().padStart(3,"0"));setNotice(count+" sticker(s) added. Next order: #"+String((Number.parseInt(orderNo,10)||0)+1).padStart(3,"0")+".");}
   function print(ids?:number[]){const selectedItems=ids?queue.filter(x=>ids.includes(x.id)):queue;if(!selectedItems.length)return;const done=()=>{setHistory(h=>[...selectedItems,...h].slice(0,250));setQueue(q=>q.filter(x=>!selectedItems.some(y=>y.id===x.id)));setNotice("Print dialog finished. Nasa history na ang stickers.");window.removeEventListener("afterprint",done);};window.addEventListener("afterprint",done,{once:true});window.print();window.setTimeout(()=>window.removeEventListener("afterprint",done),60000);}
   function reprint(s:Sticker){setQueue(q=>[...q,{...s,id:nextId}]);setNextId(n=>n+1);window.scrollTo({top:0,behavior:"smooth"});}
   return <main className="studio">
@@ -96,7 +96,7 @@ export default function StickerStudioPage() {
         <p className="muted">Selected: <strong>{product[0]} · {product[1]} — ₱{product[2]}</strong></p>
         <div className="field"><label>Customer name (optional)</label><input value={customer} onChange={e=>setCustomer(e.target.value.slice(0,35))} placeholder="Walk-in / customer name"/></div>
         <div className="field"><label>Order number</label><input value={orderNo} onChange={e=>setOrderNo(e.target.value.slice(0,12))}/></div>
-        <div className="field"><label>Sugar level</label><select value={sugar} onChange={e=>setSugar(e.target.value)}><option>100% sugar</option><option>75% sugar</option><option>50% sugar</option><option>25% sugar</option><option>No sugar</option><option>Regular</option></select></div>
+        <div className="field"><label>Sugar level — default regular</label><select value={sugar} onChange={e=>setSugar(e.target.value)}><option>Regular sugar</option><option>75% sugar</option><option>50% sugar</option><option>25% sugar</option><option>No sugar</option></select></div>
         <div className="field"><label>Ice level</label><select value={ice} onChange={e=>setIce(e.target.value)}><option>Regular ice</option><option>Less ice</option><option>Extra ice</option><option>No ice</option><option>Hot</option></select></div>
         <div className="field"><label>Optional note</label><input value={note} onChange={e=>setNote(e.target.value.slice(0,50))} placeholder="e.g. no straw, less foam"/></div>
         <div className="field"><label>Signature quote</label><input value={quote} onChange={e=>setQuote(e.target.value.slice(0,100))}/><button className="btn alt" type="button" onClick={()=>randomQuote(product[3])}>🎲 Random {product[3]} quote</button></div>
