@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 const LOGO_URL = "/IMG_5996.jpeg";
 const QR_TARGET = "https://syponcafe.shop/member-register";
@@ -85,14 +86,51 @@ export default function StickerStudioPage() {
   const [nextId,setNextId]=useState(1);
   const [ready,setReady]=useState(false);
   const [notice,setNotice]=useState("");
+  const [dailyOrders,setDailyOrders]=useState(0);
+  const [dailySales,setDailySales]=useState(0);
+  const [salesLoading,setSalesLoading]=useState(true);
+  const [salesError,setSalesError]=useState("");
+  async function refreshDailySales(){
+    if(!isSupabaseConfigured){setSalesError("Supabase is not configured.");setSalesLoading(false);return;}
+    setSalesLoading(true);
+    const today=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Manila",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+    const {data,error}=await supabase.from("sticker_studio_sales").select("total_amount").eq("business_date",today);
+    if(error){setSalesError(error.message);setSalesLoading(false);return;}
+    setDailyOrders(data?.length||0);
+    setDailySales((data||[]).reduce((sum,row)=>sum+Number(row.total_amount||0),0));
+    setSalesError("");setSalesLoading(false);
+  }
+  async function refreshNextOrderNumber(){
+    if(!isSupabaseConfigured)return;
+    const {data,error}=await supabase.rpc("syp_sticker_peek_order_number");
+    if(!error&&data)setOrderNo(String(data));
+  }
 
-  useEffect(()=>{try{const q=localStorage.getItem("syp-signature-queue");const h=localStorage.getItem("syp-signature-history");const n=localStorage.getItem("syp-signature-id");if(q)setQueue(JSON.parse(q));if(h)setHistory(JSON.parse(h));if(n)setNextId(Number(n)||1);const savedOrder=localStorage.getItem("syp-signature-order-no");if(savedOrder)setOrderNo(savedOrder);}catch{}setReady(true);},[]);
+  useEffect(()=>{try{const q=localStorage.getItem("syp-signature-queue");const h=localStorage.getItem("syp-signature-history");const n=localStorage.getItem("syp-signature-id");if(q)setQueue(JSON.parse(q));if(h)setHistory(JSON.parse(h));if(n)setNextId(Number(n)||1);}catch{}setReady(true);void refreshDailySales();void refreshNextOrderNumber();},[]);
   useEffect(()=>{if(!ready)return;localStorage.setItem("syp-signature-queue",JSON.stringify(queue));localStorage.setItem("syp-signature-history",JSON.stringify(history));localStorage.setItem("syp-signature-id",String(nextId));localStorage.setItem("syp-signature-order-no",orderNo);},[queue,history,nextId,orderNo,ready]);
 
   const filtered=useMemo(()=>MENU.map((m,i)=>({m,i})).filter(({m})=>m[0].toLowerCase().includes(search.toLowerCase())||m[3].toLowerCase().includes(search.toLowerCase())),[search]);
   const product=MENU[selected] ?? MENU[0];
   function randomQuote(category:string){const list=QUOTES[category]||QUOTES.Coffee;setQuote(list[Math.floor(Math.random()*list.length)]);}
-  function add(){const count=Math.max(1,Math.min(100,quantity));const list=QUOTES[product[3]]||QUOTES.Coffee;const item:Sticker={id:nextId,customer:customer.trim(),drink:product[0],size:product[1],price:product[2],category:product[3],sugar,ice,note:note.trim(),quote,createdAt:stamp(),orderNo};const made=Array.from({length:count},(_,i)=>({...item,id:nextId+i,quote:list[Math.floor(Math.random()*list.length)]}));setQueue(q=>[...q,...made]);setNextId(n=>n+count);setQuote(made[made.length-1].quote);setOrderNo(String((Number.parseInt(orderNo,10)||0)+1).toString().padStart(3,"0"));setNotice(count+" sticker(s) added. Next order: #"+String((Number.parseInt(orderNo,10)||0)+1).padStart(3,"0")+".");}
+  async function add(){
+    if(!isSupabaseConfigured){setNotice("Hindi naka-configure ang database. Hindi muna mase-save ang sale.");return;}
+    const count=Math.max(1,Math.min(100,quantity));
+    const {data:allocated,error:counterError}=await supabase.rpc("syp_sticker_next_order_number");
+    if(counterError||!allocated){setNotice("Hindi makakuha ng order number: "+(counterError?.message||"Please try again."));return;}
+    const allocatedNo=String(allocated);
+    const businessDate=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Manila",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
+    const orderId=crypto.randomUUID();
+    const total=Number(product[2])*count;
+    const sale={id:orderId,order_number:allocatedNo,business_date:businessDate,customer_name:customer.trim()||"Walk-in",items:[{drink:product[0],size:product[1],category:product[3],quantity:count,unit_price:Number(product[2]),sugar,ice,note:note.trim()}],total_quantity:count,total_amount:total};
+    const {error:saleError}=await supabase.from("sticker_studio_sales").insert(sale);
+    if(saleError){setNotice("Hindi na-save ang sale: "+saleError.message);return;}
+    const list=QUOTES[product[3]]||QUOTES.Coffee;
+    const item:Sticker={id:nextId,customer:customer.trim(),drink:product[0],size:product[1],price:product[2],category:product[3],sugar,ice,note:note.trim(),quote,createdAt:stamp(),orderNo:allocatedNo};
+    const made=Array.from({length:count},(_,i)=>({...item,id:nextId+i,quote:i===0?quote:list[Math.floor(Math.random()*list.length)]}));
+    setQueue(q=>[...q,...made]);setNextId(n=>n+count);setQuote(made[made.length-1].quote);
+    await refreshNextOrderNumber();await refreshDailySales();
+    setNotice("Sale saved! Order #"+allocatedNo+" · ₱"+total.toLocaleString("en-PH")+" · "+count+" sticker(s) added.");
+  }
   function print(ids?:number[]){const selectedItems=ids?queue.filter(x=>ids.includes(x.id)):queue;if(!selectedItems.length)return;const done=()=>{setHistory(h=>[...selectedItems,...h].slice(0,250));setQueue(q=>q.filter(x=>!selectedItems.some(y=>y.id===x.id)));setNotice("Print dialog finished. Nasa history na ang stickers.");window.removeEventListener("afterprint",done);};window.addEventListener("afterprint",done,{once:true});window.print();window.setTimeout(()=>window.removeEventListener("afterprint",done),60000);}
   function reprint(s:Sticker){setQueue(q=>[...q,{...s,id:nextId}]);setNextId(n=>n+1);window.scrollTo({top:0,behavior:"smooth"});}
   return <main className="studio">
@@ -104,12 +142,22 @@ export default function StickerStudioPage() {
     `}</style>
     <header className="head"><div className="brand"><img src={LOGO_URL} alt="SYP logo"/><div><h1>SYP Signature Sticker Studio</h1><p>STREET • ICED • BREWED</p></div></div><a href="/" style={{color:"#65472f",fontSize:12,fontWeight:800}}>← Back</a></header>
     <div className="layout">
+      <section className="panel" style={{gridColumn:"1 / -1",display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:12}}>
+        <div><div className="small">TODAY'S ORDERS</div><div style={{fontSize:28,fontWeight:900}}>{salesLoading?"…":dailyOrders}</div></div>
+        <div><div className="small">TODAY'S SALES</div><div style={{fontSize:28,fontWeight:900}}>₱{salesLoading?"…":dailySales.toLocaleString("en-PH")}</div></div>
+        <div><div className="small">NEXT ORDER NUMBER</div><div style={{fontSize:28,fontWeight:900}}>#{orderNo}</div></div>
+        {salesError&&<div style={{gridColumn:"1 / -1",fontSize:11,color:"#a33"}}>{salesError} · Run the Sticker Studio SQL setup in Supabase.</div>}
+        <div style={{gridColumn:"1 / -1",display:"flex",gap:8,flexWrap:"wrap"}}>
+          <button className="btn alt" type="button" onClick={()=>void refreshDailySales()}>↻ Refresh sales</button>
+          <button className="btn alt" type="button" onClick={async()=>{if(!confirm("I-reset ang order number sa 001 para ngayong araw? Hindi mabubura ang sales records."))return;const {data,error}=await supabase.rpc("syp_sticker_reset_order_number");if(error){setNotice("Reset failed: "+error.message);return;}setOrderNo(String(data||"001"));setNotice("Today's next order number reset to #001. Sales history is unchanged.");}}>↺ Reset today's order number</button>
+        </div>
+      </section>
       <section className="panel form-panel"><h2>Create signature sticker</h2><p className="muted">Piliin ang drink sa menu. Automatic ang drink name, size at presyo gaya ng Cup Wrap Studio.</p>
         <div className="field"><label>Search menu</label><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search drink / category"/></div>
         <div className="field"><label>Drink & size — auto price</label><select size={Math.min(7,Math.max(3,filtered.length))} value={String(selected)} onChange={e=>{const idx=Number(e.target.value);setSelected(idx);randomQuote(MENU[idx][3]);}}>{filtered.map(({m,i})=><option key={i} value={i}>{m[0]} · {m[1]} — ₱{m[2]}</option>)}</select></div>
         <p className="muted">Selected: <strong>{product[0]} · {product[1]} — ₱{product[2]}</strong></p>
         <div className="field"><label>Customer name (optional)</label><input value={customer} onChange={e=>setCustomer(e.target.value.slice(0,35))} placeholder="Walk-in / customer name"/></div>
-        <div className="field"><label>Order number</label><input value={orderNo} onChange={e=>setOrderNo(e.target.value.slice(0,12))}/><button className="btn alt" type="button" onClick={()=>{if(confirm("I-reset ang next order number sa 001? Hindi mababago ang dating stickers sa queue at history.")){setOrderNo("001");setNotice("Next order number reset to #001.");}}}>↺ Reset order number</button></div>
+        <div className="field"><label>Order number (automatic)</label><input value={orderNo} readOnly/><span className="small">Automatic daily sequence. Reset is in the dashboard above.</span></div>
         <div className="field"><label>Sugar level — default regular</label><select value={sugar} onChange={e=>setSugar(e.target.value)}><option>Regular sugar</option><option>75% sugar</option><option>50% sugar</option><option>25% sugar</option><option>No sugar</option></select></div>
         <div className="field"><label>Ice level</label><select value={ice} onChange={e=>setIce(e.target.value)}><option>Regular ice</option><option>Less ice</option><option>Extra ice</option><option>No ice</option><option>Hot</option></select></div>
         <div className="field"><label>Optional note</label><input value={note} onChange={e=>setNote(e.target.value.slice(0,50))} placeholder="e.g. no straw, less foam"/></div>
