@@ -73,7 +73,7 @@ export default function StickerStudioPage() {
   const [notice,setNotice]=useState("");
 
   useEffect(()=>{try{const q=localStorage.getItem("syp-signature-queue");const h=localStorage.getItem("syp-signature-history");const n=localStorage.getItem("syp-signature-id");if(q)setQueue(JSON.parse(q));if(h)setHistory(JSON.parse(h));if(n)setNextId(Number(n)||1);const savedOrder=localStorage.getItem("syp-signature-order-no");if(savedOrder)setOrderNo(savedOrder);}catch{}setReady(true);},[]);
-  useEffect(()=>{if(!ready)return;localStorage.setItem("syp-signature-queue",JSON.stringify(queue));localStorage.setItem("syp-signature-history",JSON.stringify(history));localStorage.setItem("syp-signature-id",String(nextId));localStorage.setItem("syp-signature-order-no",orderNo);},[queue,history,nextId,ready]);
+  useEffect(()=>{if(!ready)return;localStorage.setItem("syp-signature-queue",JSON.stringify(queue));localStorage.setItem("syp-signature-history",JSON.stringify(history));localStorage.setItem("syp-signature-id",String(nextId));localStorage.setItem("syp-signature-order-no",orderNo);},[queue,history,nextId,orderNo,ready]);
 
   const filtered=useMemo(()=>MENU.map((m,i)=>({m,i})).filter(({m})=>m[0].toLowerCase().includes(search.toLowerCase())||m[3].toLowerCase().includes(search.toLowerCase())),[search]);
   const product=MENU[selected] ?? MENU[0];
