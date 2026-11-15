@@ -12,6 +12,8 @@ create table if not exists public.sticker_studio_sales (
   created_at timestamptz not null default now()
 );
 
+grant select, insert on public.sticker_studio_sales to anon, authenticated;
+
 create index if not exists sticker_studio_sales_business_date_idx
   on public.sticker_studio_sales (business_date, created_at desc);
 
