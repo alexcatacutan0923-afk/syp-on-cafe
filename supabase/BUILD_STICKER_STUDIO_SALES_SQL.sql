@@ -123,3 +123,26 @@ revoke all on function public.syp_sticker_reset_cash() from public;
 grant execute on function public.syp_sticker_reset_cash() to anon, authenticated;
 
 notify pgrst, 'reload schema';
+
+
+-- Manual reset for the displayed orders count.
+alter table public.sticker_studio_daily_counters
+  add column if not exists orders_reset_at timestamptz;
+
+create or replace function public.syp_sticker_reset_orders()
+returns timestamptz language plpgsql security definer set search_path = public
+as $$
+declare
+  today date := (now() at time zone 'Asia/Manila')::date;
+  reset_time timestamptz := now();
+begin
+  insert into public.sticker_studio_daily_counters (business_date, last_number, orders_reset_at)
+  values (today, 0, reset_time)
+  on conflict (business_date) do update
+    set orders_reset_at = reset_time, updated_at = now();
+  return reset_time;
+end;
+$$;
+
+revoke all on function public.syp_sticker_reset_orders() from public;
+grant execute on function public.syp_sticker_reset_orders() to anon, authenticated;
