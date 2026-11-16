@@ -89,4 +89,27 @@ grant execute on function public.syp_sticker_next_order_number() to anon, authen
 grant execute on function public.syp_sticker_peek_order_number() to anon, authenticated;
 grant execute on function public.syp_sticker_reset_order_number() to anon, authenticated;
 
+
+-- Cash reset is separate from order-number reset and never deletes sales.
+alter table public.sticker_studio_daily_counters
+  add column if not exists cash_reset_at timestamptz;
+
+create or replace function public.syp_sticker_reset_cash()
+returns timestamptz language plpgsql security definer set search_path = public
+as $
+declare
+  today date := (now() at time zone 'Asia/Manila')::date;
+  reset_time timestamptz := now();
+begin
+  insert into public.sticker_studio_daily_counters (business_date, last_number, cash_reset_at)
+  values (today, 0, reset_time)
+  on conflict (business_date) do update
+    set cash_reset_at = reset_time, updated_at = now();
+  return reset_time;
+end;
+$;
+
+revoke all on function public.syp_sticker_reset_cash() from public;
+grant execute on function public.syp_sticker_reset_cash() to anon, authenticated;
+
 notify pgrst, 'reload schema';
