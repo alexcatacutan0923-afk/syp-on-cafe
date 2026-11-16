@@ -36,7 +36,17 @@ create table if not exists public.sticker_studio_daily_counters (
 );
 
 alter table public.sticker_studio_daily_counters enable row level security;
-revoke all on public.sticker_studio_daily_counters from anon, authenticated;
+
+-- The page reads cash_reset_at directly to calculate today's cash total.
+-- Allow read-only access to this non-sensitive daily counter row.
+grant usage on schema public to anon, authenticated;
+grant select on public.sticker_studio_daily_counters to anon, authenticated;
+drop policy if exists "Sticker Studio can read daily counters" on public.sticker_studio_daily_counters;
+create policy "Sticker Studio can read daily counters"
+  on public.sticker_studio_daily_counters for select to anon, authenticated using (true);
+
+-- No direct insert/update/delete access; writes happen only through SECURITY DEFINER RPCs.
+revoke insert, update, delete on public.sticker_studio_daily_counters from anon, authenticated;
 
 create or replace function public.syp_sticker_next_order_number()
 returns text language plpgsql security definer set search_path = public
