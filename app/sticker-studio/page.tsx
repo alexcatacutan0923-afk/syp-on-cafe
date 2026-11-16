@@ -96,12 +96,11 @@ export default function StickerStudioPage() {
     const today=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Manila",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
     const {data:resetData,error:resetError}=await supabase.from("sticker_studio_daily_counters").select("cash_reset_at").eq("business_date",today).maybeSingle();
     if(resetError){setSalesError(resetError.message);setSalesLoading(false);return;}
-    let salesQuery=supabase.from("sticker_studio_sales").select("total_amount").eq("business_date",today);
-    if(resetData?.cash_reset_at)salesQuery=salesQuery.gte("created_at",resetData.cash_reset_at);
-    const {data,error}=await salesQuery;
+    const {data,error}=await supabase.from("sticker_studio_sales").select("total_amount,created_at").eq("business_date",today);
     if(error){setSalesError(error.message);setSalesLoading(false);return;}
+    const cashRows=(data||[]).filter(row=>!resetData?.cash_reset_at||new Date(row.created_at)>=new Date(resetData.cash_reset_at));
     setDailyOrders(data?.length||0);
-    setDailySales((data||[]).reduce((sum,row)=>sum+Number(row.total_amount||0),0));
+    setDailySales(cashRows.reduce((sum,row)=>sum+Number(row.total_amount||0),0));
     setSalesError("");setSalesLoading(false);
   }
   async function refreshNextOrderNumber(){
