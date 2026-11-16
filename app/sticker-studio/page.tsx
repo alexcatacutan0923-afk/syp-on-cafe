@@ -94,7 +94,11 @@ export default function StickerStudioPage() {
     if(!isSupabaseConfigured){setSalesError("Supabase is not configured.");setSalesLoading(false);return;}
     setSalesLoading(true);
     const today=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Manila",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
-    const {data,error}=await supabase.from("sticker_studio_sales").select("total_amount").eq("business_date",today);
+    const {data:resetData,error:resetError}=await supabase.from("sticker_studio_daily_counters").select("cash_reset_at").eq("business_date",today).maybeSingle();
+    if(resetError){setSalesError(resetError.message);setSalesLoading(false);return;}
+    let salesQuery=supabase.from("sticker_studio_sales").select("total_amount").eq("business_date",today);
+    if(resetData?.cash_reset_at)salesQuery=salesQuery.gte("created_at",resetData.cash_reset_at);
+    const {data,error}=await salesQuery;
     if(error){setSalesError(error.message);setSalesLoading(false);return;}
     setDailyOrders(data?.length||0);
     setDailySales((data||[]).reduce((sum,row)=>sum+Number(row.total_amount||0),0));
@@ -150,6 +154,7 @@ export default function StickerStudioPage() {
         <div style={{gridColumn:"1 / -1",display:"flex",gap:8,flexWrap:"wrap"}}>
           <button className="btn alt" type="button" onClick={()=>void refreshDailySales()}>↻ Refresh sales</button>
           <button className="btn alt" type="button" onClick={async()=>{if(!confirm("I-reset ang order number sa 001 para ngayong araw? Hindi mabubura ang sales records."))return;const {data,error}=await supabase.rpc("syp_sticker_reset_order_number");if(error){setNotice("Reset failed: "+error.message);return;}setOrderNo(String(data||"001"));setNotice("Today's next order number reset to #001. Sales history is unchanged.");}}>↺ Reset today's order number</button>
+          <button className="btn alt" type="button" onClick={async()=>{if(!confirm("I-zero ang cash/sales total mula ngayon? Hindi mabubura ang sales history o mababago ang order number."))return;const {error}=await supabase.rpc("syp_sticker_reset_cash");if(error){setNotice("Cash reset failed: "+error.message);return;}await refreshDailySales();setNotice("Cash total reset to ₱0. Previous sales remain in history; new sales will count from now on.");}}>₱ Reset cash</button>
         </div>
       </section>
       <section className="panel form-panel"><h2>Create signature sticker</h2><p className="muted">Piliin ang drink sa menu. Automatic ang drink name, size at presyo gaya ng Cup Wrap Studio.</p>
