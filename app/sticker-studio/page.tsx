@@ -83,6 +83,7 @@ export default function StickerStudioPage() {
   const [orderNo,setOrderNo]=useState("001");
   const [quantity,setQuantity]=useState(1);
   const [cashReceived,setCashReceived]=useState("");
+  const [paymentMethod,setPaymentMethod]=useState<"Cash"|"GCash"|"Maya"|"Bank Transfer">("Cash");
   const [quote,setQuote]=useState(QUOTES.Coffee[0]);
   const [queue,setQueue]=useState<Sticker[]>([]);
   const [printItems,setPrintItems]=useState<Sticker[]>([]);
@@ -142,7 +143,7 @@ export default function StickerStudioPage() {
     await refreshNextOrderNumber();await refreshDailySales();
     setNotice("Sale saved! Order #"+allocatedNo+" · ₱"+total.toLocaleString("en-PH")+" · "+count+" sticker(s) added.");
   }
-  function print(ids?:number[]){const selectedItems=ids?queue.filter(x=>ids.includes(x.id)):queue;if(!selectedItems.length)return;if(cashReceived.trim()===""){setNotice("Ilagay muna ang cash na ibinayad ng customer para makuwenta ang sukli sa receipt.");return;}const paid=Number(cashReceived);if(!Number.isFinite(paid)||paid<0){setNotice("Invalid ang cash received. Pakilagay ang tamang halaga.");return;}setPrintItems(selectedItems);const done=()=>{setHistory(h=>[...selectedItems,...h].slice(0,250));setQueue(q=>q.filter(x=>!selectedItems.some(y=>y.id===x.id)));setPrintItems([]);setNotice("Print dialog closed. Stickers + receipt are ready in history.");window.removeEventListener("afterprint",done);};window.addEventListener("afterprint",done,{once:true});window.setTimeout(()=>window.print(),350);window.setTimeout(()=>window.removeEventListener("afterprint",done),60000);}
+  function print(ids?:number[]){const selectedItems=ids?queue.filter(x=>ids.includes(x.id)):queue;if(!selectedItems.length)return;if(paymentMethod==="Cash"){if(cashReceived.trim()===""){setNotice("Ilagay muna ang cash na ibinayad ng customer para makuwenta ang sukli sa receipt.");return;}const paid=Number(cashReceived);if(!Number.isFinite(paid)||paid<0){setNotice("Invalid ang cash received. Pakilagay ang tamang halaga.");return;}}setPrintItems(selectedItems);const done=()=>{setHistory(h=>[...selectedItems,...h].slice(0,250));setQueue(q=>q.filter(x=>!selectedItems.some(y=>y.id===x.id)));setPrintItems([]);setNotice("Print dialog closed. Stickers + receipt are ready in history.");window.removeEventListener("afterprint",done);};window.addEventListener("afterprint",done,{once:true});window.setTimeout(()=>window.print(),350);window.setTimeout(()=>window.removeEventListener("afterprint",done),60000);}
   function reprint(s:Sticker){setQueue(q=>[...q,{...s,id:nextId}]);setNextId(n=>n+1);window.scrollTo({top:0,behavior:"smooth"});}
   return <main className="studio">
     <style jsx global>{`
@@ -180,17 +181,17 @@ export default function StickerStudioPage() {
       </section>
       <section className="panel"><div className="panel-head" style={{display:"flex",justifyContent:"space-between"}}><div><h2>Print queue</h2><p className="muted">80mm × 80mm · square portrait feed · Portrait · Actual size 100%</p></div><strong>{queue.length}</strong></div>
         {!queue.length?<p className="muted">Wala pang sticker sa queue.</p>:<div className="queue">{queue.map(s=><div className="queue-row" key={s.id}><div className="preview"><StickerArt sticker={s}/></div><div className="queue-buttons"><button className="smallbtn" onClick={()=>print([s.id])}>Print / reprint</button><button className="smallbtn" onClick={()=>setQueue(q=>q.map(x=>x.id===s.id?{...x,quote:(QUOTES[x.category]||QUOTES.Coffee)[Math.floor(Math.random()*(QUOTES[x.category]||QUOTES.Coffee).length)]}:x))}>Random quote</button><button className="smallbtn" onClick={()=>setQueue(q=>q.filter(x=>x.id!==s.id))}>Remove</button></div></div>)}</div>}
-        <div className="field" style={{marginTop:16,maxWidth:320}}><label>Cash received for receipt (₱)</label><input type="number" min="0" step="0.01" value={cashReceived} onChange={e=>setCashReceived(e.target.value)} placeholder="Enter customer payment"/><div style={{background:"#f8f1e8",border:"1px solid #e6d8c8",borderRadius:12,padding:14,display:"grid",gap:8}}><div style={{display:"flex",justifyContent:"space-between",fontSize:13}}><strong>Total ({queue.length} drinks)</strong><strong>₱{queueTotal.toFixed(2)}</strong></div><div style={{display:"flex",justifyContent:"space-between",fontSize:13}}><span>Cash received</span><strong>₱{cashValid?cashAmount.toFixed(2):"0.00"}</strong></div><div style={{borderTop:"1px dashed #cdbba5",paddingTop:8,display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}><strong style={{fontSize:15}}>{cashValid?(liveChange>=0?"CHANGE":"KULANG"):"SUKLI"}</strong><strong style={{fontSize:22,color:cashValid?(liveChange>=0?"#276749":"#b45309"):"#65472f"}}>{cashValid?(liveChange>=0?"₱"+liveChange.toFixed(2):"₱"+Math.abs(liveChange).toFixed(2)):"—"}</strong></div></div></div><div className="actions"><button className="btn" disabled={!queue.length} onClick={()=>print()}>Print stickers + receipt</button></div><p className="muted">Bawat print batch ay magkakaroon ng isang receipt sa pinakahuling sheet. Ang sukli ay automatic na kukuwentahin.</p>
+        <div className="field" style={{marginTop:16,maxWidth:320}}><label>Payment method</label><select value={paymentMethod} onChange={e=>setPaymentMethod(e.target.value as "Cash"|"GCash"|"Maya"|"Bank Transfer")}><option value="Cash">Cash</option><option value="GCash">GCash</option><option value="Maya">Maya</option><option value="Bank Transfer">Bank Transfer</option></select></div>{paymentMethod==="Cash"&&<div className="field" style={{maxWidth:320}}><label>Cash received (₱)</label><input type="number" min="0" step="0.01" value={cashReceived} onChange={e=>setCashReceived(e.target.value)} placeholder="Enter customer payment"/></div>}<div style={{maxWidth:320,background:"#f8f1e8",border:"1px solid #e6d8c8",borderRadius:12,padding:14,display:"grid",gap:8}}><div style={{display:"flex",justifyContent:"space-between",fontSize:13}}><strong>Total ({queue.length} drinks)</strong><strong>₱{queueTotal.toFixed(2)}</strong></div>{paymentMethod==="Cash"?<><div style={{display:"flex",justifyContent:"space-between",fontSize:13}}><span>Cash received</span><strong>₱{cashValid?cashAmount.toFixed(2):"0.00"}</strong></div><div style={{borderTop:"1px dashed #cdbba5",paddingTop:8,display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}><strong style={{fontSize:15}}>{cashValid?(liveChange>=0?"CHANGE":"KULANG"):"SUKLI"}</strong><strong style={{fontSize:22,color:cashValid?(liveChange>=0?"#276749":"#b45309"):"#65472f"}}>{cashValid?(liveChange>=0?"₱"+liveChange.toFixed(2):"₱"+Math.abs(liveChange).toFixed(2)):"—"}</strong></div></>:<div style={{borderTop:"1px dashed #cdbba5",paddingTop:8,display:"flex",justifyContent:"space-between",fontSize:13}}><strong>PAYMENT</strong><strong>{paymentMethod.toUpperCase()}</strong></div>}</div><div className="actions"><button className="btn" disabled={!queue.length} onClick={()=>print()}>Print stickers + receipt</button></div><p className="muted">Bawat print batch ay magkakaroon ng isang receipt sa pinakahuling sheet. Ang sukli ay automatic na kukuwentahin.</p>
         <div className="history"><h2>Print history</h2><p className="muted">Saved sa browser na ito. Puwedeng i-reprint anytime.</p>{history.slice(0,40).map((s,i)=><div className="history-row" key={s.id+"-"+i}><span><strong>{s.drink}</strong><br/><span className="small">#{s.orderNo} · {s.customer||"Walk-in"} · {s.createdAt}</span></span><button className="smallbtn" onClick={()=>reprint(s)}>Reprint</button></div>)}{history.length===0&&<p className="muted">Wala pang print history.</p>}</div>
         <p className="muted" style={{marginTop:18}}>Printer setup: 80mm × 80mm, Portrait, Actual size / 100%, margins none, headers & footers off. I-test muna sa plain paper.</p>
       </section>
     </div>
-    <div className="print-only-container">{printItems.map((s,i)=><div className="print-sheet" key={s.id}><StickerArt sticker={s}/></div>)}{printItems.length>0&&<ReceiptArt items={printItems} cashReceived={Number(cashReceived)||0}/>}</div>
+    <div className="print-only-container">{printItems.map((s,i)=><div className="print-sheet" key={s.id}><StickerArt sticker={s}/></div>)}{printItems.length>0&&<ReceiptArt items={printItems} cashReceived={paymentMethod==="Cash"?(Number(cashReceived)||0):0} paymentMethod={paymentMethod}/>}</div>
   </main>;
 }
 
 
-function ReceiptArt({items,cashReceived}:{items:Sticker[];cashReceived:number}){
+function ReceiptArt({items,cashReceived,paymentMethod}:{items:Sticker[];cashReceived:number;paymentMethod:"Cash"|"GCash"|"Maya"|"Bank Transfer"}){
   const grouped=items.reduce((rows,item)=>{
     const key=item.orderNo+"|"+item.drink+"|"+item.size+"|"+item.price;
     const found=rows.find(row=>row.key===key);
@@ -208,9 +209,8 @@ function ReceiptArt({items,cashReceived}:{items:Sticker[];cashReceived:number}){
     <div className="receipt-rule"/>
     <div className="receipt-row"><strong>TOTAL DRINKS</strong><strong>{items.length} pcs</strong></div>
     <div className="receipt-row receipt-total"><span>TOTAL</span><span>₱{total.toFixed(2)}</span></div>
-    <div className="receipt-row"><span>CASH RECEIVED</span><strong>₱{cashReceived.toFixed(2)}</strong></div>
-    <div className="receipt-rule"/>
-    <div className="receipt-row receipt-change"><span>{change>=0?"CHANGE":"BALANCE"}</span><span>₱{Math.abs(change).toFixed(2)}</span></div>
+    <div className="receipt-row"><span>PAYMENT METHOD</span><strong>{paymentMethod.toUpperCase()}</strong></div>
+    {paymentMethod==="Cash"&&<><div className="receipt-row"><span>CASH RECEIVED</span><strong>₱{cashReceived.toFixed(2)}</strong></div><div className="receipt-rule"/><div className="receipt-row receipt-change"><span>{change>=0?"CHANGE":"BALANCE"}</span><span>₱{Math.abs(change).toFixed(2)}</span></div></>}
     <div className="receipt-foot">THANK YOU, KASYP!</div>
   </div></div>;
 }
