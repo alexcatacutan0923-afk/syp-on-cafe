@@ -96,7 +96,7 @@ alter table public.sticker_studio_daily_counters
 
 create or replace function public.syp_sticker_reset_cash()
 returns timestamptz language plpgsql security definer set search_path = public
-as $
+as $$
 declare
   today date := (now() at time zone 'Asia/Manila')::date;
   reset_time timestamptz := now();
@@ -107,7 +107,7 @@ begin
     set cash_reset_at = reset_time, updated_at = now();
   return reset_time;
 end;
-$;
+$$;
 
 revoke all on function public.syp_sticker_reset_cash() from public;
 grant execute on function public.syp_sticker_reset_cash() to anon, authenticated;
