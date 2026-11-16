@@ -138,7 +138,7 @@ export default function StickerStudioPage() {
     await refreshNextOrderNumber();await refreshDailySales();
     setNotice("Sale saved! Order #"+allocatedNo+" · ₱"+total.toLocaleString("en-PH")+" · "+count+" sticker(s) added.");
   }
-  function print(ids?:number[]){const selectedItems=ids?queue.filter(x=>ids.includes(x.id)):queue;if(!selectedItems.length)return;setPrintItems(selectedItems);const done=()=>{setHistory(h=>[...selectedItems,...h].slice(0,250));setQueue(q=>q.filter(x=>!selectedItems.some(y=>y.id===x.id)));setPrintItems([]);setNotice("Print dialog closed. Stickers + receipt are ready in history.");window.removeEventListener("afterprint",done);};window.addEventListener("afterprint",done,{once:true});window.setTimeout(()=>window.print(),250);window.setTimeout(()=>window.removeEventListener("afterprint",done),60000);}
+  function print(ids?:number[]){const selectedItems=ids?queue.filter(x=>ids.includes(x.id)):queue;if(!selectedItems.length)return;if(cashReceived.trim()===""){setNotice("Ilagay muna ang cash na ibinayad ng customer para makuwenta ang sukli sa receipt.");return;}const paid=Number(cashReceived);if(!Number.isFinite(paid)||paid<0){setNotice("Invalid ang cash received. Pakilagay ang tamang halaga.");return;}setPrintItems(selectedItems);const done=()=>{setHistory(h=>[...selectedItems,...h].slice(0,250));setQueue(q=>q.filter(x=>!selectedItems.some(y=>y.id===x.id)));setPrintItems([]);setNotice("Print dialog closed. Stickers + receipt are ready in history.");window.removeEventListener("afterprint",done);};window.addEventListener("afterprint",done,{once:true});window.setTimeout(()=>window.print(),350);window.setTimeout(()=>window.removeEventListener("afterprint",done),60000);}
   function reprint(s:Sticker){setQueue(q=>[...q,{...s,id:nextId}]);setNextId(n=>n+1);window.scrollTo({top:0,behavior:"smooth"});}
   return <main className="studio">
     <style jsx global>{`
@@ -202,6 +202,7 @@ function ReceiptArt({items,cashReceived}:{items:Sticker[];cashReceived:number}){
     <div className="receipt-rule"/>
     {grouped.map(row=><div className="receipt-item" key={row.key}><div className="receipt-row"><strong>{row.drink}</strong><strong>₱{(row.price*row.quantity).toFixed(2)}</strong></div><div className="receipt-row"><span>{row.size} × {row.quantity}</span><span>₱{row.price.toFixed(2)} each</span></div></div>)}
     <div className="receipt-rule"/>
+    <div className="receipt-row"><strong>TOTAL DRINKS</strong><strong>{items.length} pcs</strong></div>
     <div className="receipt-row receipt-total"><span>TOTAL</span><span>₱{total.toFixed(2)}</span></div>
     <div className="receipt-row"><span>CASH RECEIVED</span><strong>₱{cashReceived.toFixed(2)}</strong></div>
     <div className="receipt-rule"/>
