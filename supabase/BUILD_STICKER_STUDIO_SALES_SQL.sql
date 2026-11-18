@@ -146,3 +146,101 @@ $$;
 
 revoke all on function public.syp_sticker_reset_orders() from public;
 grant execute on function public.syp_sticker_reset_orders() to anon, authenticated;
+
+
+-- MANUAL CASH-DRAWER MODE (no automatic day rollover).
+-- A fixed counter key keeps the order sequence and manual reset timestamps
+-- continuous across days and months. Sales rows retain their real business_date.
+insert into public.sticker_studio_daily_counters
+  (business_date, last_number, cash_reset_at, orders_reset_at)
+select
+  date '2000-01-01',
+  0,
+  max(cash_reset_at),
+  max(orders_reset_at)
+from public.sticker_studio_daily_counters
+on conflict (business_date) do update
+set cash_reset_at = coalesce(public.sticker_studio_daily_counters.cash_reset_at, excluded.cash_reset_at),
+    orders_reset_at = coalesce(public.sticker_studio_daily_counters.orders_reset_at, excluded.orders_reset_at);
+
+create or replace function public.syp_sticker_next_order_number()
+returns text language plpgsql security definer set search_path = public
+as $$
+declare
+  next_no integer;
+begin
+  insert into public.sticker_studio_daily_counters (business_date, last_number)
+  values (date '2000-01-01', 1)
+  on conflict (business_date) do update
+    set last_number = sticker_studio_daily_counters.last_number + 1,
+        updated_at = now()
+  returning last_number into next_no;
+  return lpad(next_no::text, 3, '0');
+end;
+$$;
+
+create or replace function public.syp_sticker_peek_order_number()
+returns text language plpgsql security definer set search_path = public
+as $$
+declare
+  current_no integer;
+begin
+  select last_number + 1 into current_no
+  from public.sticker_studio_daily_counters
+  where business_date = date '2000-01-01';
+  return lpad(coalesce(current_no, 1)::text, 3, '0');
+end;
+$$;
+
+create or replace function public.syp_sticker_reset_order_number()
+returns text language plpgsql security definer set search_path = public
+as $$
+begin
+  insert into public.sticker_studio_daily_counters (business_date, last_number)
+  values (date '2000-01-01', 0)
+  on conflict (business_date) do update
+    set last_number = 0, updated_at = now();
+  return '001';
+end;
+$$;
+
+create or replace function public.syp_sticker_reset_orders()
+returns timestamptz language plpgsql security definer set search_path = public
+as $$
+declare
+  reset_time timestamptz := now();
+begin
+  insert into public.sticker_studio_daily_counters (business_date, last_number, orders_reset_at)
+  values (date '2000-01-01', 0, reset_time)
+  on conflict (business_date) do update
+    set orders_reset_at = reset_time, updated_at = now();
+  return reset_time;
+end;
+$$;
+
+create or replace function public.syp_sticker_reset_cash()
+returns timestamptz language plpgsql security definer set search_path = public
+as $$
+declare
+  reset_time timestamptz := now();
+begin
+  insert into public.sticker_studio_daily_counters (business_date, last_number, cash_reset_at)
+  values (date '2000-01-01', 0, reset_time)
+  on conflict (business_date) do update
+    set cash_reset_at = reset_time, updated_at = now();
+  return reset_time;
+end;
+$$;
+
+revoke all on function public.syp_sticker_next_order_number() from public;
+revoke all on function public.syp_sticker_peek_order_number() from public;
+revoke all on function public.syp_sticker_reset_order_number() from public;
+revoke all on function public.syp_sticker_reset_orders() from public;
+revoke all on function public.syp_sticker_reset_cash() from public;
+grant execute on function public.syp_sticker_next_order_number() to anon, authenticated;
+grant execute on function public.syp_sticker_peek_order_number() to anon, authenticated;
+grant execute on function public.syp_sticker_reset_order_number() to anon, authenticated;
+grant execute on function public.syp_sticker_reset_orders() to anon, authenticated;
+grant execute on function public.syp_sticker_reset_cash() to anon, authenticated;
+
+notify pgrst, 'reload schema';
