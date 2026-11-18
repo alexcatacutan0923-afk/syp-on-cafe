@@ -104,20 +104,25 @@ export default function StickerStudioPage() {
   const [notice,setNotice]=useState("");
   const [dailyOrders,setDailyOrders]=useState(0);
   const [dailySales,setDailySales]=useState(0);
+  const [monthlySales,setMonthlySales]=useState(0);
   const [salesLoading,setSalesLoading]=useState(true);
   const [salesError,setSalesError]=useState("");
   async function refreshDailySales(){
     if(!isSupabaseConfigured){setSalesError("Supabase is not configured.");setSalesLoading(false);return;}
     setSalesLoading(true);
-    const today=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Manila",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
-    const {data:resetData,error:resetError}=await supabase.from("sticker_studio_daily_counters").select("cash_reset_at,orders_reset_at").eq("business_date",today).maybeSingle();
+    const counterKey="2000-01-01";
+    const monthStart=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Manila",year:"numeric",month:"2-digit"}).format(new Date())+"-01";
+    const {data:resetData,error:resetError}=await supabase.from("sticker_studio_daily_counters").select("cash_reset_at,orders_reset_at").eq("business_date",counterKey).maybeSingle();
     if(resetError){setSalesError(resetError.message);setSalesLoading(false);return;}
     const {data,error}=await supabase.from("sticker_studio_sales").select("total_amount,created_at,business_date");
     if(error){setSalesError(error.message);setSalesLoading(false);return;}
-    const todayRows=(data||[]).filter(row=>resetData?.orders_reset_at?new Date(row.created_at)>=new Date(resetData.orders_reset_at):row.business_date===today);
-    const cashRows=(data||[]).filter(row=>resetData?.cash_reset_at?new Date(row.created_at)>=new Date(resetData.cash_reset_at):row.business_date===today);
-    setDailyOrders(todayRows.length);
+    const allRows=data||[];
+    const orderRows=resetData?.orders_reset_at?allRows.filter(row=>new Date(row.created_at)>=new Date(resetData.orders_reset_at)):allRows;
+    const cashRows=resetData?.cash_reset_at?allRows.filter(row=>new Date(row.created_at)>=new Date(resetData.cash_reset_at)):allRows;
+    const monthRows=allRows.filter(row=>row.business_date>=monthStart);
+    setDailyOrders(orderRows.length);
     setDailySales(cashRows.reduce((sum,row)=>sum+Number(row.total_amount||0),0));
+    setMonthlySales(monthRows.reduce((sum,row)=>sum+Number(row.total_amount||0),0));
     setSalesError("");setSalesLoading(false);
   }
   async function refreshNextOrderNumber(){
@@ -162,15 +167,16 @@ export default function StickerStudioPage() {
     `}</style>
     <header className="head"><div className="brand"><img src={LOGO_URL} alt="SYP logo"/><div><h1>SYP Signature Sticker Studio</h1><p>STREET • ICED • BREWED</p></div></div><a href="/" style={{color:"#65472f",fontSize:12,fontWeight:800}}>← Back</a></header>
     <div className="layout">
-      <section className="panel" style={{gridColumn:"1 / -1",display:"grid",gridTemplateColumns:"repeat(3,minmax(0,1fr))",gap:12}}>
-        <div><div className="small">TODAY'S ORDERS</div><div style={{fontSize:28,fontWeight:900}}>{salesLoading?"…":dailyOrders}</div></div>
-        <div><div className="small">TODAY'S SALES</div><div style={{fontSize:28,fontWeight:900}}>₱{salesLoading?"…":dailySales.toLocaleString("en-PH")}</div></div>
+      <section className="panel" style={{gridColumn:"1 / -1",display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:12}}>
+        <div><div className="small">ORDERS SINCE MANUAL RESET</div><div style={{fontSize:28,fontWeight:900}}>{salesLoading?"…":dailyOrders}</div></div>
+        <div><div className="small">TOTAL SALES SINCE CASH RESET</div><div style={{fontSize:28,fontWeight:900}}>₱{salesLoading?"…":dailySales.toLocaleString("en-PH")}</div></div>
+        <div><div className="small">THIS MONTH'S SALES</div><div style={{fontSize:28,fontWeight:900}}>₱{salesLoading?"…":monthlySales.toLocaleString("en-PH")}</div></div>
         <div><div className="small">NEXT ORDER NUMBER</div><div style={{fontSize:28,fontWeight:900}}>#{orderNo}</div></div>
         {salesError&&<div style={{gridColumn:"1 / -1",fontSize:11,color:"#a33"}}>{salesError} · Run the Sticker Studio SQL setup in Supabase.</div>}
         <div style={{gridColumn:"1 / -1",display:"flex",gap:8,flexWrap:"wrap"}}>
           <button className="btn alt" type="button" onClick={()=>void refreshDailySales()}>↻ Refresh sales</button>
-          <button className="btn alt" type="button" onClick={async()=>{if(!confirm("I-reset ang order number sa 001 para ngayong araw? Hindi mabubura ang sales records."))return;const {data,error}=await supabase.rpc("syp_sticker_reset_order_number");if(error){setNotice("Reset failed: "+error.message);return;}setOrderNo(String(data||"001"));setNotice("Today's next order number reset to #001. Sales history is unchanged.");}}>↺ Reset today's order number</button><button className="btn alt" type="button" onClick={async()=>{if(!confirm("I-reset ang TODAY'S ORDERS count sa 0? Hindi mabubura ang sales records. Bibilang ulit mula ngayon hanggang sa susunod mong manual reset."))return;const {error}=await supabase.rpc("syp_sticker_reset_orders");if(error){setNotice("Orders reset failed: "+error.message+" — Run the latest SQL patch first.");return;}await refreshDailySales();setNotice("Today's orders count reset to 0. Sales history is unchanged.");}}>↺ Reset today's orders</button>
-          <button className="btn alt" type="button" onClick={async()=>{if(!confirm("I-zero ang cash/sales total mula ngayon? Hindi mabubura ang sales history o mababago ang order number."))return;const {error}=await supabase.rpc("syp_sticker_reset_cash");if(error){setNotice("Cash reset failed: "+error.message);return;}await refreshDailySales();setNotice("Cash total reset to ₱0. Previous sales remain in history; new sales will count from now on.");}}>₱ Reset cash</button>
+          <button className="btn alt" type="button" onClick={async()=>{if(!confirm("I-reset ang order number sa 001? Hindi mabubura ang sales records."))return;const {data,error}=await supabase.rpc("syp_sticker_reset_order_number");if(error){setNotice("Reset failed: "+error.message);return;}setOrderNo(String(data||"001"));setNotice("Next order number reset to #001. Sales history is unchanged.");}}>↺ Reset order number</button><button className="btn alt" type="button" onClick={async()=>{if(!confirm("I-reset ang order count sa 0? Hindi mabubura ang sales records. Bibilang ulit mula ngayon hanggang sa susunod mong manual reset."))return;const {error}=await supabase.rpc("syp_sticker_reset_orders");if(error){setNotice("Orders reset failed: "+error.message+" — Run the latest SQL patch first.");return;}await refreshDailySales();setNotice("Order count reset to 0. Sales history is unchanged.");}}>↺ Reset order count</button>
+          <button className="btn alt" type="button" onClick={async()=>{if(!confirm("I-zero ang cash/sales total mula ngayon? Hindi mabubura ang sales history o mababago ang order number."))return;const {error}=await supabase.rpc("syp_sticker_reset_cash");if(error){setNotice("Cash reset failed: "+error.message);return;}await refreshDailySales();setNotice("Cash total reset to ₱0. Previous sales remain in history; new sales will count from now on.");}}>₱ Reset cash drawer</button>
         </div>
       </section>
       <section className="panel form-panel"><h2>Create signature sticker</h2><p className="muted">Piliin ang drink sa menu. Automatic ang drink name, size at presyo gaya ng Cup Wrap Studio.</p>
@@ -178,7 +184,7 @@ export default function StickerStudioPage() {
         <div className="field"><label>Drink & size — auto price</label><select size={Math.min(7,Math.max(3,filtered.length))} value={String(selected)} onChange={e=>{const idx=Number(e.target.value);setSelected(idx);randomQuote(MENU[idx][3]);}}>{filtered.map(({m,i})=><option key={i} value={i}>{m[0]} · {m[1]} — ₱{m[2]}</option>)}</select></div>
         <p className="muted">Selected: <strong>{product[0]} · {product[1]} — ₱{product[2]}</strong></p>
         <div className="field"><label>Customer name (optional)</label><input value={customer} onChange={e=>setCustomer(e.target.value.slice(0,35))} placeholder="Walk-in / customer name"/></div>
-        <div className="field"><label>Order number (automatic)</label><input value={orderNo} readOnly/><span className="small">Automatic daily sequence. Reset is in the dashboard above.</span></div>
+        <div className="field"><label>Order number (automatic)</label><input value={orderNo} readOnly/><span className="small">Continuous sequence. Ikaw ang magre-reset bago magsimula ng bagong kaha.</span></div>
         <div className="field"><label>Sugar level — default regular</label><select value={sugar} onChange={e=>setSugar(e.target.value)}><option>Regular sugar</option><option>75% sugar</option><option>50% sugar</option><option>25% sugar</option><option>No sugar</option></select></div>
         <div className="field"><label>Ice level</label><select value={ice} onChange={e=>setIce(e.target.value)}><option>Regular ice</option><option>Less ice</option><option>Extra ice</option><option>No ice</option><option>Hot</option></select></div>
         <div className="field"><label>Optional note</label><input value={note} onChange={e=>setNote(e.target.value.slice(0,50))} placeholder="e.g. no straw, less foam"/></div>
