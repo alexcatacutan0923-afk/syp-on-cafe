@@ -27,6 +27,8 @@ const MENU = [
   ["Milky White Choco","16oz",99,"Milky"],["Milky White Choco","22oz",119,"Milky"],
   ["Milky Choco","16oz",99,"Milky"],["Milky Choco","22oz",119,"Milky"],
   ["Matcha Latte","16oz",109,"Matcha"],["Matcha Latte","22oz",129,"Matcha"],
+  ["Dirty Matcha","16oz",109,"Matcha"],["Dirty Matcha","22oz",129,"Matcha"],
+  ["Hot Dirty Matcha","8oz",69,"Matcha"],["Hot Dirty Matcha","12oz",89,"Matcha"],
   ["Strawberry Matcha","16oz",109,"Matcha"],["Strawberry Matcha","22oz",129,"Matcha"],
   ["Mango Matcha","16oz",109,"Matcha"],["Mango Matcha","22oz",129,"Matcha"],
   ["Blueberry Matcha","16oz",109,"Matcha"],["Blueberry Matcha","22oz",129,"Matcha"],
