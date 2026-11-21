@@ -272,7 +272,7 @@ function ReceiptArt({items,cashReceived,paymentMethod,paymentStatus,additionalCh
     <div className="receipt-row"><span>ORDER #{items[0]?.orderNo||"—"}</span><span>{stamp()}</span></div>
     <div className="receipt-rule"/>
     {note&&<div style={{border:"1px dashed #777",padding:"1.5mm",margin:"1.5mm 0",fontSize:"7pt",lineHeight:1.35,overflowWrap:"anywhere"}}><strong>NOTE:</strong> {note}</div>}
-    {grouped.map(row=><div className="receipt-item" key={row.key}><div className="receipt-row"><strong>{row.drink}</strong><strong>₱{(row.price*row.quantity).toFixed(2)}</strong></div><div className="receipt-row"><span>{row.size} × {row.quantity}</span><span>₱{row.price.toFixed(2)} each</span></div></div>)}{Array.from(new Set(items.map(item=>item.note.trim()).filter(Boolean))).map((customNote,index)=><div key={"note-"+index} style={{fontSize:"7pt",fontWeight:700,padding:"1mm 0",overflowWrap:"anywhere"}}>NOTE: {customNote}</div>)}
+    {grouped.map(row=><div className="receipt-item" key={row.key}><div className="receipt-row"><strong>{row.drink}</strong><strong>₱{(row.price*row.quantity).toFixed(2)}</strong></div><div className="receipt-row"><span>{row.size} × {row.quantity}</span></div></div>)}
     <div className="receipt-rule"/>
     <div className="receipt-row"><strong>TOTAL DRINKS</strong><strong>{items.length} pcs</strong></div>
     {additionalCharges.map((charge,index)=><div className="receipt-row" key={index}><span>{charge.name.toUpperCase()}</span><strong>₱{charge.amount.toFixed(2)}</strong></div>)}{discountAmount>0&&<div className="receipt-row"><span>DISCOUNT</span><strong>-₱{discountAmount.toFixed(2)}</strong></div>}
