@@ -128,7 +128,7 @@ export default function StickerStudioPage() {
     const monthStart=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Manila",year:"numeric",month:"2-digit"}).format(new Date())+"-01";
     const {data:resetData,error:resetError}=await supabase.from("sticker_studio_daily_counters").select("cash_reset_at,orders_reset_at").eq("business_date",counterKey).maybeSingle();
     if(resetError){setSalesError(resetError.message);setSalesLoading(false);return;}
-    const {data,error}=await supabase.from("sticker_studio_sales").select("total_amount,created_at,business_date,payment_status,payment_method,items,order_number,customer_name");
+    const {data,error}=await supabase.from("sticker_studio_sales").select("id,total_amount,created_at,business_date,payment_status,payment_method,items,order_number,customer_name,subtotal_amount,additional_charges,discount_amount,cash_received,change_amount");
     if(error){setSalesError(error.message);setSalesLoading(false);return;}
     const allRows=data||[];
     setSalesRows(allRows);
