@@ -7,43 +7,67 @@ const LOGO_URL = "/IMG_5996.jpeg";
 const QR_TARGET = "https://syponcafe.shop/member-register";
 
 const MENU = [
-  ["Americano","16oz",69,"Coffee"],["Americano","22oz",79,"Coffee"],
-  ["Spanish Latte","16oz",89,"Coffee"],["Spanish Latte","22oz",109,"Coffee"],
-  ["Oreo Latte","16oz",79,"Coffee"],["Oreo Latte","22oz",99,"Coffee"],
-  ["Iced Milo Latte","16oz",79,"Coffee"],["Iced Milo Latte","22oz",99,"Coffee"],
-  ["Vanilla Latte","16oz",89,"Coffee"],["Vanilla Latte","22oz",109,"Coffee"],
-  ["French Vanilla Latte","16oz",89,"Coffee"],["French Vanilla Latte","22oz",109,"Coffee"],
-  ["Roasted Almond Latte","16oz",99,"Coffee"],["Roasted Almond Latte","22oz",119,"Coffee"],
-  ["Biscoff Latte","16oz",99,"Coffee"],["Biscoff Latte","22oz",119,"Coffee"],
-  ["Salted Caramel","16oz",89,"Coffee"],["Salted Caramel","22oz",109,"Coffee"],
-  ["Hot Americano","8oz",49,"Coffee"],["Hot Americano","12oz",69,"Coffee"],
-  ["Hot Spanish Latte","8oz",79,"Coffee"],["Hot Spanish Latte","12oz",89,"Coffee"],
-  ["Hot Oreo Latte","8oz",69,"Coffee"],["Hot Oreo Latte","12oz",79,"Coffee"],
-  ["Hot Milo Latte","8oz",69,"Coffee"],["Hot Milo Latte","12oz",79,"Coffee"],
-  ["Hot Salted Caramel","8oz",69,"Coffee"],["Hot Salted Caramel","12oz",89,"Coffee"],
-  ["Milo Dino","16oz",79,"Milky"],["Milo Dino","22oz",99,"Milky"],
-  ["Oreo Milky","16oz",79,"Milky"],["Oreo Milky","22oz",99,"Milky"],
-  ["Caramel Macchiato","16oz",99,"Milky"],["Caramel Macchiato","22oz",119,"Milky"],
-  ["Milky White Choco","16oz",99,"Milky"],["Milky White Choco","22oz",119,"Milky"],
-  ["Milky Choco","16oz",99,"Milky"],["Milky Choco","22oz",119,"Milky"],
+  // ICED COFFEE — 16oz / 22oz
+  ["Americano","16oz",69,"Iced Coffee"],["Americano","22oz",79,"Iced Coffee"],
+  ["Oreo Latte","16oz",79,"Iced Coffee"],["Oreo Latte","22oz",99,"Iced Coffee"],
+  ["Iced Milo Latte","16oz",79,"Iced Coffee"],["Iced Milo Latte","22oz",99,"Iced Coffee"],
+  ["Spanish Latte","16oz",89,"Iced Coffee"],["Spanish Latte","22oz",109,"Iced Coffee"],
+  ["Salted Caramel Latte","16oz",89,"Iced Coffee"],["Salted Caramel Latte","22oz",109,"Iced Coffee"],
+  ["Vanilla Latte","16oz",89,"Iced Coffee"],["Vanilla Latte","22oz",109,"Iced Coffee"],
+  ["French Vanilla Latte","16oz",89,"Iced Coffee"],["French Vanilla Latte","22oz",109,"Iced Coffee"],
+  ["Roasted Almond Latte","16oz",99,"Iced Coffee"],["Roasted Almond Latte","22oz",119,"Iced Coffee"],
+  ["Biscoff Latte","16oz",99,"Iced Coffee"],["Biscoff Latte","22oz",119,"Iced Coffee"],
+  // HOT COFFEE — 8oz / 12oz
+  ["Hot Americano","8oz",49,"Hot Coffee"],["Hot Americano","12oz",69,"Hot Coffee"],
+  ["Hot Oreo Latte","8oz",59,"Hot Coffee"],["Hot Oreo Latte","12oz",79,"Hot Coffee"],
+  ["Hot Milo Latte","8oz",59,"Hot Coffee"],["Hot Milo Latte","12oz",79,"Hot Coffee"],
+  ["Hot Spanish Latte","8oz",59,"Hot Coffee"],["Hot Spanish Latte","12oz",79,"Hot Coffee"],
+  ["Hot Salted Caramel","8oz",69,"Hot Coffee"],["Hot Salted Caramel","12oz",89,"Hot Coffee"],
+  ["Hot Mocha","8oz",69,"Hot Coffee"],["Hot Mocha","12oz",89,"Hot Coffee"],
+  ["Hot White Mocha","8oz",69,"Hot Coffee"],["Hot White Mocha","12oz",89,"Hot Coffee"],
+  ["Hot Roasted Almond Latte","8oz",79,"Hot Coffee"],["Hot Roasted Almond Latte","12oz",99,"Hot Coffee"],
+  ["Hot Biscoff Latte","8oz",79,"Hot Coffee"],["Hot Biscoff Latte","12oz",99,"Hot Coffee"],
+  // ICED MILKY — 16oz / 22oz
+  ["Milo Dino","16oz",79,"Iced Milky"],["Milo Dino","22oz",99,"Iced Milky"],
+  ["Oreo Milky","16oz",79,"Iced Milky"],["Oreo Milky","22oz",99,"Iced Milky"],
+  ["Caramel Macchiato","16oz",99,"Iced Milky"],["Caramel Macchiato","22oz",119,"Iced Milky"],
+  ["Milky White Choco","16oz",99,"Iced Milky"],["Milky White Choco","22oz",119,"Iced Milky"],
+  ["Milky Choco","16oz",99,"Iced Milky"],["Milky Choco","22oz",119,"Iced Milky"],
+  // HOT MILKY — 8oz / 12oz
+  ["Hot Milo Dino","8oz",59,"Hot Milky"],["Hot Milo Dino","12oz",79,"Hot Milky"],
+  ["Hot Oreo Milky","8oz",59,"Hot Milky"],["Hot Oreo Milky","12oz",79,"Hot Milky"],
+  ["Hot Caramel Macchiato","8oz",69,"Hot Milky"],["Hot Caramel Macchiato","12oz",89,"Hot Milky"],
+  ["Hot Milky White Choco","8oz",69,"Hot Milky"],["Hot Milky White Choco","12oz",89,"Hot Milky"],
+  ["Hot Milky Choco","8oz",69,"Hot Milky"],["Hot Milky Choco","12oz",89,"Hot Milky"],
+  // ICED SIGNATURE — 16oz / 22oz
+  ["SYP Choco Boom (Mocha)","16oz",99,"Iced Signature"],["SYP Choco Boom (Mocha)","22oz",119,"Iced Signature"],
+  ["SYP White Rush (White Mocha)","16oz",99,"Iced Signature"],["SYP White Rush (White Mocha)","22oz",119,"Iced Signature"],
+  // ICED MATCHA — 16oz / 22oz
   ["Matcha Latte","16oz",109,"Matcha"],["Matcha Latte","22oz",129,"Matcha"],
   ["Dirty Matcha","16oz",109,"Matcha"],["Dirty Matcha","22oz",129,"Matcha"],
-  ["Hot Dirty Matcha","8oz",69,"Matcha"],["Hot Dirty Matcha","12oz",89,"Matcha"],
-  ["Strawberry Matcha","16oz",109,"Matcha"],["Strawberry Matcha","22oz",129,"Matcha"],
   ["Mango Matcha","16oz",109,"Matcha"],["Mango Matcha","22oz",129,"Matcha"],
   ["Blueberry Matcha","16oz",109,"Matcha"],["Blueberry Matcha","22oz",129,"Matcha"],
+  ["Strawberry Matcha","16oz",109,"Matcha"],["Strawberry Matcha","22oz",129,"Matcha"],
   ["Biscoff Matcha","16oz",119,"Matcha"],["Biscoff Matcha","22oz",139,"Matcha"],
-  ["Oreo Matcha","16oz",119,"Matcha"],["Oreo Matcha","22oz",139,"Matcha"],
+  // HOT MATCHA — 8oz / 12oz
+  ["Hot Matcha Latte","8oz",69,"Hot Matcha"],["Hot Matcha Latte","12oz",89,"Hot Matcha"],
+  ["Hot Dirty Matcha","8oz",69,"Hot Matcha"],["Hot Dirty Matcha","12oz",89,"Hot Matcha"],
+  ["Hot Mango Matcha","8oz",69,"Hot Matcha"],["Hot Mango Matcha","12oz",89,"Hot Matcha"],
+  ["Hot Blueberry Matcha","8oz",69,"Hot Matcha"],["Hot Blueberry Matcha","12oz",89,"Hot Matcha"],
+  ["Hot Strawberry Matcha","8oz",69,"Hot Matcha"],["Hot Strawberry Matcha","12oz",89,"Hot Matcha"],
+  ["Hot Biscoff Matcha","8oz",79,"Hot Matcha"],["Hot Biscoff Matcha","12oz",99,"Hot Matcha"],
+  // SODA — 16oz / 22oz
   ["Green Apple","16oz",39,"Soda"],["Green Apple","22oz",49,"Soda"],
-  ["Mango Soda","16oz",39,"Soda"],["Mango Soda","22oz",49,"Soda"],
-  ["Orange Soda","16oz",39,"Soda"],["Orange Soda","22oz",49,"Soda"],
-  ["Strawberry Soda","16oz",39,"Soda"],["Strawberry Soda","22oz",49,"Soda"],
-  ["Watermelon Soda","16oz",39,"Soda"],["Watermelon Soda","22oz",49,"Soda"],
-  ["Blueberry Soda","16oz",39,"Soda"],["Blueberry Soda","22oz",49,"Soda"],
-  ["Peach Soda","16oz",39,"Soda"],["Peach Soda","22oz",49,"Soda"],
-  ["SYP Choco Boom","16oz",99,"Signature"],["SYP Choco Boom","22oz",119,"Signature"],
-  ["SYP White Rush","16oz",99,"Signature"],["SYP White Rush","22oz",119,"Signature"],
-  ["SYP Bites","Small",49,"Fries"],["SYP Cravings","Medium",79,"Fries"],["SYP Overload","Barkada",119,"Fries"],
+  ["Mango","16oz",39,"Soda"],["Mango","22oz",49,"Soda"],
+  ["Orange","16oz",39,"Soda"],["Orange","22oz",49,"Soda"],
+  ["Strawberry","16oz",39,"Soda"],["Strawberry","22oz",49,"Soda"],
+  ["Watermelon","16oz",39,"Soda"],["Watermelon","22oz",49,"Soda"],
+  ["Blueberry","16oz",39,"Soda"],["Blueberry","22oz",49,"Soda"],
+  ["Peach","16oz",39,"Soda"],["Peach","22oz",49,"Soda"],
+  // FRIES
+  ["Syp Bites (Small)","Small",49,"Fries"],["Syp Cravings (Medium)","Medium",79,"Fries"],["Syp Overload (Barkada)","Barkada",119,"Fries"],
+  // WAFFLE
+  ["Syp Waffle","1 pc",69,"Waffle"],["Syp Cheesy Waffle","1 pc",79,"Waffle"],["Syp Hotdog Waffle","1 pc",79,"Waffle"],["Syp Chocolate Waffle","1 pc",89,"Waffle"],
 ] as const;
 
 const expandQuotes = (lines:string[]) => lines.flatMap(line=>[line,"POV: "+line,"Real talk: "+line,"Current mood: "+line,"Not me: "+line,"Plot twist: "+line]);
@@ -152,10 +176,11 @@ export default function StickerStudioPage() {
   useEffect(()=>{try{const q=localStorage.getItem("syp-signature-queue");const h=localStorage.getItem("syp-signature-history");const n=localStorage.getItem("syp-signature-id");if(q)setQueue(JSON.parse(q));if(h)setHistory(JSON.parse(h));if(n)setNextId(Number(n)||1);}catch{}setReady(true);void refreshDailySales();void refreshNextOrderNumber();},[]);
   useEffect(()=>{if(!ready)return;localStorage.setItem("syp-signature-queue",JSON.stringify(queue));localStorage.setItem("syp-signature-history",JSON.stringify(history));localStorage.setItem("syp-signature-id",String(nextId));localStorage.setItem("syp-signature-order-no",orderNo);},[queue,history,nextId,orderNo,ready]);
 
-  const categories=["All","Coffee","Milky","Matcha","Soda","Signature","Fries"];
+  const categories=["All","Iced Coffee","Hot Coffee","Iced Milky","Hot Milky","Iced Signature","Matcha","Hot Matcha","Soda","Fries","Waffle"];
   const filtered=useMemo(()=>MENU.map((m,i)=>({m,i})).filter(({m})=>(activeCategory==="All"||m[3]===activeCategory)&&(m[0].toLowerCase().includes(search.toLowerCase())||m[3].toLowerCase().includes(search.toLowerCase()))),[search,activeCategory]);
   const product=MENU[selected] ?? MENU[0];
-  function randomQuote(category:string){const list=QUOTES[category]||QUOTES.Coffee;setQuote(list[Math.floor(Math.random()*list.length)]);}
+  function quoteGroup(category:string){return category.includes("Matcha")?"Matcha":category.includes("Soda")?"Soda":category.includes("Milky")?"Milky":category.includes("Signature")?"Signature":category==="Fries"?"Fries":"Coffee";}
+  function randomQuote(category:string){const list=QUOTES[quoteGroup(category)]||QUOTES.Coffee;setQuote(list[Math.floor(Math.random()*list.length)]);}
   async function add(productIndex:number=selected){
     if(!isSupabaseConfigured){setNotice("Hindi naka-configure ang database. Hindi muna mase-save ang sale.");return;}
     const chosen=MENU[productIndex]??MENU[0];
@@ -163,7 +188,7 @@ export default function StickerStudioPage() {
     const activeOrder=[...queue].reverse().find(item=>item.salePending);
     let allocatedNo=activeOrder?.orderNo;
     if(!allocatedNo){const {data:allocated,error:counterError}=await supabase.rpc("syp_sticker_next_order_number");if(counterError||!allocated){setNotice("Hindi makakuha ng order number: "+(counterError?.message||"Please try again."));return;}allocatedNo=String(allocated);}
-    const list=QUOTES[chosen[3]]||QUOTES.Coffee;
+    const list=QUOTES[quoteGroup(chosen[3])]||QUOTES.Coffee;
     const itemQuote=chosen[3]===product[3]?quote:list[Math.floor(Math.random()*list.length)];
     const item:Sticker={id:nextId,customer:customer.trim(),drink:chosen[0],size:chosen[1],price:chosen[2],category:chosen[3],sugar,ice,note:note.trim(),quote:itemQuote,createdAt:stamp(),orderNo:allocatedNo,salePending:true};
     const made=Array.from({length:count},(_,i)=>({...item,id:nextId+i,quote:i===0?itemQuote:list[Math.floor(Math.random()*list.length)]}));
@@ -200,10 +225,9 @@ export default function StickerStudioPage() {
       </section>
       <section className="panel form-panel"><h2>Create signature sticker</h2><p className="muted">Piliin ang drink sa menu. Automatic ang drink name, size at presyo gaya ng Cup Wrap Studio.</p>
         <div className="field"><label>Search menu</label><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search drink / category"/></div>
-        <div className="category-tabs" aria-label="Drink categories">{categories.map(category=><button type="button" key={category} className={"category-tab"+(activeCategory===category?" active":"")} onClick={()=>setActiveCategory(category)}>{category==="All"?"All drinks":category}</button>)}</div>
+        <div className="category-tabs" aria-label="Menu categories">{categories.map(category=><button type="button" key={category} className={"category-tab"+(activeCategory===category?" active":"")} onClick={()=>setActiveCategory(category)}>{category==="All"?"All menu":category}</button>)}</div>
         <div className="quick-menu">
-          {(activeCategory==="All"||activeCategory==="Coffee")&&<><div className="menu-divider"><span>COFFEE</span><i/></div><div className="quick-grid">{filtered.filter(({m})=>m[3]==="Coffee").map(({m,i})=><button type="button" className={"quick-item"+(selected===i?" selected":"")} key={i} onClick={()=>void add(i)}><strong>{m[0]}</strong><span>{m[1]}</span><b>₱{m[2]}</b></button>)}</div></>}
-          {(activeCategory==="All"||activeCategory!=="Coffee")&&<><div className="menu-divider"><span>{activeCategory==="All"?"NON-COFFEE":activeCategory.toUpperCase()}</span><i/></div><div className="quick-grid">{filtered.filter(({m})=>m[3]!=="Coffee").map(({m,i})=><button type="button" className={"quick-item"+(selected===i?" selected":"")} key={i} onClick={()=>void add(i)}><strong>{m[0]}</strong><span>{m[1]}</span><b>₱{m[2]}</b></button>)}</div></>}
+          {(activeCategory==="All"?categories.slice(1):[activeCategory]).map(category=><div key={category}><div className="menu-divider"><span>{category.toUpperCase()}</span><i/></div><div className="quick-grid">{filtered.filter(({m})=>m[3]===category).map(({m,i})=><button type="button" className={"quick-item"+(selected===i?" selected":"")} key={i} onClick={()=>void add(i)}><strong>{m[0]}</strong><span>{m[1]}</span><b>₱{m[2]}</b></button>)}</div></div>)}
           {filtered.length===0&&<p className="muted">Walang match sa search.</p>}
         </div>
         <p className="muted">Tap ang drink at size para direktang maidagdag sa order. Walang Add to Print Queue button.</p>
