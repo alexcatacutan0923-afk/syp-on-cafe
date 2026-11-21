@@ -252,7 +252,9 @@ export default function StickerStudioPage() {
 }
 
 
-function paymentStatusForReceipt(total:number,cash:string,method:"Cash"|"GCash"|"Maya"|"Bank Transfer"){return method==="Cash"?(cash.trim()!==""&&Number(cash)>=total&&Number(cash)>0?"PAID":"UNPAID"):"PAID";}\n\nfunction ReceiptArt({items,cashReceived,paymentMethod,paymentStatus,additionalCharges,discountAmount}:{items:Sticker[];cashReceived:number;paymentMethod:"Cash"|"GCash"|"Maya"|"Bank Transfer";paymentStatus:string;additionalCharges:{name:string;amount:number}[];discountAmount:number}){
+function paymentStatusForReceipt(total:number,cash:string,method:"Cash"|"GCash"|"Maya"|"Bank Transfer"){return method==="Cash"?(cash.trim()!==""&&Number(cash)>=total&&Number(cash)>0?"PAID":"UNPAID"):"PAID";}
+
+function ReceiptArt({items,cashReceived,paymentMethod,paymentStatus,additionalCharges,discountAmount}:{items:Sticker[];cashReceived:number;paymentMethod:"Cash"|"GCash"|"Maya"|"Bank Transfer";paymentStatus:string;additionalCharges:{name:string;amount:number}[];discountAmount:number}){
   const grouped=items.reduce((rows,item)=>{
     const key=item.orderNo+"|"+item.drink+"|"+item.size+"|"+item.price;
     const found=rows.find(row=>row.key===key);
