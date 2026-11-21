@@ -244,3 +244,27 @@ grant execute on function public.syp_sticker_reset_orders() to anon, authenticat
 grant execute on function public.syp_sticker_reset_cash() to anon, authenticated;
 
 notify pgrst, 'reload schema';
+
+
+-- PAID / UNPAID checkout tracking for Sticker Studio.
+-- Existing historical sales are treated as paid; new orders receive explicit status.
+alter table public.sticker_studio_sales
+  add column if not exists payment_status text not null default 'paid'
+    check (payment_status in ('paid','unpaid')),
+  add column if not exists amount_paid numeric(12,2) not null default 0
+    check (amount_paid >= 0),
+  add column if not exists payment_method text not null default 'Cash',
+  add column if not exists paid_at timestamptz;
+
+update public.sticker_studio_sales
+set amount_paid = total_amount
+where payment_status = 'paid' and amount_paid = 0;
+
+grant update on public.sticker_studio_sales to anon, authenticated;
+drop policy if exists "Sticker Studio can update unpaid sales" on public.sticker_studio_sales;
+create policy "Sticker Studio can update unpaid sales"
+  on public.sticker_studio_sales for update to anon, authenticated
+  using (payment_status = 'unpaid')
+  with check (payment_status in ('paid','unpaid'));
+
+notify pgrst, 'reload schema';
