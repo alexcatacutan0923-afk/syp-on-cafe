@@ -268,3 +268,20 @@ create policy "Sticker Studio can update unpaid sales"
   with check (payment_status in ('paid','unpaid'));
 
 notify pgrst, 'reload schema';
+
+
+-- Persist complete checkout breakdown for Sticker Studio sales.
+alter table public.sticker_studio_sales
+  add column if not exists subtotal_amount numeric(12,2) not null default 0 check (subtotal_amount >= 0),
+  add column if not exists additional_charges jsonb not null default '[]'::jsonb,
+  add column if not exists discount_amount numeric(12,2) not null default 0 check (discount_amount >= 0),
+  add column if not exists cash_received numeric(12,2) not null default 0 check (cash_received >= 0),
+  add column if not exists change_amount numeric(12,2) not null default 0 check (change_amount >= 0);
+
+-- Backfill old rows without changing their recorded totals or payment status.
+update public.sticker_studio_sales
+set subtotal_amount = total_amount
+where subtotal_amount = 0 and total_amount > 0;
+
+grant select, insert, update on public.sticker_studio_sales to anon, authenticated;
+notify pgrst, 'reload schema';
