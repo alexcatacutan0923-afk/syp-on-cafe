@@ -126,7 +126,7 @@ export default function StickerStudioPage() {
     const paidRows=allRows.filter(row=>row.payment_status!=="unpaid");
     const {data:unpaidData}=await supabase.from("sticker_studio_sales").select("id,order_number,customer_name,total_amount,amount_paid,payment_method,created_at").eq("payment_status","unpaid").order("created_at",{ascending:false});
     setUnpaidOrders(unpaidData||[]);
-    const orderRows=resetData?.orders_reset_at?paidRows.filter(row=>new Date(row.created_at)>=new Date(resetData.orders_reset_at)):paidRows;
+    const orderRows=resetData?.orders_reset_at?allRows.filter(row=>new Date(row.created_at)>=new Date(resetData.orders_reset_at)):allRows;
     const cashRows=resetData?.cash_reset_at?paidRows.filter(row=>new Date(row.created_at)>=new Date(resetData.cash_reset_at)):paidRows;
     const monthRows=paidRows.filter(row=>row.business_date>=monthStart);
     setDailyOrders(orderRows.length);
