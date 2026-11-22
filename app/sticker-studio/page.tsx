@@ -101,6 +101,7 @@ const stamp = () => new Intl.DateTimeFormat("en-PH",{timeZone:"Asia/Manila",date
 
 export default function StickerStudioPage() {
   const [search,setSearch]=useState("");
+  const [salesReportOpen,setSalesReportOpen]=useState(false);
   const [activeCategory,setActiveCategory]=useState("All");
   const [selected,setSelected]=useState(0);
   const [customer,setCustomer]=useState("");
@@ -228,7 +229,13 @@ export default function StickerStudioPage() {
     `}</style>
     <header className="head"><div className="brand"><img src={LOGO_URL} alt="SYP logo"/><div><h1>SYP Signature Sticker Studio</h1><p>STREET • ICED • BREWED</p></div></div><a href="/" style={{color:"#65472f",fontSize:12,fontWeight:800}}>← Back</a></header>
     <div className="layout">
-      <section className="panel" style={{gridColumn:"1 / -1",display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:12}}>
+      <section className="panel" style={{gridColumn:"1 / -1",padding:12}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
+          <div><strong style={{fontSize:14}}>SALES REPORT</strong><div className="small">{salesReportOpen?"Sales summary, payment breakdown, records at controls":"Nakatago ang sales report para mas maluwag ang sticker workspace."}</div></div>
+          <button className="btn alt" type="button" aria-expanded={salesReportOpen} onClick={()=>setSalesReportOpen(open=>!open)}>{salesReportOpen?"▲ Close Sales Report":"▼ Open Sales Report"}</button>
+        </div>
+        {salesReportOpen&&<div style={{display:"grid",gridTemplateColumns:"repeat(4,minmax(0,1fr))",gap:12,marginTop:14}}>
+
         <div><div className="small">ORDERS SINCE MANUAL RESET</div><div style={{fontSize:28,fontWeight:900}}>{salesLoading?"…":dailyOrders}</div></div>
         <div><div className="small">TOTAL SALES SINCE CASH RESET</div><div style={{fontSize:28,fontWeight:900}}>₱{salesLoading?"…":dailySales.toLocaleString("en-PH")}</div></div>
         <div><div className="small">THIS MONTH'S SALES</div><div style={{fontSize:28,fontWeight:900}}>₱{salesLoading?"…":monthlySales.toLocaleString("en-PH")}</div></div>
@@ -242,6 +249,8 @@ export default function StickerStudioPage() {
           <button className="btn alt" type="button" onClick={async()=>{if(!confirm("I-reset ang order number sa 001? Hindi mabubura ang sales records."))return;const {data,error}=await supabase.rpc("syp_sticker_reset_order_number");if(error){setNotice("Reset failed: "+error.message);return;}setOrderNo(String(data||"001"));setNotice("Next order number reset to #001. Sales history is unchanged.");}}>↺ Reset order number</button><button className="btn alt" type="button" onClick={async()=>{if(!confirm("I-reset ang order count sa 0? Hindi mabubura ang sales records. Bibilang ulit mula ngayon hanggang sa susunod mong manual reset."))return;const {error}=await supabase.rpc("syp_sticker_reset_orders");if(error){setNotice("Orders reset failed: "+error.message+" — Run the latest SQL patch first.");return;}await refreshDailySales();setNotice("Order count reset to 0. Sales history is unchanged.");}}>↺ Reset order count</button>
           <button className="btn alt" type="button" onClick={async()=>{if(!confirm("I-zero ang cash/sales total mula ngayon? Hindi mabubura ang sales history o mababago ang order number."))return;const {error}=await supabase.rpc("syp_sticker_reset_cash");if(error){setNotice("Cash reset failed: "+error.message);return;}await refreshDailySales();setNotice("Cash total reset to ₱0. Previous sales remain in history; new sales will count from now on.");}}>₱ Reset cash drawer</button>
         </div>
+
+        </div>}
       </section>
       <section className="panel form-panel"><h2>Create signature sticker</h2><p className="muted">Piliin ang drink sa menu. Automatic ang drink name, size at presyo gaya ng Cup Wrap Studio.</p>
         <div className="field"><label>Search menu</label><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search drink / category"/></div>
