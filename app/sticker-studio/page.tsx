@@ -109,6 +109,9 @@ export default function StickerStudioPage() {
   const [note,setNote]=useState("");
   const [orderNo,setOrderNo]=useState("001");
   const [quantity,setQuantity]=useState(1);
+  const [customDrinkName,setCustomDrinkName]=useState("");
+  const [customDrinkSize,setCustomDrinkSize]=useState("16oz");
+  const [customDrinkPrice,setCustomDrinkPrice]=useState("");
   const [cashReceived,setCashReceived]=useState("");
   const [paymentMethod,setPaymentMethod]=useState<"Cash"|"GCash"|"Maya"|"Bank Transfer">("Cash");
   const [paymentConfirmed,setPaymentConfirmed]=useState(false);
@@ -196,6 +199,23 @@ export default function StickerStudioPage() {
     await refreshNextOrderNumber();
     setNotice(chosen[0]+" "+chosen[1]+" × "+count+" added · Order #"+allocatedNo+". Sales record kapag pinindot ang Print.");
   }
+  async function addCustomDrink(){
+    const name=customDrinkName.trim();
+    const price=Number(customDrinkPrice);
+    if(!name){setNotice("Ilagay muna ang pangalan ng customized drink.");return;}
+    if(customDrinkPrice.trim()===""||!Number.isFinite(price)||price<0){setNotice("Ilagay ang valid na presyo ng customized drink.");return;}
+    if(!isSupabaseConfigured){setNotice("Hindi naka-configure ang database. Hindi muna mase-save ang sale.");return;}
+    const count=Math.max(1,Math.min(100,quantity));
+    const activeOrder=[...queue].reverse().find(item=>item.salePending);
+    let allocatedNo=activeOrder?.orderNo;
+    if(!allocatedNo){const {data:allocated,error:counterError}=await supabase.rpc("syp_sticker_next_order_number");if(counterError||!allocated){setNotice("Hindi makakuha ng order number: "+(counterError?.message||"Please try again."));return;}allocatedNo=String(allocated);}
+    const item:Sticker={id:nextId,customer:customer.trim(),drink:name,size:customDrinkSize.trim()||"Custom",price,category:"Custom",sugar,ice,note:note.trim(),quote:quote||QUOTES.Coffee[0],createdAt:stamp(),orderNo:allocatedNo,salePending:true};
+    const made=Array.from({length:count},(_,i)=>({...item,id:nextId+i}));
+    setQueue(q=>[...q,...made]);setNextId(n=>n+count);
+    await refreshNextOrderNumber();
+    setNotice(name+" "+item.size+" × "+count+" added · ₱"+price.toFixed(2)+" each · Order #"+allocatedNo+".");
+    setCustomDrinkName("");setCustomDrinkPrice("");
+  }
   async function print(ids?:number[]){const rawSelectedItems=ids?queue.filter(x=>ids.includes(x.id)):queue;if(!rawSelectedItems.length)return;const selectedItems=rawSelectedItems.map(item=>({...item,note:note.trim()||item.note}));if(paymentMethod!=="Cash"&&!paymentConfirmed){setNotice("Please confirm muna na natanggap na ang "+paymentMethod+" payment.");return;}const cashInput=cashReceived.trim()===""?0:Number(cashReceived);if(paymentMethod==="Cash"&&(!Number.isFinite(cashInput)||cashInput<0)){setNotice("Invalid ang cash received. Pakilagay ang tamang halaga.");return;}const paymentStatus=paymentMethod==="Cash"?(cashInput>=finalTotal&&cashInput>0?"paid":"unpaid"):"paid";const amountPaid=paymentStatus==="paid"?finalTotal:0;const pendingItems=selectedItems.filter(x=>x.salePending);if(pendingItems.length){if(!isSupabaseConfigured){setNotice("Hindi naka-configure ang database. Hindi maitatala ang sale.");return;}const groups=Array.from(new Set(pendingItems.map(x=>x.orderNo))).map(order=>pendingItems.filter(x=>x.orderNo===order));const businessDate=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Manila",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());let discountRemaining=discountAmount;for(let index=0;index<groups.length;index++){const group=groups[index];const subtotal=group.reduce((sum,item)=>sum+Number(item.price||0),0);const charges=index===0?receiptCharges:[];const extraTotal=charges.reduce((sum,item)=>sum+item.amount,0);const orderDiscount=Math.min(subtotal+extraTotal,discountRemaining);discountRemaining=Math.max(0,discountRemaining-orderDiscount);const saleTotal=Math.max(0,subtotal+extraTotal-orderDiscount);const groupCash=index===0&&paymentMethod==="Cash"?cashInput:0;const sale={id:crypto.randomUUID(),order_number:group[0].orderNo,business_date:businessDate,customer_name:group[0].customer||"Walk-in",items:group.map(item=>({drink:item.drink,size:item.size,category:item.category,quantity:1,unit_price:Number(item.price),sugar:item.sugar,ice:item.ice,note:item.note})),total_quantity:group.length,subtotal_amount:subtotal,additional_charges:charges,discount_amount:orderDiscount,total_amount:saleTotal,payment_status:paymentStatus,amount_paid:paymentStatus==="paid"?saleTotal:0,payment_method:paymentMethod,cash_received:groupCash,change_amount:paymentMethod==="Cash"?Math.max(0,groupCash-saleTotal):0};const {error}=await supabase.from("sticker_studio_sales").insert(sale);if(error){setNotice("Hindi naitala ang sale kaya hindi muna magpi-print: "+error.message);return;}}const pendingIds=new Set(pendingItems.map(x=>x.id));setQueue(q=>q.map(item=>pendingIds.has(item.id)?{...item,salePending:false}:item));await refreshDailySales();}const selectedMode=printMode;setPrintItems(selectedItems);const done=()=>{const nextHistory=[...selectedItems.map(item=>({...item,salePending:false})),...history].slice(0,250);const nextQueue=queue.filter(x=>!selectedItems.some(y=>y.id===x.id));setHistory(nextHistory);setQueue(nextQueue);try{localStorage.setItem("syp-signature-history",JSON.stringify(nextHistory));localStorage.setItem("syp-signature-queue",JSON.stringify(nextQueue));}catch{}setNotice((paymentStatus==="paid"?"PAID":"UNPAID")+". Print dialog closed. Saved in history.");setPrintItems([]);setCheckoutOpen(false);window.removeEventListener("afterprint",done);window.setTimeout(()=>window.location.reload(),500);};window.addEventListener("afterprint",done,{once:true});window.setTimeout(()=>window.print(),350);window.setTimeout(()=>window.removeEventListener("afterprint",done),60000);}
   function reprint(s:Sticker){setPrintMode("stickers");setPrintItems([{...s,id:Date.now(),salePending:false}]);setNotice("Preparing sticker reprint for Order #"+s.orderNo+"…");const refresh=()=>{window.removeEventListener("afterprint",refresh);window.setTimeout(()=>window.location.reload(),500);};window.addEventListener("afterprint",refresh,{once:true});window.setTimeout(()=>window.print(),350);window.setTimeout(()=>window.removeEventListener("afterprint",refresh),60000);}
 
@@ -229,6 +249,16 @@ export default function StickerStudioPage() {
         <div className="quick-menu">
           {(activeCategory==="All"?categories.slice(1):[activeCategory]).map(category=><div key={category}><div className="menu-divider"><span>{category.toUpperCase()}</span><i/></div><div className="quick-grid">{filtered.filter(({m})=>m[3]===category).map(({m,i})=><button type="button" className={"quick-item"+(selected===i?" selected":"")} key={i} onClick={()=>void add(i)}><strong>{m[0]}</strong><span>{m[1]}</span><b>₱{m[2]}</b></button>)}</div></div>)}
           {filtered.length===0&&<p className="muted">Walang match sa search.</p>}
+        </div>
+        <div style={{marginTop:14,padding:12,border:"1px solid #d8c4ad",borderRadius:12,background:"#fffaf4",display:"grid",gap:9}}>
+          <strong style={{fontSize:14}}>CUSTOMIZED DRINK</strong>
+          <span className="small">Para sa special/custom drinks na wala sa regular menu. Ilagay ang sariling pangalan at presyo.</span>
+          <div className="field"><label>Customized drink name</label><input value={customDrinkName} onChange={e=>setCustomDrinkName(e.target.value.slice(0,50))} placeholder="e.g. Customer's Own Mix"/></div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+            <div className="field"><label>Size</label><input value={customDrinkSize} onChange={e=>setCustomDrinkSize(e.target.value.slice(0,12))} placeholder="e.g. 16oz"/></div>
+            <div className="field"><label>Price (₱)</label><input type="number" min="0" step="0.01" inputMode="decimal" value={customDrinkPrice} onChange={e=>setCustomDrinkPrice(e.target.value)} placeholder="Enter price"/></div>
+          </div>
+          <button type="button" className="btn" onClick={()=>void addCustomDrink()}>＋ Add customized drink</button>
         </div>
         <p className="muted">Tap ang drink at size para direktang maidagdag sa order. Walang Add to Print Queue button.</p>
         <div className="field"><label>Customer name (optional)</label><input value={customer} onChange={e=>setCustomer(e.target.value.slice(0,35))} placeholder="Walk-in / customer name"/></div>
