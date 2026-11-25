@@ -224,7 +224,7 @@ export default function StickerStudioPage() {
   }
   function randomQuote(category:string){
     const group=quoteGroup(category);
-    const used=[...queue.filter(item=>item.orderNo===activeOrder?.orderNo || quoteGroup(item.category)===group).map(item=>item.quote),...history.slice(0,40).filter(item=>quoteGroup(item.category)===group).map(item=>item.quote),quote];
+    const used=[...queue.filter(item=>quoteGroup(item.category)===group).map(item=>item.quote),...history.slice(0,40).filter(item=>quoteGroup(item.category)===group).map(item=>item.quote),quote];
     setQuote(pickUniqueQuote(category,used));
   }
   async function add(productIndex:number=selected){
