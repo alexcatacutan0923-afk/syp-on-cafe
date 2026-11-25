@@ -256,9 +256,12 @@ export default function StickerStudioPage() {
     if(mode==="both"||mode==="receipt"){
       if(!receiptNode)throw new Error("Hindi pa handa ang receipt preview. Subukan ulit.");
       await waitImages(receiptNode);
-      const receiptHeight=Math.max(45,Math.ceil(receiptNode.getBoundingClientRect().height*25.4/96)+3);
-      const markup=wrap(receiptNode.outerHTML,80,receiptHeight);
-      jobs.push(sendQzMarkup(receiptPrinter!,markup,80,receiptHeight,"SYP Receipt Order "+(items[0]?.orderNo||"")));
+      const receiptMain=receiptNode.querySelector(".receipt") as HTMLElement|null;
+      if(!receiptMain)throw new Error("Hindi makita ang receipt content.");
+      const receiptHeight=Math.max(55,Math.ceil(Math.max(receiptMain.scrollHeight,receiptMain.getBoundingClientRect().height)*25.4/96)+5);
+      const receiptCss=`.receipt{display:block!important;width:74mm!important;max-width:74mm!important;box-sizing:border-box!important;margin:0!important;padding:2mm 1.5mm 3mm!important;background:#fff!important;color:#000!important;font-family:Arial,Helvetica,sans-serif!important;font-size:8pt!important;line-height:1.25!important;overflow:visible!important}.receipt *{box-sizing:border-box!important;color:#000!important}.receipt-head{font-family:Arial,Helvetica,sans-serif!important;font-size:16pt!important;font-weight:900!important;line-height:1.1!important}.receipt-sub{font-size:6.5pt!important}.receipt-address{font-size:6pt!important}.receipt-title{font-size:9pt!important}.receipt-disclaimer{font-size:5.5pt!important}.receipt-meta{font-size:7pt!important;gap:1mm 2mm!important}.receipt-row{font-size:7.5pt!important;line-height:1.3!important;margin:.7mm 0!important}.receipt-total{font-size:11pt!important;padding:1.2mm 0!important}.receipt-change{font-size:10pt!important}.receipt-item{margin:1mm 0!important}.receipt-item-main{font-size:8pt!important}.receipt-item small{font-size:6.5pt!important}.receipt-note{font-size:7pt!important}.receipt-social{margin:1.5mm auto .7mm!important;gap:.5mm!important}.receipt-social img{width:9mm!important;height:9mm!important;image-rendering:pixelated!important}.receipt-social strong{font-size:6pt!important}.receipt-social span{font-size:5pt!important}.receipt-foot{font-size:8pt!important}.receipt-site{font-size:6pt!important}`;
+      const receiptMarkup='<!doctype html><html><head><meta charset="utf-8"><style>@page{size:80mm '+receiptHeight+'mm;margin:0}*{box-sizing:border-box}html,body{display:block!important;width:80mm!important;min-width:80mm!important;max-width:80mm!important;height:'+receiptHeight+'mm!important;min-height:'+receiptHeight+'mm!important;max-height:'+receiptHeight+'mm!important;margin:0!important;padding:0!important;overflow:hidden!important;background:#fff!important;color:#000!important}body{padding:0!important}'+receiptCss+'</style></head><body>'+receiptMain.outerHTML+'</body></html>';
+      jobs.push(sendQzMarkup(receiptPrinter!,receiptMarkup,80,receiptHeight,"SYP Receipt Order "+(items[0]?.orderNo||"")));
     }
     const results=await Promise.allSettled(jobs);
     const failed=results.filter(result=>result.status==="rejected");
