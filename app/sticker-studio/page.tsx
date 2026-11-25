@@ -200,6 +200,27 @@ export default function StickerStudioPage() {
     }
   }
 
+  async function testPrintBoth(){
+    const w=window as any;
+    if(!w.qz||!w.qz.websocket.isActive()){setNotice("Connect muna sa QZ Tray bago mag-test.");return;}
+    const stickerPrinter=qzPrinters.find(name=>name.trim()==="TP870 S");
+    const receiptPrinter=qzPrinters.find(name=>name.trim()==="EPSON TM-T88IV Receipt");
+    if(!stickerPrinter||!receiptPrinter){setNotice("Hindi makita ang parehong printer. Pindutin muna ang Reconnect / Find Printers.");return;}
+    if(!window.confirm("Magpi-print ng isang TEST sticker (70×50mm) sa TP870 S at isang TEST receipt sa Epson. Walang sale o queue na gagalawin. Ituloy?"))return;
+    setNotice("Sending test jobs to both printers…");
+    const stickerHtml='<!doctype html><html><head><meta charset="utf-8"><style>@page{size:70mm 50mm;margin:0}*{box-sizing:border-box}html,body{margin:0;padding:0;width:70mm;height:50mm;font-family:Arial,sans-serif;color:#000}body{padding:4mm;border:1px solid #000;text-align:center;display:flex;flex-direction:column;justify-content:center}h1{font-size:17pt;margin:0 0 3mm;font-weight:900}p{font-size:9pt;margin:1mm 0}.line{border-top:1px dashed #000;margin:3mm 0}</style></head><body><h1>SYP ON CAFÉ</h1><p>STREET • ICED • BREWED</p><div class="line"></div><h1>STICKER TEST</h1><p>70 × 50 mm · TP870 S</p><p>NO SALE CREATED</p></body></html>';
+    const receiptHtml='<!doctype html><html><head><meta charset="utf-8"><style>@page{size:80mm 60mm;margin:0}*{box-sizing:border-box}html,body{margin:0;padding:0;width:80mm;font-family:monospace;color:#000}body{padding:4mm}h1{text-align:center;font-family:Arial,sans-serif;font-size:16pt;margin:0 0 2mm}p{font-size:9pt;margin:2mm 0}.rule{border-top:1px dashed #000;margin:3mm 0}.total{font-size:13pt;font-weight:bold;text-align:center}</style></head><body><h1>SYP ON CAFÉ</h1><p style="text-align:center">STREET • ICED • BREWED</p><div class="rule"></div><p>QZ TRAY PRINTER TEST</p><p>Printer: EPSON TM-T88IV Receipt</p><p>Paper: 80 mm</p><div class="rule"></div><p class="total">TEST ONLY · ₱0.00</p><p style="text-align:center">NO SALE CREATED · THANK YOU, KASYP!</p></body></html>';
+    const stickerConfig=w.qz.configs.create(stickerPrinter,{units:"mm",size:{width:70,height:50},orientation:"landscape",margins:0,scaleContent:false,jobName:"SYP Sticker Test"});
+    const receiptConfig=w.qz.configs.create(receiptPrinter,{units:"mm",size:{width:80,height:60},margins:0,scaleContent:false,jobName:"SYP Receipt Test"});
+    const stickerJob=w.qz.print(stickerConfig,[{type:"pixel",format:"html",flavor:"plain",data:stickerHtml}]);
+    const receiptJob=w.qz.print(receiptConfig,[{type:"pixel",format:"html",flavor:"plain",data:receiptHtml}]);
+    const results=await Promise.allSettled([stickerJob,receiptJob]);
+    const stickerOk=results[0].status==="fulfilled";
+    const receiptOk=results[1].status==="fulfilled";
+    if(stickerOk&&receiptOk){setNotice("QZ accepted both test print jobs. Check TP870 S sticker and Epson receipt output. Walang sale o queue na binago.");}
+    else{const detail=results.map((result,index)=>result.status==="rejected"?(index===0?"TP870 S: ":"Epson: ")+String((result.reason as any)?.message||result.reason):"").filter(Boolean).join(" · ");setNotice("Partial/failed test submission. "+detail+" Check printer queues and output; no sale or queue was changed.");}
+  }
+
   const drinksTotal=queue.reduce((sum,item)=>sum+Number(item.price||0),0);
   const chargesTotal=(deliveryEnabled?Math.max(0,Number(deliveryFee)||0):0)+extraCharges.reduce((sum,item)=>sum+Math.max(0,Number(item.amount)||0),0);
   const queueTotal=drinksTotal+chargesTotal;
@@ -318,10 +339,10 @@ export default function StickerStudioPage() {
     <section className="panel" style={{maxWidth:1200,margin:"0 auto 14px",padding:12}}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap"}}>
         <div><strong style={{fontSize:13}}>QZ TRAY · DUAL PRINTER</strong><div className="small">{qzStatus}</div></div>
-        <button type="button" className="btn alt" onClick={connectQz}>Reconnect / Find Printers</button>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><button type="button" className="btn" onClick={testPrintBoth} disabled={qzPrinters.length===0}>TEST PRINT BOTH</button><button type="button" className="btn alt" onClick={connectQz}>Reconnect / Find Printers</button></div>
       </div>
       {qzPrinters.length>0&&<div className="small" style={{marginTop:8,display:"grid",gap:4}}>{qzPrinters.map((printer,index)=><div key={printer+"-"+index}>• {printer}</div>)}</div>}
-      <div className="small" style={{marginTop:8}}>Connection check only muna. Wala pang ipi-print at walang mababago sa sales o queue.</div>
+      <div className="small" style={{marginTop:8}}>TEST PRINT BOTH sends one sample to each printer only. Walang sale o queue na babaguhin.</div>
     </section>
     <div className="layout">
       <section className="panel" style={{gridColumn:"1 / -1",padding:12}}>
