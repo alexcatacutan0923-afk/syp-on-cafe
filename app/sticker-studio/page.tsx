@@ -135,6 +135,7 @@ const stamp = () => new Intl.DateTimeFormat("en-PH",{timeZone:"Asia/Manila",date
 export default function StickerStudioPage() {
   const [search,setSearch]=useState("");
   const [cashier,setCashier]=useState<string>("");
+  const [printerGateDone,setPrinterGateDone]=useState(false);
   const [salesReportOpen,setSalesReportOpen]=useState(false);
   const [activeCategory,setActiveCategory]=useState("All");
   const [selected,setSelected]=useState(0);
@@ -206,12 +207,17 @@ export default function StickerStudioPage() {
       const list=Array.isArray(found)?found:[found];
       setQzPrinters(list.filter(Boolean));
       setQzStatus("Connected · "+list.length+" printer(s) found");
+      localStorage.setItem("syp-qz-auto-connect","1");
       setNotice("QZ Tray connected. Check that TP870 S and EPSON TM-T88IV Receipt are listed below.");
+      return true;
     }catch(error){
       setQzStatus("Connection failed");
       setNotice("QZ Tray error: "+((error as any)?.message||String(error)));
+      return false;
     }
   }
+
+  useEffect(()=>{try{if(localStorage.getItem("syp-qz-auto-connect")==="1"){void connectQz().then(connected=>{if(connected)setPrinterGateDone(true);});}}catch{}},[]);
 
   async function testPrintBoth(){
     const w=window as any;
@@ -392,6 +398,7 @@ export default function StickerStudioPage() {
   function openPrintPreview(items:Sticker[]){setPrintItems(items.map(item=>({...item,note:note.trim()||item.note})));setPreviewOpen(true);}
   function reprint(s:Sticker){setPrintMode("stickers");setPrintItems([{...s,id:Date.now(),salePending:false}]);setNotice("Preparing sticker reprint for Order #"+s.orderNo+"… QZ Tray connection will stay active.");window.setTimeout(()=>window.print(),350);}
 
+  if(!printerGateDone)return <main style={{minHeight:"100vh",background:"#f3ede4",color:"#2e241c",display:"flex",alignItems:"center",justifyContent:"center",padding:20,fontFamily:"Arial,sans-serif"}}><section style={{width:"min(100%,760px)",background:"#fffaf4",border:"1px solid #e3d3c2",borderRadius:28,padding:"clamp(24px,5vw,48px)",textAlign:"center",boxShadow:"0 18px 60px rgba(50,35,20,.12)"}}><img src={LOGO_URL} alt="SYP ON CAFÉ" style={{width:94,height:94,objectFit:"contain",margin:"0 auto 10px"}}/><div style={{fontSize:12,letterSpacing:4,fontWeight:900,color:"#8b6b4e"}}>SYP ON CAFÉ</div><h1 style={{fontSize:"clamp(30px,6vw,46px)",margin:"10px 0 8px"}}>STICKER STUDIO</h1><p style={{fontSize:16,color:"#806b58",margin:"0 0 22px"}}>Ikonekta muna ang printers bago pumili ng cashier.</p><button type="button" onClick={async()=>{const ok=await connectQz();if(ok)setPrinterGateDone(true);}} style={{width:"100%",minHeight:112,border:0,borderRadius:20,background:"#493321",color:"#fffaf4",fontSize:"clamp(22px,4vw,30px)",fontWeight:900,cursor:"pointer",boxShadow:"0 8px 20px rgba(73,51,33,.2)"}}>🖨️ CONNECT PRINTERS<small style={{display:"block",fontSize:13,fontWeight:600,marginTop:9,opacity:.85}}>Connect QZ Tray · Find TP870 S + EPSON Receipt</small></button><div style={{marginTop:16,padding:14,borderRadius:14,background:"#f5ecdf",fontWeight:800,color:qzStatus==="Connection failed"?"#a33":"#72583f"}}>{qzStatus}</div>{qzPrinters.length>0&&<div style={{fontSize:12,color:"#806b58",marginTop:10}}>{qzPrinters.map((p,i)=><div key={p+"-"+i}>✓ {p}</div>)}</div>}{notice&&<p style={{fontSize:12,color:"#a33",margin:"10px 0"}}>{notice}</p>}<div style={{display:"flex",justifyContent:"center",alignItems:"center",gap:16,marginTop:22}}><button type="button" onClick={()=>setPrinterGateDone(true)} style={{border:0,background:"transparent",color:"#88745f",fontSize:13,textDecoration:"underline",cursor:"pointer",padding:10}}>Skip for now</button></div><p style={{fontSize:11,color:"#a18c78",margin:"8px 0 0"}}>Kapag successful ang connection, susunod na ang cashier selection. Awtomatikong susubukan ulit sa susunod na pagbukas ng site.</p></section></main>;
   if(!cashier)return <main style={{minHeight:"100vh",background:"#f3ede4",color:"#2e241c",display:"flex",alignItems:"center",justifyContent:"center",padding:20,fontFamily:"Arial,sans-serif"}}><section style={{width:"min(100%,720px)",background:"#fffaf4",border:"1px solid #e3d3c2",borderRadius:28,padding:"clamp(24px,5vw,48px)",textAlign:"center",boxShadow:"0 18px 60px rgba(50,35,20,.12)"}}><img src={LOGO_URL} alt="SYP ON CAFÉ" style={{width:100,height:100,objectFit:"contain",margin:"0 auto 12px"}}/><div style={{fontSize:12,letterSpacing:4,fontWeight:900,color:"#8b6b4e"}}>SYP ON CAFÉ</div><h1 style={{fontSize:"clamp(30px,6vw,48px)",margin:"10px 0 8px"}}>STICKER STUDIO</h1><p style={{fontSize:16,color:"#806b58",margin:"0 0 28px"}}>Sino ang cashier ngayon?</p><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))",gap:14}}>{["Jojo","Carl","Alex"].map(name=><button key={name} type="button" onClick={()=>{localStorage.setItem("syp-studio-cashier",name);setCashier(name);}} style={{minHeight:150,border:"2px solid #d8c3ad",borderRadius:20,background:"#f7eee4",color:"#39291d",fontSize:26,fontWeight:900,cursor:"pointer"}}>☕<br/>{name}<small style={{display:"block",fontSize:12,fontWeight:600,marginTop:8}}>TAP TO ENTER</small></button>)}</div><p style={{fontSize:12,color:"#98836f",margin:"24px 0 0"}}>Piliin ang pangalan para makapasok sa cashier system.</p></section></main>;
   return <main className="studio">
     <style jsx global>{`
