@@ -311,7 +311,7 @@ export default function ActiveOrdersPanel() {
                 <div className="pos-ticket-customer">
                   <h3>
                     {ticket.customer_name ||
-                      "WALK-IN CUSTOMER"}
+                      "IN-STORE GUEST"}
                   </h3>
 
                   <p>
