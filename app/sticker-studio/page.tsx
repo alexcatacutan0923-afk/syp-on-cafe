@@ -400,13 +400,11 @@ export default function StickerStudioPage() {
 
       /* Reference-inspired 80 × 50 mm sticker artwork: one QR only */
       .ref-art{width:46mm!important;height:76mm!important;padding:1.2mm!important;border:.35mm solid #30251c!important;background:#fff!important;color:#21170f!important;display:flex!important;flex-direction:row!important;align-items:stretch!important;gap:1.2mm!important;overflow:hidden!important}
-      .ref-ruler{width:4mm;flex:0 0 4mm;display:flex;flex-direction:column;align-items:center;justify-content:space-between;border-right:.25mm solid #6b513b;padding:.5mm 0;font-size:4pt;font-weight:900;color:#5b422e;line-height:1}
-      .ref-ruler i{display:block;width:2mm;border-top:.2mm solid #6b513b;height:0}.ref-ruler i:nth-of-type(2n){width:3mm}
       .ref-content{min-width:0;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:space-between;text-align:center;gap:.35mm;overflow:hidden}
       .ref-location{font-size:4.2pt;font-weight:900;letter-spacing:.12em;line-height:1.1;white-space:nowrap}
       .ref-hero{height:24mm;width:100%;display:flex;align-items:center;justify-content:center;overflow:hidden}
       .ref-hero img{width:24mm;height:24mm;object-fit:contain;display:block}
-      .ref-drink{font-size:9pt;font-weight:900;line-height:1.02;max-width:100%;overflow-wrap:anywhere}
+      .ref-drink{font-size:14pt;font-weight:900;line-height:1.02;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:clip}
       .ref-details{font-size:4.1pt;font-weight:800;line-height:1.1;max-width:100%;overflow-wrap:anywhere}
       .ref-details b{padding:0 .4mm}.ref-to{font-size:4.2pt;font-weight:900;line-height:1.1;max-width:100%;overflow-wrap:anywhere}
       .ref-quote{font-size:4.3pt;font-weight:800;line-height:1.1;max-height:7mm;overflow:hidden;max-width:100%;padding:.6mm .8mm;border-top:.2mm solid #b7a18b;border-bottom:.2mm solid #b7a18b}
@@ -418,7 +416,7 @@ export default function StickerStudioPage() {
       .ref-date{width:100%;display:flex;flex-direction:column;gap:.3mm;font-size:3.7pt;line-height:1.1}.ref-date span{font-weight:900;letter-spacing:.1em}.ref-date strong{font-size:4pt;overflow-wrap:anywhere}
       .ref-footer{font-size:4pt;font-weight:900;letter-spacing:.06em;line-height:1}
       .print-sheet .art.ref-art{width:${stickerInnerHeight}mm!important;height:${stickerInnerWidth}mm!important;padding:1.2mm!important;display:flex!important;flex-direction:row!important;gap:1.2mm!important;transform:translate(-50%,-50%) rotate(-90deg)!important}
-      .print-sheet .ref-ruler{width:4mm!important;flex:0 0 4mm!important}.print-sheet .ref-content{flex:1!important;min-width:0!important}
+      .print-sheet .ref-content{flex:1!important;min-width:0!important;width:100%!important}
       .print-sheet .ref-hero{height:24mm!important;min-height:24mm!important}.print-sheet .ref-hero img{width:24mm!important;height:24mm!important}
       .print-sheet .ref-qr{min-height:17mm!important;flex:0 0 17mm!important}.print-sheet .ref-qr img{width:15mm!important;height:15mm!important}
     `}</style>
@@ -542,11 +540,10 @@ function ReceiptArt({items,cashReceived,paymentMethod,paymentStatus,additionalCh
 }
 function StickerArt({sticker}:{sticker:Sticker}){
   return <div className="art ref-art">
-    <div className="ref-ruler" aria-hidden="true"><span>0</span><i/><i/><i/><i/><i/><span>50 mm</span></div>
     <div className="ref-content">
       <div className="ref-location">APOLLO, ORANI, BATAAN</div>
       <div className="ref-hero"><img src={LOGO_URL} alt="SYP ON CAFÉ logo"/></div>
-      <div className="ref-drink">{sticker.drink}</div>
+      <div className="ref-drink" style={{fontSize:Math.min(14,Math.max(6,250/Math.max(18,sticker.drink.trim().length)))+"pt"}}>{sticker.drink}</div>
       <div className="ref-details">{sticker.size} <b>•</b> {sticker.sugar} <b>•</b> {sticker.ice}</div>
       {sticker.customer&&<div className="ref-to">TO: {sticker.customer}</div>}
       <div className="ref-quote">“{sticker.quote}”</div>
