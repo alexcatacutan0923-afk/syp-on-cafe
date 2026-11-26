@@ -139,7 +139,7 @@ export default function StickerStudioPage() {
   const [cashier,setCashier]=useState<string>("");
   const [printerGateDone,setPrinterGateDone]=useState(false);
   const [salesReportOpen,setSalesReportOpen]=useState(false);
-  const [activeCategory,setActiveCategory]=useState("All");
+  const [activeCategory,setActiveCategory]=useState("Coffee");
   const [selected,setSelected]=useState(0);
   const [customer,setCustomer]=useState("");
   const [sugar,setSugar]=useState("Regular sugar");
@@ -620,7 +620,7 @@ export default function StickerStudioPage() {
         <div className="category-cards" aria-label="Choose menu category">{categories.map(category=><button type="button" key={category} className={"category-card"+(activeCategory===category?" active":"")} onClick={()=>setActiveCategory(category)}><span className="category-picture" aria-hidden="true">{categoryIcons[category]}</span><strong>{category}</strong><small>{category==="Coffee"?"Iced & hot coffee":category==="Milky"?"Creamy favorites":category==="Matcha"?"Iced & hot matcha":category==="Soda"?"Refreshing drinks":category==="Fries"?"Crispy snacks":"Sweet treats"}</small></button>)}</div>
         <div className="menu-section-heading"><div><span className="menu-eyebrow">SYP ON CAFÉ MENU</span><h3>{activeCategory}</h3></div><span className="menu-count">{filtered.length} options</span></div>
         <div className="quick-menu">
-          <div className="quick-grid">{filtered.map(({m,i})=>{const hot=String(m[0]).toLowerCase().startsWith("hot ");const displayName=String(m[0]).replace(/^Hot\\s+/i,"");const icon=hot?"☕":activeCategory==="Coffee"?"🧋":activeCategory==="Milky"?"🥛":activeCategory==="Matcha"?"🍵":activeCategory==="Soda"?"🥤":activeCategory==="Fries"?"🍟":"🧇";return <button type="button" className={"quick-item"+(selected===i?" selected":"")} key={i} onClick={()=>void add(i)}><span className="menu-product-picture" aria-hidden="true">{icon}</span><strong>{displayName}</strong><span className="menu-product-size">{hot?"HOT CUP · ":"ICED · "}{m[1]}</span><b>₱{m[2]}</b></button>})}</div>
+          <div className="quick-grid">{filtered.map(({m,i})=>{const hot=String(m[0]).toLowerCase().startsWith("hot ");const displayName=String(m[0]).replace(/^Hot\s+/i,"");const icon=hot?"☕":activeCategory==="Coffee"?"🧋":activeCategory==="Milky"?"🥛":activeCategory==="Matcha"?"🍵":activeCategory==="Soda"?"🥤":activeCategory==="Fries"?"🍟":"🧇";return <button type="button" className={"quick-item"+(selected===i?" selected":"")} key={i} onClick={()=>void add(i)}><span className="menu-product-picture" aria-hidden="true">{icon}</span><strong>{displayName}</strong><span className="menu-product-size">{hot?"HOT CUP · ":"ICED · "}{m[1]}</span><b>₱{m[2]}</b></button>})}</div>
           {filtered.length===0&&<p className="muted">Walang match sa search.</p>}
         </div>
         <div style={{marginTop:14,padding:12,border:"1px solid #d8c4ad",borderRadius:12,background:"#fffaf4",display:"grid",gap:9}}>
