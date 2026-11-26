@@ -132,6 +132,8 @@ const WIFI_QR_URL = "https://api.qrserver.com/v1/create-qr-code/?size=500x500&ma
 const MEMBERSHIP_QR_URL = "https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=4&data="+encodeURIComponent(MEMBERSHIP_QR_TARGET);
 const stamp = () => new Intl.DateTimeFormat("en-PH",{timeZone:"Asia/Manila",dateStyle:"medium",timeStyle:"short"}).format(new Date());
 
+function menuCategory(group:string){if(group.includes("Coffee")||group.includes("Signature"))return "Coffee";if(group.includes("Milky"))return "Milky";if(group.includes("Matcha"))return "Matcha";return group;}
+
 export default function StickerStudioPage() {
   const [search,setSearch]=useState("");
   const [cashier,setCashier]=useState<string>("");
@@ -342,8 +344,9 @@ export default function StickerStudioPage() {
   useEffect(()=>{try{const savedCashier=localStorage.getItem("syp-studio-cashier");if(savedCashier&&["Jojo","Carl","Alex"].includes(savedCashier))setCashier(savedCashier);const q=localStorage.getItem("syp-signature-queue");const h=localStorage.getItem("syp-signature-history");const n=localStorage.getItem("syp-signature-id");if(q)setQueue(JSON.parse(q));if(h)setHistory(JSON.parse(h));if(n)setNextId(Number(n)||1);}catch{}setReady(true);void refreshDailySales();void refreshNextOrderNumber();},[]);
   useEffect(()=>{if(!ready)return;localStorage.setItem("syp-signature-queue",JSON.stringify(queue));localStorage.setItem("syp-signature-history",JSON.stringify(history));localStorage.setItem("syp-signature-id",String(nextId));localStorage.setItem("syp-signature-order-no",orderNo);},[queue,history,nextId,orderNo,ready]);
 
-  const categories=["All","Iced Coffee","Hot Coffee","Iced Milky","Hot Milky","Iced Signature","Matcha","Hot Matcha","Soda","Fries","Waffle"];
-  const filtered=useMemo(()=>MENU.map((m,i)=>({m,i})).filter(({m})=>(activeCategory==="All"||m[3]===activeCategory)&&(m[0].toLowerCase().includes(search.toLowerCase())||m[3].toLowerCase().includes(search.toLowerCase()))),[search,activeCategory]);
+  const categories=["Coffee","Milky","Matcha","Soda","Fries","Waffle"];
+  const categoryIcons:Record<string,string>={Coffee:"☕",Milky:"🥛",Matcha:"🍵",Soda:"🥤",Fries:"🍟",Waffle:"🧇"};
+  const filtered=useMemo(()=>MENU.map((m,i)=>({m,i})).filter(({m})=>menuCategory(String(m[3]))===activeCategory&&(m[0].toLowerCase().includes(search.toLowerCase())||m[3].toLowerCase().includes(search.toLowerCase()))),[search,activeCategory]);
   const product=MENU[selected] ?? MENU[0];
   function quoteGroup(category:string){return category.includes("Matcha")?"Matcha":category.includes("Soda")?"Soda":category.includes("Milky")?"Milky":category.includes("Signature")?"Signature":category==="Fries"?"Fries":"Coffee";}
   function pickUniqueQuote(category:string,used:string[]=[]){
@@ -525,6 +528,50 @@ export default function StickerStudioPage() {
       .preview-art .ref-social-line{font-size:clamp(7px,2.6cqh,16px)!important}
       .preview-art .ref-social-line .social-icons svg{width:4.8cqh!important;height:4.8cqh!important}
       .preview-art .ref-qr-line img{width:18cqh!important;height:18cqh!important}
+
+      /* SYP dark coffee-shop theme */
+      body{background:#10100f!important;color:#f5eee5!important;font-family:Georgia,"Palatino Linotype",serif!important}
+      .studio{background:#10100f;color:#f5eee5;padding:clamp(12px,2vw,24px)}
+      .studio .head h1,.studio .panel h2,.studio h3{font-family:Georgia,"Palatino Linotype",serif;letter-spacing:.02em;color:#f7efe4}
+      .studio .brand img{background:#211f1b;border:1px solid #494034}
+      .studio .brand p,.studio .muted,.studio .small{color:#b6a895}
+      .studio .panel{background:#1b1a18;border:1px solid #39342c;color:#f5eee5;box-shadow:0 10px 30px rgba(0,0,0,.22)}
+      .studio .field label{color:#d2ad79}
+      .studio .field input,.studio .field select{background:#11110f;border:1px solid #514536;color:#f7efe4;border-radius:11px}
+      .studio .field input::placeholder{color:#8f8374}
+      .studio .btn{background:#b8874f;color:#17120d;border-radius:11px;font-weight:900}
+      .studio .btn.alt,.studio .smallbtn{background:#29251f;color:#e9d3b3;border:1px solid #5a4935}
+      .studio .notice{background:#30271d;color:#f2d8b4;border:1px solid #725633}
+      .category-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:10px 0 18px}
+      .category-card{min-width:0;min-height:112px;border:1px solid #514536;border-radius:15px;background:linear-gradient(145deg,#28241f,#191816);color:#f4eadc;padding:12px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;box-shadow:0 5px 14px rgba(0,0,0,.18);transition:transform .12s,border-color .12s,background .12s}
+      .category-card:active{transform:scale(.97)}
+      .category-card.active{border:2px solid #c99b63;background:linear-gradient(145deg,#493520,#292019);box-shadow:0 0 0 2px rgba(201,155,99,.12)}
+      .category-picture{font-family:system-ui,sans-serif;font-size:30px;line-height:1.1;filter:drop-shadow(0 3px 4px rgba(0,0,0,.3))}
+      .category-card strong{font-family:Georgia,serif;font-size:15px;letter-spacing:.03em}
+      .category-card small{font-family:Arial,sans-serif;font-size:9px;color:#b9aa96;text-align:center;line-height:1.25}
+      .menu-section-heading{display:flex;justify-content:space-between;align-items:end;gap:10px;margin:8px 2px 10px}
+      .menu-section-heading h3{font-size:24px;margin:3px 0 0}
+      .menu-eyebrow{font:800 9px Arial,sans-serif;letter-spacing:.2em;color:#c99b63}
+      .menu-count{font:700 10px Arial,sans-serif;color:#b9aa96;padding-bottom:4px}
+      .quick-menu{background:#141311;border:1px solid #39342c;border-radius:15px;max-height:clamp(300px,58vh,650px);padding:10px}
+      .quick-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+      .quick-item{position:relative;min-height:104px;background:linear-gradient(145deg,#282622,#1d1c19);border:1px solid #484034;border-radius:13px;padding:11px 10px 10px 48px;color:#f5eee5;grid-template-columns:minmax(0,1fr) auto;gap:5px 6px;align-content:center}
+      .quick-item strong{font-family:Georgia,"Palatino Linotype",serif;font-size:14px;line-height:1.2;color:#fff7eb}
+      .quick-item .menu-product-picture{position:absolute;left:10px;top:50%;transform:translateY(-50%);font:27px system-ui,sans-serif;width:32px;text-align:center}
+      .quick-item .menu-product-size{font:800 9px Arial,sans-serif;letter-spacing:.06em;color:#c5a77e}
+      .quick-item b{font:900 15px Arial,sans-serif;color:#e0b77f}
+      .quick-item.selected{border-color:#c99b63;background:#3a2b1d}
+      .quick-item:active{background:#3a2b1d}
+      .studio .order-summary-bar,.studio .report-card,.studio .checkout-total,.studio .checkout-change,.studio .queue-row{background:#25221d;border-color:#514536;color:#f5eee5}
+      .studio .history-row{border-color:#39342c}
+      .studio .history-specs,.studio .history-price{color:#e0b77f}
+      .studio .checkout-card{background:#1b1a18;color:#f5eee5;border-color:#514536}
+      .studio .checkout-card .field input,.studio .checkout-card .field select{background:#11110f;color:#fff;border-color:#514536}
+      .studio .checkout-items{background:#141311;border-color:#514536}
+      .studio .payment-confirm{background:#29241d;border-color:#665137;color:#f5eee5}
+      .studio .checkout-overlay{background:rgba(0,0,0,.78)}
+      .studio .checkout-total .small,.studio .checkout-change .small{color:#c5b49d}
+      @media(max-width:560px){.category-cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.category-card{min-height:98px;padding:8px 4px}.category-picture{font-size:26px}.category-card strong{font-size:13px}.category-card small{font-size:8px}.quick-item{min-height:98px;padding-left:42px}.quick-item strong{font-size:12px}.quick-item .menu-product-picture{left:7px;font-size:24px;width:29px}.menu-section-heading h3{font-size:21px}}
     `}</style>
     <header className="head"><div className="brand"><img src={LOGO_URL} alt="SYP logo"/><div><h1>SYP Signature Sticker Studio</h1><p>STREET • ICED • BREWED</p></div></div><div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><button className="btn alt" type="button" onClick={async()=>{let device:any;try{const bt=(navigator as any).bluetooth;if(!bt){alert("Web Bluetooth is not available in this browser.");return;}if(!confirm("Print ONE 50 x 70mm test label?\\nNo sale or sticker queue record will be created."))return;device=await bt.requestDevice({acceptAllDevices:true,optionalServices:["ff00"]});const server=await device.gatt.connect();if(!server.connected)throw new Error("Bluetooth connected state is false.");const service=await server.getPrimaryService("ff00");const characteristic=await service.getCharacteristic("ff02");const payload='SIZE 50 mm,70 mm\\r\\nGAP 2 mm,0 mm\\r\\nDIRECTION 1\\r\\nCLS\\r\\nTEXT 55,75,"3",0,1,1,"SYP BLUETOOTH TEST"\\r\\nPRINT 1,1\\r\\n';const bytes=new TextEncoder().encode(payload);for(let i=0;i<bytes.length;i+=20){await characteristic.writeValueWithoutResponse(bytes.slice(i,i+20));await new Promise(resolve=>setTimeout(resolve,25));}await new Promise(resolve=>setTimeout(resolve,2500));if(!device.gatt.connected)throw new Error("Printer disconnected before the test could be confirmed.");alert("Data transfer finished and Bluetooth stayed connected. Check whether one label printed.");device.gatt.disconnect();}catch(e){try{device?.gatt?.disconnect();}catch{}alert("Test failed: "+((e as any)?.message||String(e))+"\\nIf the printer was not listed, ensure it is ON and not connected to the Grozziie app. No sale was created.");}}}>PRINT TEST LABEL</button><button className="btn" type="button" onClick={connectQz}>CONNECT QZ TRAY</button><a href="/" style={{color:"#65472f",fontSize:12,fontWeight:800}}>← Back</a></div></header>
     <section className="panel" style={{maxWidth:1200,margin:"0 auto 14px",padding:12}}>
@@ -569,10 +616,11 @@ export default function StickerStudioPage() {
         </div>}
       </section>
       <section className="panel form-panel"><h2>Create signature sticker</h2><p className="muted">Piliin ang drink sa menu. Automatic ang drink name, size at presyo gaya ng Cup Wrap Studio.</p>
-        <div className="field"><label>Search menu</label><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search drink / category"/></div>
-        <div className="category-tabs" aria-label="Menu categories">{categories.map(category=><button type="button" key={category} className={"category-tab"+(activeCategory===category?" active":"")} onClick={()=>setActiveCategory(category)}>{category==="All"?"All menu":category}</button>)}</div>
+        <div className="field menu-search"><label>Find a drink or food</label><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Type product name…"/></div>
+        <div className="category-cards" aria-label="Choose menu category">{categories.map(category=><button type="button" key={category} className={"category-card"+(activeCategory===category?" active":"")} onClick={()=>setActiveCategory(category)}><span className="category-picture" aria-hidden="true">{categoryIcons[category]}</span><strong>{category}</strong><small>{category==="Coffee"?"Iced & hot coffee":category==="Milky"?"Creamy favorites":category==="Matcha"?"Iced & hot matcha":category==="Soda"?"Refreshing drinks":category==="Fries"?"Crispy snacks":"Sweet treats"}</small></button>)}</div>
+        <div className="menu-section-heading"><div><span className="menu-eyebrow">SYP ON CAFÉ MENU</span><h3>{activeCategory}</h3></div><span className="menu-count">{filtered.length} options</span></div>
         <div className="quick-menu">
-          {(activeCategory==="All"?categories.slice(1):[activeCategory]).map(category=><div key={category}><div className="menu-divider"><span>{category.toUpperCase()}</span><i/></div><div className="quick-grid">{filtered.filter(({m})=>m[3]===category).map(({m,i})=><button type="button" className={"quick-item"+(selected===i?" selected":"")} key={i} onClick={()=>void add(i)}><strong>{m[0]}</strong><span>{m[1]}</span><b>₱{m[2]}</b></button>)}</div></div>)}
+          <div className="quick-grid">{filtered.map(({m,i})=>{const hot=String(m[0]).toLowerCase().startsWith("hot ");const displayName=String(m[0]).replace(/^Hot\\s+/i,"");const icon=hot?"☕":activeCategory==="Coffee"?"🧋":activeCategory==="Milky"?"🥛":activeCategory==="Matcha"?"🍵":activeCategory==="Soda"?"🥤":activeCategory==="Fries"?"🍟":"🧇";return <button type="button" className={"quick-item"+(selected===i?" selected":"")} key={i} onClick={()=>void add(i)}><span className="menu-product-picture" aria-hidden="true">{icon}</span><strong>{displayName}</strong><span className="menu-product-size">{hot?"HOT CUP · ":"ICED · "}{m[1]}</span><b>₱{m[2]}</b></button>})}</div>
           {filtered.length===0&&<p className="muted">Walang match sa search.</p>}
         </div>
         <div style={{marginTop:14,padding:12,border:"1px solid #d8c4ad",borderRadius:12,background:"#fffaf4",display:"grid",gap:9}}>
