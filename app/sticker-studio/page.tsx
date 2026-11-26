@@ -400,27 +400,27 @@ export default function StickerStudioPage() {
 
       /* UNIVERSAL SYP ON CAFE LABEL — reference-matched, monochrome thermal */
       .art.ref-art{position:relative!important;box-sizing:border-box!important;width:46mm!important;height:76mm!important;min-width:46mm!important;min-height:76mm!important;padding:1.4mm!important;border:.75mm double #000!important;border-radius:5mm!important;background:#fff!important;color:#000!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:0!important;overflow:hidden!important;font-family:Arial,Helvetica,sans-serif!important}
-      .ref-head{height:20%;flex:0 0 20%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4mm;border-bottom:.35mm solid #000;padding:0 0 1mm;min-height:0}
+      .ref-head{height:24%;flex:0 0 24%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4mm;border-bottom:.35mm solid #000;padding:0 0 1mm;min-height:0}
       .ref-logo{display:block!important;width:11mm!important;height:10mm!important;object-fit:contain!important;object-position:center!important}
       .ref-wordmark{font-size:10pt;font-weight:1000;line-height:1;letter-spacing:-.035em;text-align:center;white-space:nowrap}
       .ref-tagline{font-size:5pt;font-weight:600;line-height:1.1;letter-spacing:.035em;text-align:center;white-space:nowrap}
-      .ref-orderline{height:6%;flex:0 0 6%;display:flex;align-items:center;justify-content:flex-start;padding:0 .5mm;font-size:9pt;font-weight:900;letter-spacing:.02em}
-      .ref-drinkline{height:13%;flex:0 0 13%;display:flex;align-items:center;justify-content:center;text-align:left;padding:0 .5mm;min-height:0;overflow:hidden}
-      .ref-drink{font-family:Georgia,"Times New Roman",serif!important;font-weight:900!important;line-height:.98!important;letter-spacing:-.035em!important;color:#000!important;max-width:100%;max-height:100%;overflow:hidden;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+      .ref-orderline{height:5%;flex:0 0 5%;display:flex;align-items:center;justify-content:flex-start;padding:0 .5mm;font-size:9pt;font-weight:900;letter-spacing:.02em}
+      .ref-drinkline{height:9%;flex:0 0 9%;display:flex;align-items:center;justify-content:center;text-align:left;padding:0 .5mm;min-height:0;overflow:hidden}
+      .ref-drink{font-family:Georgia,"Times New Roman",serif!important;font-weight:900!important;line-height:1.02!important;letter-spacing:-.025em!important;color:#000!important;max-width:100%;max-height:100%;overflow:hidden;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
       .ref-detail-line{height:7%;flex:0 0 7%;display:flex;align-items:center;justify-content:flex-start;gap:1.4mm;padding:0 .5mm;font-size:7pt;line-height:1;font-weight:500;white-space:nowrap}
       .ref-detail-line .sparkle{font-size:11pt;line-height:1}
       .ref-detail-line .dot{font-size:9pt;font-weight:900}
-      .ref-date-line{height:6%;flex:0 0 6%;display:flex;align-items:center;justify-content:flex-end;padding:0 .5mm;border-bottom:.35mm solid #000;font-size:7pt;font-weight:500;white-space:nowrap}
+      .ref-date-line{height:7%;flex:0 0 7%;display:flex;align-items:center;justify-content:flex-end;padding:0 .5mm;border-bottom:.35mm solid #000;font-size:7pt;font-weight:500;white-space:nowrap}
       .ref-customer-line{height:8%;flex:0 0 8%;display:flex;align-items:center;justify-content:center;padding:.3mm .5mm 0;font-family:Georgia,"Times New Roman",serif;font-size:12pt;font-weight:900;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-      .ref-mood-line{height:22%;flex:0 0 22%;display:flex;align-items:center;justify-content:center;min-height:0;padding:.3mm}
-      .ref-mood-circle{width:100%;height:100%;max-width:24mm;max-height:24mm;aspect-ratio:1/1;border:.55mm solid #000;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;text-align:center;padding:1.4mm}
+      .ref-mood-line{height:25%;flex:0 0 25%;display:flex;align-items:center;justify-content:center;min-height:0;padding:.3mm}
+      .ref-mood-circle{width:100%;height:100%;max-width:26mm;max-height:26mm;aspect-ratio:1/1;border:.55mm solid #000;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;text-align:center;padding:1.4mm}
       .ref-mood-circle:after{content:"";position:absolute;inset:1.2mm;border:.25mm solid #000;border-radius:50%;pointer-events:none}
       .ref-mood-title{font-family:Georgia,"Times New Roman",serif;font-size:7pt;font-weight:900;letter-spacing:.06em;line-height:1}
       .ref-mood-sparkle{font-size:6pt;line-height:1;margin:.4mm 0}
       .ref-mood-copy{font-family:Georgia,"Times New Roman",serif;font-size:9pt;font-weight:900;line-height:.96;letter-spacing:-.025em}
       .ref-social-line{height:6%;flex:0 0 6%;display:flex;align-items:center;justify-content:center;gap:1.5mm;font-size:8pt;font-weight:700;white-space:nowrap}
-      .ref-social-line .social-icons{font-size:11pt;font-weight:900;letter-spacing:.04em}
-      .ref-qr-line{height:12%;flex:0 0 12%;display:flex;align-items:center;justify-content:center;min-height:0}
+      .ref-social-line .social-icons{display:flex;align-items:center;gap:1mm}.ref-social-line .social-icons svg{width:5mm;height:5mm;display:block;flex:0 0 auto}
+      .ref-qr-line{height:9%;flex:0 0 9%;display:flex;align-items:center;justify-content:center;min-height:0}
       .ref-qr-line img{width:10mm;height:10mm;object-fit:contain;image-rendering:pixelated;display:block}
       .print-sheet .art.ref-art{width:${stickerInnerWidth}mm!important;height:${stickerInnerHeight}mm!important;min-width:${stickerInnerWidth}mm!important;max-width:${stickerInnerWidth}mm!important;min-height:${stickerInnerHeight}mm!important;max-height:${stickerInnerHeight}mm!important;margin:0!important;padding:1.4mm!important;transform:translate(-50%,-50%)!important}
       .preview-art{position:absolute;inset:0;container-type:size;overflow:hidden;background:#fff}
@@ -434,13 +434,13 @@ export default function StickerStudioPage() {
       .preview-art .ref-detail-line .sparkle{font-size:clamp(9px,3cqh,18px)!important}
       .preview-art .ref-date-line{font-size:clamp(6px,2cqh,12px)!important}
       .preview-art .ref-customer-line{font-size:clamp(9px,4cqh,24px)!important}
-      .preview-art .ref-mood-circle{max-width:34cqh!important;max-height:34cqh!important;border-width:.55cqh!important}
+      .preview-art .ref-mood-circle{max-width:36cqh!important;max-height:36cqh!important;border-width:.55cqh!important}
       .preview-art .ref-mood-circle:after{inset:1.2cqh!important;border-width:.25cqh!important}
       .preview-art .ref-mood-title{font-size:clamp(6px,2.3cqh,14px)!important}
       .preview-art .ref-mood-sparkle{font-size:clamp(5px,1.8cqh,11px)!important}
       .preview-art .ref-mood-copy{font-size:clamp(8px,3.2cqh,19px)!important}
       .preview-art .ref-social-line{font-size:clamp(7px,2.6cqh,16px)!important}
-      .preview-art .ref-social-line .social-icons{font-size:clamp(9px,3.4cqh,20px)!important}
+      .preview-art .ref-social-line .social-icons svg{width:4.8cqh!important;height:4.8cqh!important}
       .preview-art .ref-qr-line img{width:18cqh!important;height:18cqh!important}
     `}</style>
     <header className="head"><div className="brand"><img src={LOGO_URL} alt="SYP logo"/><div><h1>SYP Signature Sticker Studio</h1><p>STREET • ICED • BREWED</p></div></div><div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><button className="btn alt" type="button" onClick={async()=>{let device:any;try{const bt=(navigator as any).bluetooth;if(!bt){alert("Web Bluetooth is not available in this browser.");return;}if(!confirm("Print ONE 50 x 70mm test label?\\nNo sale or sticker queue record will be created."))return;device=await bt.requestDevice({acceptAllDevices:true,optionalServices:["ff00"]});const server=await device.gatt.connect();if(!server.connected)throw new Error("Bluetooth connected state is false.");const service=await server.getPrimaryService("ff00");const characteristic=await service.getCharacteristic("ff02");const payload='SIZE 50 mm,70 mm\\r\\nGAP 2 mm,0 mm\\r\\nDIRECTION 1\\r\\nCLS\\r\\nTEXT 55,75,"3",0,1,1,"SYP BLUETOOTH TEST"\\r\\nPRINT 1,1\\r\\n';const bytes=new TextEncoder().encode(payload);for(let i=0;i<bytes.length;i+=20){await characteristic.writeValueWithoutResponse(bytes.slice(i,i+20));await new Promise(resolve=>setTimeout(resolve,25));}await new Promise(resolve=>setTimeout(resolve,2500));if(!device.gatt.connected)throw new Error("Printer disconnected before the test could be confirmed.");alert("Data transfer finished and Bluetooth stayed connected. Check whether one label printed.");device.gatt.disconnect();}catch(e){try{device?.gatt?.disconnect();}catch{}alert("Test failed: "+((e as any)?.message||String(e))+"\\nIf the printer was not listed, ensure it is ON and not connected to the Grozziie app. No sale was created.");}}}>PRINT TEST LABEL</button><button className="btn" type="button" onClick={connectQz}>CONNECT QZ TRAY</button><a href="/" style={{color:"#65472f",fontSize:12,fontWeight:800}}>← Back</a></div></header>
@@ -562,7 +562,7 @@ function ReceiptArt({items,cashReceived,paymentMethod,paymentStatus,additionalCh
   </main></div>;
 }
 function StickerArt({sticker}:{sticker:Sticker}){
-  const drinkFontSize=Math.min(24,Math.max(9,280/Math.max(10,sticker.drink.trim().length)));
+  const drinkFontSize=Math.min(25,Math.max(10,390/Math.max(14,sticker.drink.trim().length)));
   const rawDate=sticker.createdAt||stamp();
   const parsedDate=new Date(rawDate);
   const orderDate=Number.isNaN(parsedDate.getTime())?rawDate:new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Manila",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:true}).format(parsedDate).replace(", "," ");
@@ -588,7 +588,14 @@ function StickerArt({sticker}:{sticker:Sticker}){
         <div className="ref-mood-copy">Main<br/>Character<br/>Energy in<br/><i>a Cup.</i></div>
       </div>
     </div>
-    <div className="ref-social-line"><span>@syponcafe</span><span className="social-icons">● f&nbsp; ♪&nbsp; ◎</span></div>
+    <div className="ref-social-line">
+      <span>@syponcafe</span>
+      <span className="social-icons" aria-label="Facebook, TikTok and Instagram">
+        <svg viewBox="0 0 24 24" role="img" aria-label="Facebook"><circle cx="12" cy="12" r="11" fill="#000"/><path d="M13.6 20v-7h2.35l.35-2.75H13.6V8.5c0-.8.22-1.35 1.38-1.35h1.48V4.7c-.26-.04-1.16-.11-2.2-.11-2.18 0-3.67 1.33-3.67 3.78v1.88H8.1V13h2.49v7z" fill="#fff"/></svg>
+        <svg viewBox="0 0 24 24" role="img" aria-label="TikTok"><circle cx="12" cy="12" r="11" fill="#000"/><path d="M13.4 4.5h2.4c.1 1.7 1.1 2.8 2.7 3v2.5a6.2 6.2 0 0 1-2.7-.8v5.1a4.7 4.7 0 1 1-4.7-4.7c.4 0 .8 0 1.1.1v2.6a2.2 2.2 0 1 0 1.2 2V4.5z" fill="#fff"/></svg>
+        <svg viewBox="0 0 24 24" role="img" aria-label="Instagram"><circle cx="12" cy="12" r="11" fill="#000"/><rect x="6.5" y="6.5" width="11" height="11" rx="3" fill="none" stroke="#fff" stroke-width="1.7"/><circle cx="12" cy="12" r="2.7" fill="none" stroke="#fff" stroke-width="1.7"/><circle cx="15.5" cy="8.7" r="1" fill="#fff"/></svg>
+      </span>
+    </div>
     <div className="ref-qr-line"><img src={QR_URL} alt="SYP ON CAFÉ Facebook QR code"/></div>
   </div>;
 }
