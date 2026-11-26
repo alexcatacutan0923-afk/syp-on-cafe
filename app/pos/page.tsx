@@ -402,7 +402,7 @@ export default function PosPage() {
 
   useEffect(() => {
     const savedCashier = window.localStorage.getItem("sypCashierName");
-    if (savedCashier?.trim()) setCashierName(savedCashier.trim());
+    if (savedCashier?.trim() && ["Jojo", "Alex", "Carl"].includes(savedCashier.trim())) setCashierName(savedCashier.trim());
     setLastReceiptHtml(window.localStorage.getItem(LAST_POS_RECEIPT_KEY) || "");
   }, []);
 
@@ -825,7 +825,7 @@ export default function PosPage() {
       const memberName =
         selectedMember?.name?.trim() ||
         customerQuery.trim() ||
-        (orderType === "DELIVERY" ? deliveryName : "WALK-IN CUSTOMER");
+        (orderType === "DELIVERY" ? deliveryName : "IN-STORE GUEST");
       const saleNotes = [
         orderNote.trim(),
         orderType === "DELIVERY" ? `DELIVERY CUSTOMER: ${deliveryName}` : "",
@@ -954,6 +954,7 @@ export default function PosPage() {
         customerQuery: memberForReceipt
           ? `${memberForReceipt.name} (${memberForReceipt.member_code})`
           : customerQuery,
+        cashierName: cashierName.trim() || "Alex",
         addStamp,
         orderNote,
         receiptStyle,
@@ -1170,12 +1171,15 @@ export default function PosPage() {
           <div className="avatar">{(cashierName.trim()[0] || "A").toUpperCase()}</div>
           <div className="cashier-copy">
             <span>Cashier</span>
-            <input
+            <select
               value={cashierName}
               onChange={(event) => updateCashierName(event.target.value)}
-              onBlur={() => { if (!cashierName.trim()) updateCashierName("Alex"); }}
-              aria-label="Cashier name"
-            />
+              aria-label="Select cashier"
+            >
+              <option value="Jojo">Jojo</option>
+              <option value="Alex">Alex</option>
+              <option value="Carl">Carl</option>
+            </select>
           </div>
         </label>
         <div className="clock">
@@ -1704,6 +1708,7 @@ type ReceiptPayload = {
   cash: number;
   change: number;
   customerQuery: string;
+  cashierName: string;
   addStamp: boolean;
   orderNote: string;
   receiptStyle: ReceiptStyle;
@@ -1744,7 +1749,7 @@ function escapeReceiptText(value: string) {
 function buildReceiptHtml(payload: ReceiptPayload) {
   const {
     receiptNo, completedAt, cart, subtotal, discount, discountReason, total, payment, cash, change,
-    customerQuery, addStamp, orderNote, receiptStyle, quote, seasonalTheme, qrTarget, member, stampWasAdded, rewardWasClaimed, rewardDiscount,
+    customerQuery, cashierName, addStamp, orderNote, receiptStyle, quote, seasonalTheme, qrTarget, member, stampWasAdded, rewardWasClaimed, rewardDiscount,
     orderType, deliveryMobile, deliveryAddress, deliveryLandmark, deliveryFee,
   } = payload;
   const isEco = receiptStyle === "eco";
@@ -1840,7 +1845,7 @@ function buildReceiptHtml(payload: ReceiptPayload) {
   <section class="meta">
     <span>Order</span><strong>${receiptNo}</strong>
     <span>Date</span><strong>${escapeReceiptText(dateText)}</strong>
-    <span>Cashier</span><strong>Alex</strong>
+    <span>Cashier</span><strong>${escapeReceiptText(cashierName || "Alex")}</strong>
     <span>Payment</span><strong>${payment}</strong>
   </section>
   ${customerSection}
