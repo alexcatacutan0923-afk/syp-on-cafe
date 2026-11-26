@@ -222,7 +222,7 @@ export default function StickerStudioPage() {
     setNotice("Sending test jobs to both printers…");
     const stickerHtml='<!doctype html><html><head><meta charset="utf-8"><style>@page{size:'+stickerWidth+'mm '+stickerHeight+'mm;margin:0}*{box-sizing:border-box}html,body{margin:0;padding:0;width:'+stickerWidth+'mm;height:'+stickerHeight+'mm;font-family:Arial,sans-serif;color:#000}body{padding:4mm;border:1px solid #000;text-align:center;display:flex;flex-direction:column;justify-content:center}h1{font-size:17pt;margin:0 0 3mm;font-weight:900}p{font-size:9pt;margin:1mm 0}.line{border-top:1px dashed #000;margin:3mm 0}</style></head><body><h1>SYP ON CAFÉ</h1><p>STREET • ICED • BREWED</p><div class="line"></div><h1>STICKER TEST</h1><p>'+stickerWidth+' × '+stickerHeight+' mm · TP870 S</p><p>NO SALE CREATED</p></body></html>';
     const receiptHtml='<!doctype html><html><head><meta charset="utf-8"><style>@page{size:'+receiptWidth+'mm 60mm;margin:0}*{box-sizing:border-box}html,body{margin:0;padding:0;width:'+receiptWidth+'mm;font-family:monospace;color:#000}body{padding:4mm}h1{text-align:center;font-family:Arial,sans-serif;font-size:16pt;margin:0 0 2mm}p{font-size:9pt;margin:2mm 0}.rule{border-top:1px dashed #000;margin:3mm 0}.total{font-size:13pt;font-weight:bold;text-align:center}</style></head><body><h1>SYP ON CAFÉ</h1><p style="text-align:center">STREET • ICED • BREWED</p><div class="rule"></div><p>QZ TRAY PRINTER TEST</p><p>Printer: EPSON TM-T88IV Receipt</p><p>Paper: '+receiptWidth+' mm</p><div class="rule"></div><p class="total">TEST ONLY · ₱0.00</p><p style="text-align:center">NO SALE CREATED · THANK YOU, KASYP!</p></body></html>';
-    const stickerConfig=w.qz.configs.create(stickerPrinter,{units:"mm",size:{width:stickerWidth,height:stickerHeight},orientation:stickerWidth===stickerHeight?null:stickerWidth<stickerHeight?"portrait":"landscape",rotation:0,margins:0,scaleContent:printScale==="fit",jobName:"SYP Sticker Test"});
+    const stickerConfig=w.qz.configs.create(stickerPrinter,{units:"mm",size:{width:stickerWidth,height:stickerHeight},orientation:stickerWidth===stickerHeight?null:stickerWidth<stickerHeight?"portrait":"landscape",rotation:180,margins:0,scaleContent:printScale==="fit",jobName:"SYP Sticker Test"});
     const receiptConfig=w.qz.configs.create(receiptPrinter,{units:"mm",size:{width:receiptWidth,height:60},margins:0,scaleContent:printScale==="fit",jobName:"SYP Receipt Test"});
     const stickerJob=w.qz.print(stickerConfig,[{type:"pixel",format:"html",flavor:"plain",data:stickerHtml}]);
     const receiptJob=w.qz.print(receiptConfig,[{type:"pixel",format:"html",flavor:"plain",data:receiptHtml}]);
@@ -236,7 +236,7 @@ export default function StickerStudioPage() {
   async function sendQzMarkup(printer:string,markup:string,width:number,height:number,jobName:string){
     const w=window as any;
     const isSticker=printer.trim()==="TP870 S";
-    const config=w.qz.configs.create(printer,{units:"mm",size:{width,height},orientation:isSticker?(width===height?null:width<height?"portrait":"landscape"):null,rotation:0,margins:0,scaleContent:printScale==="fit",jobName});
+    const config=w.qz.configs.create(printer,{units:"mm",size:{width,height},orientation:isSticker?(width===height?null:width<height?"portrait":"landscape"):null,rotation:isSticker?180:0,margins:0,scaleContent:printScale==="fit",jobName});
     return w.qz.print(config,[{type:"pixel",format:"html",flavor:"plain",data:markup}]);
   }
 
