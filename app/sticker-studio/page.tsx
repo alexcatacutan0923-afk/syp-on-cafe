@@ -398,48 +398,48 @@ export default function StickerStudioPage() {
       @media(max-width:900px){.layout{grid-template-columns:1fr}.studio{padding:13px}.quick-menu{max-height:48vh}}@media(min-width:901px){.form-panel{position:sticky;top:12px;align-self:start}.layout>section:last-of-type{min-width:0}}@media(max-width:480px){.head{align-items:flex-start}.queue-row{grid-template-columns:1fr}.queue-buttons{flex-direction:row;flex-wrap:wrap}.quick-menu{max-height:46vh;padding:8px}.quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
       @page{size:${stickerWidth}mm ${stickerHeight}mm;margin:0} @page receipt{size:${receiptWidth}mm auto;margin:0} @media print{html,body{width:${stickerWidth}mm!important;height:auto!important;min-height:0!important;margin:0!important;padding:0!important;overflow:visible!important;background:#fff!important}body *{visibility:hidden!important}.studio,.studio .print-only-container,.studio .print-only-container *{visibility:visible!important}.studio{display:block!important;position:static!important;width:${stickerWidth}mm!important;min-height:0!important;height:auto!important;margin:0!important;padding:0!important;background:#fff!important}.studio>*:not(.print-only-container){display:none!important}.print-only-container{display:block!important;position:static!important;width:${stickerWidth}mm!important;margin:0!important;padding:0!important}.print-sheet{display:block!important;position:relative!important;box-sizing:border-box!important;width:${stickerWidth}mm!important;height:${stickerHeight}mm!important;min-width:${stickerWidth}mm!important;max-width:${stickerWidth}mm!important;min-height:${stickerHeight}mm!important;max-height:${stickerHeight}mm!important;margin:0!important;padding:0!important;overflow:hidden!important;break-inside:avoid!important;page-break-inside:avoid!important;break-after:page!important;page-break-after:always!important}.receipt-sheet{page:receipt!important;display:block!important;position:relative!important;width:${receiptWidth}mm!important;height:auto!important;min-height:0!important;max-height:none!important;margin:0!important;padding:0!important;overflow:visible!important;break-inside:avoid!important;page-break-inside:avoid!important;break-after:auto!important;page-break-after:auto!important}.receipt{width:${receiptInnerWidth}mm;height:auto;max-height:none;box-sizing:border-box;margin:0 0 0 1mm;padding:2mm 3mm;color:#000;background:#fff;font-family:Arial,sans-serif;font-size:7pt;line-height:1.2;overflow:visible;break-inside:auto;page-break-inside:auto}.receipt-item,.receipt-row{break-inside:avoid!important;page-break-inside:avoid!important}.receipt-head{text-align:center;font-weight:900;font-size:12pt;letter-spacing:.03em;line-height:1.05}.receipt-sub{text-align:center;font-size:5pt;font-weight:800;letter-spacing:.1em;margin-top:.5mm}.receipt-title{text-align:center;font-size:7pt;font-weight:900;margin:1mm 0}.receipt-rule{border-top:.25mm dashed #000;margin:1mm 0}.receipt-row{display:flex;justify-content:space-between;gap:1.5mm;font-size:6.5pt;line-height:1.2}.receipt-total{font-size:9pt;font-weight:900}.receipt-change{font-size:11pt;font-weight:900}.receipt-item{margin:.6mm 0}.receipt-social{text-align:center;margin:1mm auto .5mm;display:flex;flex-direction:column;align-items:center;gap:.3mm}.receipt-social img{width:8mm;height:8mm;object-fit:contain;display:block}.receipt-social span{font-size:4.5pt;font-weight:900;letter-spacing:.04em}.receipt-foot{text-align:center;font-size:6pt;font-weight:900;margin-top:1mm}.print-sheet .art{position:absolute!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%) rotate(-90deg)!important;transform-origin:center center!important;display:flex!important;box-sizing:border-box!important;width:${stickerInnerHeight}mm!important;height:${stickerInnerWidth}mm!important;min-height:${stickerInnerWidth}mm!important;max-height:${stickerInnerWidth}mm!important;margin:0!important;padding:1.5mm!important;border:.5mm solid #000!important;border-left:.8mm solid #000!important;overflow:hidden!important;gap:0!important}.art-top{position:relative!important;display:flex!important;align-items:center!important;justify-content:flex-start!important;flex:0 0 auto!important;width:100%!important;padding-bottom:1mm!important;min-height:10mm!important}.art-logo{width:11mm!important;height:8mm!important;flex:0 0 auto!important}.art-brand{position:absolute!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;width:48mm!important;max-width:48mm!important;flex:none!important;text-align:center!important;white-space:nowrap!important}.art-brand strong{font-size:9.5pt!important;line-height:1!important;letter-spacing:.035em!important}.art-brand span{font-size:4pt!important;letter-spacing:.12em!important}.art-date{flex:0 0 auto!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;overflow:hidden!important;white-space:nowrap!important;text-overflow:clip!important;text-align:center!important;font-size:4.2pt!important;line-height:1!important;letter-spacing:.02em!important;margin-top:.6mm!important;padding:0 .5mm!important}.art-drink{flex:0 0 auto!important;font-size:13pt!important;line-height:1.02!important;margin:.8mm 0 .3mm!important}.art-meta,.art-customer,.art-note{flex:0 0 auto!important;font-size:4.3pt!important;margin-top:.4mm!important}.art-qr-row{flex:0 0 auto!important;display:grid!important;grid-template-columns:1fr 1fr!important;align-items:stretch!important;justify-content:stretch!important;width:100%!important;box-sizing:border-box!important;margin:1mm 0 0!important;padding:0 .4mm!important;gap:1.5mm!important}.art-qr-card,.art-qr-row>div{box-sizing:border-box!important;width:100%!important;min-width:0!important;min-height:20mm!important;flex:initial!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:flex-start!important;padding:1mm .5mm .8mm!important;border:.25mm solid #222!important;gap:.6mm!important}.art-qr-main,.art-wifi-qr{width:15mm!important;height:15mm!important;object-fit:contain!important;display:block!important;image-rendering:pixelated!important;flex:0 0 auto!important}.art-wifi-box{width:100%!important;flex:initial!important}.art-qr-label,.art-wifi-label{font-size:4.4pt!important;line-height:1.05!important;min-height:2mm!important}.art-wifi-name{font-size:3.7pt!important}.art-quote{grid-column:1 / -1!important;flex:0 0 auto!important;min-height:7mm!important;margin-top:.5mm!important;padding:.8mm 1mm!important;font-size:5.8pt!important;line-height:1.12!important;overflow-wrap:anywhere!important;border-top:.25mm solid #000!important;border-bottom:.25mm solid #000!important;border-left:0!important;border-right:0!important}.art-foot{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:1mm!important;width:100%!important;min-width:0!important;flex:0 0 auto!important;font-size:4pt!important;line-height:1!important;padding-top:.5mm!important;letter-spacing:.02em!important;white-space:nowrap!important}.art-foot span{display:block!important;min-width:0!important;white-space:nowrap!important}.art-foot span:last-child{justify-self:end!important;text-align:right!important}.print-sheet .art{display:flex!important;position:absolute!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%) rotate(-90deg)!important;transform-origin:center center!important;width:${stickerInnerHeight}mm!important;height:${stickerInnerWidth}mm!important;min-height:${stickerInnerWidth}mm!important;max-height:${stickerInnerWidth}mm!important;margin:0!important;padding:1.5mm!important;overflow:hidden!important;justify-content:space-between!important}.art-top{height:10mm!important;min-height:10mm!important}.art-center{height:40mm!important;min-height:40mm!important}.art-center-circle{width:38mm!important;height:38mm!important;border:.45mm solid #000!important;border-radius:50%!important}.art-qr-row{height:20mm!important;min-height:20mm!important;grid-template-columns:1fr 1fr!important;gap:1mm!important}.art-qr-card,.art-qr-row>div{border:0!important;min-height:0!important;padding:0!important}.art-qr-main,.art-wifi-qr{width:15mm!important;height:15mm!important}.art-quote{max-height:8mm!important;overflow:hidden!important}}}}
 
-      /* Exact landscape reference composition for 80 × 50 mm label */
-      .ref-art{width:76mm!important;height:46mm!important;padding:1.4mm!important;border:0!important;background:#fff!important;color:#080604!important;display:grid!important;grid-template-columns:10mm minmax(0,1fr) 23mm!important;align-items:stretch!important;gap:1mm!important;overflow:hidden!important;font-family:Arial,Helvetica,sans-serif!important}
-      .ref-left{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;min-width:0;overflow:hidden}
-      .ref-location{font-size:8pt;font-weight:900;line-height:1;white-space:nowrap;writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:.02em}
-      .ref-left-bottom{display:flex;flex-direction:row;align-items:flex-end;justify-content:flex-start;gap:1.2mm;width:100%;font-size:7pt;font-weight:900;line-height:1;white-space:nowrap;writing-mode:vertical-rl;transform:rotate(180deg)}
-      .ref-main{position:relative;min-width:0;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden}
-      .ref-hero{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
-      .ref-hero img{width:43mm;height:43mm;object-fit:contain;display:block}
-      .ref-drink-group{position:absolute;left:7%;top:50%;transform:translateY(-50%);display:flex;flex-direction:row;align-items:center;gap:.8mm;max-height:88%;max-width:76%;z-index:1;text-align:center}
-      .ref-drink,.ref-details{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;max-height:100%;overflow:hidden;text-overflow:clip}
-      .ref-drink{font-size:14pt;font-weight:900;line-height:.98;color:#080604}
-      .ref-details{font-size:6pt;font-weight:900;line-height:1.05;text-transform:uppercase}
-      .ref-quote{position:absolute;right:5%;top:50%;transform:translateY(-50%) rotate(180deg);writing-mode:vertical-rl;font-size:10pt;font-weight:900;line-height:1;max-height:78%;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;z-index:2}
-      .ref-right{height:100%;display:grid;grid-template-columns:minmax(0,1fr) 8mm;grid-template-rows:1fr 13mm;align-items:center;gap:.7mm;min-width:0;overflow:hidden}
-      .ref-brand{grid-column:1;grid-row:1;display:flex;flex-direction:row-reverse;align-items:center;justify-content:center;gap:1mm;min-width:0;height:100%}
-      .ref-brand strong{font-size:17pt;font-weight:900;line-height:.9;letter-spacing:.02em;writing-mode:vertical-rl;transform:rotate(180deg);color:#71300f;white-space:nowrap}
-      .ref-brand span{font-size:8pt;font-weight:800;line-height:1;letter-spacing:.08em;writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap}
-      .ref-social{grid-column:2;grid-row:1;display:flex;flex-direction:column;align-items:center;justify-content:space-around;height:100%;font-size:17pt;font-weight:900;line-height:1;color:#080604}
-      .ref-qr{grid-column:1;grid-row:2;display:flex;align-items:center;justify-content:flex-end;gap:1mm;min-width:0;height:100%;overflow:hidden}
-      .ref-qr img{width:13mm;height:13mm;object-fit:contain;image-rendering:pixelated;display:block;flex:0 0 auto}
-      .ref-follow{grid-column:2;grid-row:2;align-self:center;justify-self:center;background:#2857a5;color:#fff;font-size:7pt;font-weight:900;line-height:1;padding:1mm .6mm;writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap}
-      .print-sheet .art.ref-art{width:${stickerInnerWidth}mm!important;height:${stickerInnerHeight}mm!important;min-width:${stickerInnerWidth}mm!important;max-width:${stickerInnerWidth}mm!important;min-height:${stickerInnerHeight}mm!important;max-height:${stickerInnerHeight}mm!important;padding:1.4mm!important;margin:0!important;border:0!important;border-left:0!important;display:grid!important;grid-template-columns:10mm minmax(0,1fr) 23mm!important;gap:1mm!important;transform:translate(-50%,-50%)!important}
-      .print-sheet .ref-hero img{width:43mm!important;height:43mm!important}
-      .print-sheet .ref-qr img{width:13mm!important;height:13mm!important}
-
-      /* Responsive on-screen proof: same 80:50 composition as the printed label */
-      .preview-art{position:absolute;inset:0;container-type:size;overflow:hidden;background:#fff}
-      .preview-art .ref-art{width:100%!important;height:100%!important;min-width:0!important;max-width:none!important;min-height:0!important;max-height:none!important;box-sizing:border-box!important;padding:1.75cqh 1.8cqw!important;grid-template-columns:13.2cqw minmax(0,1fr) 30.3cqw!important;gap:1.3cqw!important}
-      .preview-art .ref-location{font-size:clamp(5px,1.85cqh,10px)!important}
-      .preview-art .ref-left-bottom{font-size:clamp(5px,1.7cqh,9px)!important;gap:1.5cqw!important}
-      .preview-art .ref-hero img{width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important}
-      .preview-art .ref-drink-group{max-width:76%!important;max-height:88%!important;gap:.8cqw!important}
-      .preview-art .ref-drink{font-size:clamp(6px,3.3cqh,18px)!important}
-      .preview-art .ref-details{font-size:clamp(4px,1.45cqh,8px)!important}
-      .preview-art .ref-quote{font-size:clamp(6px,2.4cqh,13px)!important}
-      .preview-art .ref-right{grid-template-columns:minmax(0,1fr) 27%!important;grid-template-rows:minmax(0,1fr) 28%!important;gap:1.2cqw!important}
-      .preview-art .ref-brand strong{font-size:clamp(10px,4.1cqh,22px)!important}
-      .preview-art .ref-brand span{font-size:clamp(5px,1.9cqh,10px)!important}
-      .preview-art .ref-social{font-size:clamp(12px,4.1cqh,22px)!important}
-      .preview-art .ref-qr{justify-content:center!important}
-      .preview-art .ref-qr img{width:min(100%,13cqh)!important;height:auto!important;max-height:100%!important}
-      .preview-art .ref-follow{font-size:clamp(5px,1.8cqh,9px)!important;padding:.8cqh .6cqw!important}
+      /* SYP ON CAFE — fresh premium 80 × 50 mm landscape label */
+      .ref-art{width:76mm!important;height:46mm!important;min-width:76mm!important;min-height:46mm!important;padding:1.4mm!important;border:.35mm solid #3b281b!important;border-radius:1.2mm!important;background:#fffaf2!important;color:#2f2118!important;display:grid!important;grid-template-columns:minmax(0,1fr) 21mm!important;gap:1.2mm!important;overflow:hidden!important;font-family:Arial,Helvetica,sans-serif!important}
+      .ref-main{position:relative;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;padding:.5mm .6mm .3mm}
+      .ref-topline{display:flex;align-items:center;justify-content:space-between;gap:1mm;border-bottom:.35mm solid #d9b58b;padding:0 0 1.2mm;min-width:0}
+      .ref-kicker{font-size:5.2pt;font-weight:900;letter-spacing:.12em;color:#93613b;white-space:nowrap}
+      .ref-order{font-size:5pt;font-weight:900;letter-spacing:.06em;color:#6b4b34;white-space:nowrap}
+      .ref-drink-group{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:.9mm;min-height:0;flex:1;padding:.7mm 0;overflow:hidden}
+      .ref-eyebrow{font-size:5pt;font-weight:900;letter-spacing:.16em;color:#9b704c;line-height:1}
+      .ref-drink{font-size:20pt!important;font-weight:900;line-height:.98;letter-spacing:-.035em;color:#302116;max-width:100%;max-height:none;white-space:normal;overflow-wrap:anywhere;word-break:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+      .ref-details{display:flex;align-items:center;gap:1mm;flex-wrap:wrap;font-size:6pt;font-weight:800;line-height:1.1;color:#604631;text-transform:uppercase}
+      .ref-details span{background:#f1e4d3;border-radius:1mm;padding:.65mm 1.1mm}
+      .ref-quote{border-top:.25mm solid #dfc9b2;padding-top:1mm;font-size:5.3pt;font-weight:700;line-height:1.12;color:#745a45;max-height:7mm;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+      .ref-customer{font-size:5pt;font-weight:900;line-height:1.1;color:#4a3424;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:.7mm}
+      .ref-right{height:100%;min-width:0;overflow:hidden;background:#352519;border-radius:.8mm;color:#fff8ed;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:1.4mm 1mm}
+      .ref-logo{width:10mm;height:10mm;object-fit:contain;display:block;border-radius:1mm;background:#fffaf2;padding:.4mm}
+      .ref-brand{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5mm;width:100%;text-align:center}
+      .ref-brand strong{font-size:9pt;font-weight:900;line-height:.95;letter-spacing:-.02em;color:#fff8ed;white-space:nowrap}
+      .ref-brand span{font-size:4pt;font-weight:800;line-height:1.1;letter-spacing:.09em;color:#e8c7a2;white-space:nowrap}
+      .ref-qr{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5mm;width:100%;min-width:0}
+      .ref-qr img{width:11mm;height:11mm;object-fit:contain;image-rendering:pixelated;display:block;background:#fff;padding:.5mm;border-radius:.6mm}
+      .ref-follow{font-size:4.3pt;font-weight:900;letter-spacing:.08em;color:#f2d6b5;line-height:1;white-space:nowrap}
+      .print-sheet .art.ref-art{width:${stickerInnerWidth}mm!important;height:${stickerInnerHeight}mm!important;min-width:${stickerInnerWidth}mm!important;max-width:${stickerInnerWidth}mm!important;min-height:${stickerInnerHeight}mm!important;max-height:${stickerInnerHeight}mm!important;padding:1.4mm!important;margin:0!important;display:grid!important;grid-template-columns:minmax(0,1fr) 21mm!important;gap:1.2mm!important;transform:translate(-50%,-50%)!important}
+      .print-sheet .ref-logo{width:10mm!important;height:10mm!important}
+      .print-sheet .ref-qr img{width:11mm!important;height:11mm!important}
+      .print-sheet .ref-drink{font-size:20pt!important}
+      /* Responsive proof uses the same composition as the physical label */
+      .preview-art{position:absolute;inset:0;container-type:size;overflow:hidden;background:#fffaf2}
+      .preview-art .ref-art{width:100%!important;height:100%!important;min-width:0!important;max-width:none!important;min-height:0!important;max-height:none!important;box-sizing:border-box!important;padding:2.5cqh 1.8cqw!important;grid-template-columns:minmax(0,1fr) 27.5cqw!important;gap:1.5cqw!important}
+      .preview-art .ref-kicker{font-size:clamp(4px,1.2cqh,7px)!important}
+      .preview-art .ref-order{font-size:clamp(4px,1.15cqh,7px)!important}
+      .preview-art .ref-eyebrow{font-size:clamp(4px,1.15cqh,7px)!important}
+      .preview-art .ref-drink{font-size:clamp(10px,5.3cqh,25px)!important}
+      .preview-art .ref-details{font-size:clamp(4px,1.45cqh,8px)!important;gap:1cqw!important}
+      .preview-art .ref-details span{padding:.8cqh 1.1cqw!important}
+      .preview-art .ref-quote{font-size:clamp(4px,1.3cqh,7px)!important;max-height:16cqh!important}
+      .preview-art .ref-customer{font-size:clamp(4px,1.2cqh,7px)!important}
+      .preview-art .ref-right{padding:2.5cqh 1.4cqw!important}
+      .preview-art .ref-logo{width:38cqh!important;height:38cqh!important}
+      .preview-art .ref-brand strong{font-size:clamp(6px,2.1cqh,12px)!important}
+      .preview-art .ref-brand span{font-size:clamp(3px,.95cqh,6px)!important}
+      .preview-art .ref-qr img{width:35cqh!important;height:35cqh!important}
+      .preview-art .ref-follow{font-size:clamp(3px,1cqh,6px)!important}
     `}</style>
     <header className="head"><div className="brand"><img src={LOGO_URL} alt="SYP logo"/><div><h1>SYP Signature Sticker Studio</h1><p>STREET • ICED • BREWED</p></div></div><div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><button className="btn alt" type="button" onClick={async()=>{let device:any;try{const bt=(navigator as any).bluetooth;if(!bt){alert("Web Bluetooth is not available in this browser.");return;}if(!confirm("Print ONE 50 x 70mm test label?\\nNo sale or sticker queue record will be created."))return;device=await bt.requestDevice({acceptAllDevices:true,optionalServices:["ff00"]});const server=await device.gatt.connect();if(!server.connected)throw new Error("Bluetooth connected state is false.");const service=await server.getPrimaryService("ff00");const characteristic=await service.getCharacteristic("ff02");const payload='SIZE 50 mm,70 mm\\r\\nGAP 2 mm,0 mm\\r\\nDIRECTION 1\\r\\nCLS\\r\\nTEXT 55,75,"3",0,1,1,"SYP BLUETOOTH TEST"\\r\\nPRINT 1,1\\r\\n';const bytes=new TextEncoder().encode(payload);for(let i=0;i<bytes.length;i+=20){await characteristic.writeValueWithoutResponse(bytes.slice(i,i+20));await new Promise(resolve=>setTimeout(resolve,25));}await new Promise(resolve=>setTimeout(resolve,2500));if(!device.gatt.connected)throw new Error("Printer disconnected before the test could be confirmed.");alert("Data transfer finished and Bluetooth stayed connected. Check whether one label printed.");device.gatt.disconnect();}catch(e){try{device?.gatt?.disconnect();}catch{}alert("Test failed: "+((e as any)?.message||String(e))+"\\nIf the printer was not listed, ensure it is ON and not connected to the Grozziie app. No sale was created.");}}}>PRINT TEST LABEL</button><button className="btn" type="button" onClick={connectQz}>CONNECT QZ TRAY</button><a href="/" style={{color:"#65472f",fontSize:12,fontWeight:800}}>← Back</a></div></header>
     <section className="panel" style={{maxWidth:1200,margin:"0 auto 14px",padding:12}}>
@@ -560,30 +560,27 @@ function ReceiptArt({items,cashReceived,paymentMethod,paymentStatus,additionalCh
   </main></div>;
 }
 function StickerArt({sticker}:{sticker:Sticker}){
-  const drinkFontSize=Math.min(15,Math.max(6,150/Math.max(10,sticker.drink.trim().length)));
+  const drinkFontSize=Math.min(23,Math.max(9,240/Math.max(10,sticker.drink.trim().length)));
   return <div className="art ref-art">
-    <div className="ref-left">
-      <div className="ref-location">APOLLO, ORANI, BATAAN</div>
-      <div className="ref-left-bottom">
-        <span>TO: {sticker.customer||"________"}</span>
-        <span>DATE AND TIME:</span>
-        <span>{sticker.createdAt}</span>
+    <section className="ref-main">
+      <div className="ref-topline">
+        <span className="ref-kicker">FRESHLY MADE FOR YOU</span>
+        <span className="ref-order">ORDER #{sticker.orderNo}</span>
       </div>
-    </div>
-    <div className="ref-main">
-      <div className="ref-hero"><img src={LOGO_URL} alt="SYP ON CAFÉ logo"/></div>
       <div className="ref-drink-group">
+        <div className="ref-eyebrow">YOUR DRINK</div>
         <div className="ref-drink" style={{fontSize:drinkFontSize+"pt"}}>{sticker.drink}</div>
-        <div className="ref-details">{sticker.size} · {sticker.sugar}</div>
-        <div className="ref-details">{sticker.ice}</div>
+        <div className="ref-details">
+          <span>{sticker.size}</span><span>{sticker.sugar}</span><span>{sticker.ice}</span>
+        </div>
       </div>
-      <div className="ref-quote">“{sticker.quote}”</div>
-    </div>
-    <div className="ref-right">
-      <div className="ref-brand"><strong>SYP ON CAFÉ</strong><span>— Street • Iced • Brewed —</span></div>
-      <div className="ref-social"><span>♪</span><span>◎</span><span>f</span></div>
-      <div className="ref-qr"><img src={QR_URL} alt="SYP ON CAFÉ Facebook QR code"/></div>
-      <div className="ref-follow">👍 FOLLOW US</div>
-    </div>
+      {sticker.quote&&<div className="ref-quote">“{sticker.quote}”</div>}
+      <div className="ref-customer">MADE FOR: {sticker.customer.trim()||"OUR KA-SYP"}</div>
+    </section>
+    <aside className="ref-right">
+      <img className="ref-logo" src={LOGO_URL} alt="SYP ON CAFÉ logo"/>
+      <div className="ref-brand"><strong>SYP ON CAFÉ</strong><span>STREET · ICED · BREWED</span></div>
+      <div className="ref-qr"><img src={QR_URL} alt="SYP ON CAFÉ Facebook QR code"/><span className="ref-follow">SCAN TO FOLLOW</span></div>
+    </aside>
   </div>;
 }
