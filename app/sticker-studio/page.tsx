@@ -419,7 +419,7 @@ export default function StickerStudioPage() {
       .ref-qr{grid-column:1;grid-row:2;display:flex;align-items:center;justify-content:flex-end;gap:1mm;min-width:0;height:100%;overflow:hidden}
       .ref-qr img{width:13mm;height:13mm;object-fit:contain;image-rendering:pixelated;display:block;flex:0 0 auto}
       .ref-follow{grid-column:2;grid-row:2;align-self:center;justify-self:center;background:#2857a5;color:#fff;font-size:7pt;font-weight:900;line-height:1;padding:1mm .6mm;writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap}
-      .print-sheet .art.ref-art{width:${stickerInnerHeight}mm!important;height:${stickerInnerWidth}mm!important;padding:1.4mm!important;display:grid!important;grid-template-columns:10mm minmax(0,1fr) 23mm!important;gap:1mm!important;transform:translate(-50%,-50%) rotate(-90deg)!important}
+      .print-sheet .art.ref-art{width:${stickerInnerWidth}mm!important;height:${stickerInnerHeight}mm!important;min-width:${stickerInnerWidth}mm!important;max-width:${stickerInnerWidth}mm!important;min-height:${stickerInnerHeight}mm!important;max-height:${stickerInnerHeight}mm!important;padding:1.4mm!important;margin:0!important;border:0!important;border-left:0!important;display:grid!important;grid-template-columns:10mm minmax(0,1fr) 23mm!important;gap:1mm!important;transform:translate(-50%,-50%)!important}
       .print-sheet .ref-hero img{width:43mm!important;height:43mm!important}
       .print-sheet .ref-qr img{width:13mm!important;height:13mm!important}
     `}</style>
