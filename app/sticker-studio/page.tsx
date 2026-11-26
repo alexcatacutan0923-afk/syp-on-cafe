@@ -406,7 +406,7 @@ export default function StickerStudioPage() {
       .ref-order{font-size:5pt;font-weight:900;letter-spacing:.06em;color:#6b4b34;white-space:nowrap}
       .ref-drink-group{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:.9mm;min-height:0;flex:1;padding:.7mm 0;overflow:hidden}
       .ref-eyebrow{font-size:5pt;font-weight:900;letter-spacing:.16em;color:#9b704c;line-height:1}
-      .ref-drink{font-size:20pt!important;font-weight:900;line-height:.98;letter-spacing:-.035em;color:#302116;max-width:100%;max-height:none;white-space:normal;overflow-wrap:anywhere;word-break:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+      .ref-drink{font-weight:900;line-height:.98;letter-spacing:-.035em;color:#302116;max-width:100%;max-height:none;white-space:normal;overflow-wrap:anywhere;word-break:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
       .ref-details{display:flex;align-items:center;gap:1mm;flex-wrap:wrap;font-size:6pt;font-weight:800;line-height:1.1;color:#604631;text-transform:uppercase}
       .ref-details span{background:#f1e4d3;border-radius:1mm;padding:.65mm 1.1mm}
       .ref-quote{border-top:.25mm solid #dfc9b2;padding-top:1mm;font-size:5.3pt;font-weight:700;line-height:1.12;color:#745a45;max-height:7mm;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
@@ -422,7 +422,6 @@ export default function StickerStudioPage() {
       .print-sheet .art.ref-art{width:${stickerInnerWidth}mm!important;height:${stickerInnerHeight}mm!important;min-width:${stickerInnerWidth}mm!important;max-width:${stickerInnerWidth}mm!important;min-height:${stickerInnerHeight}mm!important;max-height:${stickerInnerHeight}mm!important;padding:1.4mm!important;margin:0!important;display:grid!important;grid-template-columns:minmax(0,1fr) 21mm!important;gap:1.2mm!important;transform:translate(-50%,-50%)!important}
       .print-sheet .ref-logo{width:10mm!important;height:10mm!important}
       .print-sheet .ref-qr img{width:11mm!important;height:11mm!important}
-      .print-sheet .ref-drink{font-size:20pt!important}
       /* Responsive proof uses the same composition as the physical label */
       .preview-art{position:absolute;inset:0;container-type:size;overflow:hidden;background:#fffaf2}
       .preview-art .ref-art{width:100%!important;height:100%!important;min-width:0!important;max-width:none!important;min-height:0!important;max-height:none!important;box-sizing:border-box!important;padding:2.5cqh 1.8cqw!important;grid-template-columns:minmax(0,1fr) 27.5cqw!important;gap:1.5cqw!important}
