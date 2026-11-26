@@ -242,43 +242,46 @@ export default function StickerStudioPage() {
 
   async function printSelectedWithQz(items:Sticker[],mode:"both"|"stickers"|"receipt"){
     const w=window as any;
-    if(!w.qz||!w.qz.websocket.isActive())throw new Error("QZ Tray is disconnected. Reconnect muna bago mag-print.");
-    const stickerPrinter=qzPrinters.find(name=>name.trim()==="TP870 S");
+    const needsReceipt=mode==="both"||mode==="receipt";
+    const needsSticker=mode==="both"||mode==="stickers";
+    if(needsReceipt&&(!w.qz||!w.qz.websocket.isActive()))throw new Error("QZ Tray is disconnected. Reconnect muna bago mag-print ng receipt.");
     const receiptPrinter=qzPrinters.find(name=>name.trim()==="EPSON TM-T88IV Receipt");
-    if((mode==="both"||mode==="stickers")&&!stickerPrinter)throw new Error("Hindi makita ang TP870 S sticker printer.");
-    if((mode==="both"||mode==="receipt")&&!receiptPrinter)throw new Error("Hindi makita ang EPSON TM-T88IV Receipt printer.");
+    if(needsReceipt&&!receiptPrinter)throw new Error("Hindi makita ang EPSON TM-T88IV Receipt printer.");
 
     setPrintItems(items);
     await new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve())));
-    const stickerNodes=Array.from(document.querySelectorAll(".print-sheet")) as HTMLElement[];
     const receiptNode=document.querySelector(".receipt-sheet") as HTMLElement|null;
-    const styleMarkup=Array.from(document.querySelectorAll("style")).map(node=>node.outerHTML).join("\\n");
-    const base='<base href="'+window.location.origin+'/">';
-    const wrap=(body:string,width:number,height:number)=>'<!doctype html><html><head><meta charset="utf-8">'+base+styleMarkup+'<style>@page{size:'+width+'mm '+height+'mm;margin:0}html,body{margin:0!important;padding:0!important;width:'+width+'mm!important;min-width:'+width+'mm!important;max-width:'+width+'mm!important;background:#fff!important;color:#000!important}body{overflow:visible!important}.print-sheet{display:block!important;visibility:visible!important;width:'+stickerWidth+'mm!important;height:'+stickerHeight+'mm!important;min-height:'+stickerHeight+'mm!important;max-height:'+stickerHeight+'mm!important;margin:0!important;padding:0!important;overflow:hidden!important;break-after:avoid!important;page-break-after:avoid!important}.print-sheet .art{position:absolute!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%) rotate(-90deg)!important;transform-origin:center center!important;display:flex!important;visibility:visible!important;box-sizing:border-box!important;width:'+stickerInnerHeight+'mm!important;height:'+stickerInnerWidth+'mm!important;min-height:'+stickerInnerWidth+'mm!important;max-height:'+stickerInnerWidth+'mm!important;margin:0!important;overflow:hidden!important}.receipt-sheet,.receipt{visibility:visible!important;display:block!important}</style></head><body>'+body+'</body></html>'
-    const waitImages=async(node:HTMLElement)=>{await Promise.all(Array.from(node.querySelectorAll("img")).map(img=>img.complete?Promise.resolve():new Promise<void>(resolve=>{img.onload=()=>resolve();img.onerror=()=>resolve();setTimeout(resolve,5000);})));};
-    const jobs:Promise<any>[]=[];
-    if(mode==="both"||mode==="stickers"){
+
+    // Sticker printing now follows the exact browser Web Print route used by Reprint.
+    // This preserves the browser's paper-size, orientation, scaling and printer settings.
+    if(needsSticker){
+      const stickerNodes=Array.from(document.querySelectorAll(".print-sheet")) as HTMLElement[];
       if(stickerNodes.length!==items.length)throw new Error("Hindi pa handa ang sticker preview. Subukan ulit.");
-      for(let i=0;i<stickerNodes.length;i++){
-        await waitImages(stickerNodes[i]);
-        const markup=wrap(stickerNodes[i].outerHTML,stickerWidth,stickerHeight);
-        jobs.push(sendQzMarkup(stickerPrinter!,markup,stickerWidth,stickerHeight,"SYP Sticker Order "+items[i].orderNo));
+      await Promise.all(stickerNodes.flatMap(node=>Array.from(node.querySelectorAll("img")).map(img=>img.complete?Promise.resolve():new Promise<void>(resolve=>{img.onload=()=>resolve();img.onerror=()=>resolve();setTimeout(resolve,5000);}))));
+      const hideReceipt=document.createElement("style");
+      hideReceipt.setAttribute("data-syp-sticker-webprint","true");
+      hideReceipt.textContent="@media print{.receipt-sheet{display:none!important;visibility:hidden!important}}";
+      document.head.appendChild(hideReceipt);
+      try{
+        await new Promise<void>(resolve=>window.setTimeout(resolve,350));
+        window.print();
+      }finally{
+        hideReceipt.remove();
       }
     }
-    if(mode==="both"||mode==="receipt"){
+
+    if(needsReceipt){
       if(!receiptNode)throw new Error("Hindi pa handa ang receipt preview. Subukan ulit.");
-      await waitImages(receiptNode);
+      await Promise.all(Array.from(receiptNode.querySelectorAll("img")).map(img=>img.complete?Promise.resolve():new Promise<void>(resolve=>{img.onload=()=>resolve();img.onerror=()=>resolve();setTimeout(resolve,5000);})));
       const receiptMain=receiptNode.querySelector(".receipt") as HTMLElement|null;
       if(!receiptMain)throw new Error("Hindi makita ang receipt content.");
-      const receiptHeight=Math.max(60,Math.ceil(Math.max(receiptMain.scrollHeight,receiptMain.getBoundingClientRect().height)*25.4/96)+8);
-      const receiptCss=`.receipt{display:block!important;width:${receiptInnerWidth}mm!important;max-width:${receiptInnerWidth}mm!important;box-sizing:border-box!important;margin:0!important;padding:4mm!important;background:#fff!important;color:#000!important;font-family:monospace!important;font-size:9pt!important;line-height:1.35!important;overflow:visible!important;height:auto!important;max-height:none!important}.receipt *{box-sizing:border-box!important;color:#000!important}.receipt-head{font-family:Arial,Helvetica,sans-serif!important;font-size:16pt!important;font-weight:900!important;line-height:1.1!important;text-align:center!important}.receipt-sub,.receipt-address,.receipt-title,.receipt-foot,.receipt-site{text-align:center!important}.receipt-sub{font-size:8pt!important;margin:1mm 0!important}.receipt-address,.receipt-title{font-size:8pt!important}.receipt-disclaimer{font-size:7pt!important}.receipt-meta{font-size:8pt!important;gap:1.5mm 2mm!important;display:grid!important;grid-template-columns:1fr 1fr!important}.receipt-row{font-size:8.5pt!important;line-height:1.35!important;margin:1mm 0!important}.receipt-total{font-size:12pt!important;padding:1.5mm 0!important}.receipt-change{font-size:10pt!important}.receipt-item{margin:1.5mm 0!important}.receipt-item-main{font-size:9pt!important}.receipt-item small{font-size:8pt!important}.receipt-note{font-size:8pt!important}.receipt-social{margin:2mm auto 1mm!important;gap:.7mm!important}.receipt-social img{width:10mm!important;height:10mm!important;image-rendering:pixelated!important}.receipt-social strong{font-size:8pt!important}.receipt-social span{font-size:7pt!important}.receipt-foot{font-size:9pt!important}.receipt-site{font-size:7pt!important}`;
+      const receiptHeight=Math.max(75,Math.ceil(Math.max(receiptMain.scrollHeight,receiptMain.getBoundingClientRect().height)*25.4/96*1.28)+10);
+      const receiptCss=`.receipt{display:block!important;width:${receiptInnerWidth}mm!important;max-width:${receiptInnerWidth}mm!important;box-sizing:border-box!important;margin:0!important;padding:4mm!important;background:#fff!important;color:#000!important;font-family:monospace!important;font-size:10.5pt!important;line-height:1.4!important;overflow:visible!important;height:auto!important;max-height:none!important}.receipt *{box-sizing:border-box!important;color:#000!important}.receipt-head{font-family:Arial,Helvetica,sans-serif!important;font-size:18pt!important;font-weight:900!important;line-height:1.1!important;text-align:center!important}.receipt-sub,.receipt-address,.receipt-title,.receipt-foot,.receipt-site{text-align:center!important}.receipt-sub{font-size:9pt!important;margin:1mm 0!important}.receipt-address,.receipt-title{font-size:9pt!important}.receipt-disclaimer{font-size:8pt!important}.receipt-meta{font-size:9.5pt!important;gap:1.5mm 2mm!important;display:grid!important;grid-template-columns:1fr 1fr!important}.receipt-row{font-size:10pt!important;line-height:1.4!important;margin:1mm 0!important}.receipt-total{font-size:14pt!important;padding:1.5mm 0!important}.receipt-change{font-size:12pt!important}.receipt-item{margin:1.7mm 0!important}.receipt-item-main{font-size:10.5pt!important}.receipt-item small{font-size:9pt!important}.receipt-note{font-size:9pt!important}.receipt-social{margin:2mm auto 1mm!important;gap:.7mm!important}.receipt-social img{width:12mm!important;height:12mm!important;image-rendering:pixelated!important}.receipt-social strong{font-size:9pt!important}.receipt-social span{font-size:8pt!important}.receipt-foot{font-size:10pt!important}.receipt-site{font-size:8pt!important}`;
       const receiptMarkup='<!doctype html><html><head><meta charset="utf-8"><style>@page{size:'+receiptWidth+'mm '+receiptHeight+'mm;margin:0}*{box-sizing:border-box}html,body{display:block!important;width:'+receiptWidth+'mm!important;min-width:'+receiptWidth+'mm!important;max-width:'+receiptWidth+'mm!important;height:auto!important;min-height:0!important;max-height:none!important;margin:0!important;padding:0!important;overflow:visible!important;background:#fff!important;color:#000!important}body{padding:0!important}'+receiptCss+'</style></head><body>'+receiptMain.outerHTML+'</body></html>';
-      jobs.push(sendQzMarkup(receiptPrinter!,receiptMarkup,receiptWidth,receiptHeight,"SYP Receipt Order "+(items[0]?.orderNo||"")));
+      await sendQzMarkup(receiptPrinter!,receiptMarkup,receiptWidth,receiptHeight,"SYP Receipt Order "+(items[0]?.orderNo||""));
     }
-    const results=await Promise.allSettled(jobs);
-    const failed=results.filter(result=>result.status==="rejected");
-    if(failed.length)throw new Error("May printer job na hindi naipadala: "+failed.map(result=>result.status==="rejected"?String((result.reason as any)?.message||result.reason):"").join(" · "));
-    return jobs.length;
+    return (needsSticker?1:0)+(needsReceipt?1:0);
+  }
   }
 
   const drinksTotal=queue.reduce((sum,item)=>sum+Number(item.price||0),0);
