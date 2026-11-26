@@ -282,7 +282,6 @@ export default function StickerStudioPage() {
     }
     return (needsSticker?1:0)+(needsReceipt?1:0);
   }
-  }
 
   const drinksTotal=queue.reduce((sum,item)=>sum+Number(item.price||0),0);
   const chargesTotal=(deliveryEnabled?Math.max(0,Number(deliveryFee)||0):0)+extraCharges.reduce((sum,item)=>sum+Math.max(0,Number(item.amount)||0),0);
