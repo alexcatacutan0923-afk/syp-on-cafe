@@ -437,6 +437,37 @@ export default function StickerStudioPage() {
       .preview-art .ref-brand span{font-size:clamp(3px,.95cqh,6px)!important}
       .preview-art .ref-qr img{width:16cqh!important;height:16cqh!important}
       .preview-art .ref-follow{font-size:clamp(3px,.9cqh,6px)!important}
+
+      /* MATCHA SERIES — dedicated monochrome thermal label */
+      .ref-art.matcha-art{border:.45mm solid #000!important;padding:1.1mm!important;grid-template-rows:minmax(0,1fr) 13mm!important;gap:.7mm!important}
+      .matcha-art .ref-main{border:.2mm solid #000;padding:1.1mm .8mm .8mm!important;justify-content:space-between!important}
+      .matcha-art .matcha-heading{width:100%;display:flex;flex-direction:column;align-items:center;gap:.7mm;border-bottom:.35mm solid #000;padding-bottom:1.2mm}
+      .matcha-art .matcha-brand{font-size:9pt;font-weight:1000;letter-spacing:-.035em;line-height:1}
+      .matcha-art .matcha-series{font-size:5pt;font-weight:900;letter-spacing:.2em;line-height:1}
+      .matcha-art .matcha-leaf{font-size:8pt;line-height:.8}
+      .matcha-art .matcha-drink-group{display:flex;flex:1;min-height:0;width:100%;flex-direction:column;align-items:center;justify-content:center;gap:1.1mm;padding:1mm 0;overflow:hidden}
+      .matcha-art .matcha-eyebrow{font-size:5pt;font-weight:900;letter-spacing:.2em}
+      .matcha-art .matcha-drink{font-weight:1000;line-height:.98;letter-spacing:-.035em;max-width:100%;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+      .matcha-art .matcha-details{display:flex;flex-wrap:wrap;justify-content:center;gap:.8mm}
+      .matcha-art .matcha-details span{border:.25mm solid #000;padding:.7mm 1mm;font-size:5pt;font-weight:900;line-height:1}
+      .matcha-art .matcha-quote{width:100%;border-top:.25mm solid #000;border-bottom:.25mm solid #000;padding:1mm .4mm;text-align:center;font-size:5pt;font-weight:800;line-height:1.12;max-height:9mm;overflow:hidden}
+      .matcha-art .matcha-customer{font-size:5pt;font-weight:900;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .matcha-art .ref-right{border-top:.3mm solid #000!important;padding:0 .8mm!important}
+      .matcha-art .ref-brand strong{font-size:9pt!important}
+      .matcha-art .ref-brand span{font-size:3.7pt!important}
+      .matcha-art .ref-qr img{width:10mm!important;height:10mm!important}
+      .matcha-art .ref-follow{font-size:3.6pt!important}
+      .preview-art .matcha-art{padding:1.5cqh 1.5cqw!important;grid-template-rows:minmax(0,1fr) 18cqh!important;gap:1cqh!important}
+      .preview-art .matcha-art .matcha-brand{font-size:clamp(7px,2.5cqh,14px)!important}
+      .preview-art .matcha-art .matcha-series{font-size:clamp(4px,1.2cqh,7px)!important}
+      .preview-art .matcha-art .matcha-leaf{font-size:clamp(6px,2cqh,11px)!important}
+      .preview-art .matcha-art .matcha-eyebrow{font-size:clamp(4px,1.15cqh,7px)!important}
+      .preview-art .matcha-art .matcha-drink{font-size:clamp(11px,4.8cqh,25px)!important}
+      .preview-art .matcha-art .matcha-details span{font-size:clamp(4px,1.2cqh,7px)!important;padding:.8cqh 1cqw!important}
+      .preview-art .matcha-art .matcha-quote{font-size:clamp(4px,1.2cqh,7px)!important;max-height:12cqh!important}
+      .preview-art .matcha-art .matcha-customer{font-size:clamp(4px,1.2cqh,7px)!important}
+      .preview-art .matcha-art .ref-brand strong{font-size:clamp(6px,2cqh,12px)!important}
+      .preview-art .matcha-art .ref-qr img{width:15cqh!important;height:15cqh!important}
     `}</style>
     <header className="head"><div className="brand"><img src={LOGO_URL} alt="SYP logo"/><div><h1>SYP Signature Sticker Studio</h1><p>STREET • ICED • BREWED</p></div></div><div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><button className="btn alt" type="button" onClick={async()=>{let device:any;try{const bt=(navigator as any).bluetooth;if(!bt){alert("Web Bluetooth is not available in this browser.");return;}if(!confirm("Print ONE 50 x 70mm test label?\\nNo sale or sticker queue record will be created."))return;device=await bt.requestDevice({acceptAllDevices:true,optionalServices:["ff00"]});const server=await device.gatt.connect();if(!server.connected)throw new Error("Bluetooth connected state is false.");const service=await server.getPrimaryService("ff00");const characteristic=await service.getCharacteristic("ff02");const payload='SIZE 50 mm,70 mm\\r\\nGAP 2 mm,0 mm\\r\\nDIRECTION 1\\r\\nCLS\\r\\nTEXT 55,75,"3",0,1,1,"SYP BLUETOOTH TEST"\\r\\nPRINT 1,1\\r\\n';const bytes=new TextEncoder().encode(payload);for(let i=0;i<bytes.length;i+=20){await characteristic.writeValueWithoutResponse(bytes.slice(i,i+20));await new Promise(resolve=>setTimeout(resolve,25));}await new Promise(resolve=>setTimeout(resolve,2500));if(!device.gatt.connected)throw new Error("Printer disconnected before the test could be confirmed.");alert("Data transfer finished and Bluetooth stayed connected. Check whether one label printed.");device.gatt.disconnect();}catch(e){try{device?.gatt?.disconnect();}catch{}alert("Test failed: "+((e as any)?.message||String(e))+"\\nIf the printer was not listed, ensure it is ON and not connected to the Grozziie app. No sale was created.");}}}>PRINT TEST LABEL</button><button className="btn" type="button" onClick={connectQz}>CONNECT QZ TRAY</button><a href="/" style={{color:"#65472f",fontSize:12,fontWeight:800}}>← Back</a></div></header>
     <section className="panel" style={{maxWidth:1200,margin:"0 auto 14px",padding:12}}>
@@ -558,6 +589,32 @@ function ReceiptArt({items,cashReceived,paymentMethod,paymentStatus,additionalCh
 }
 function StickerArt({sticker}:{sticker:Sticker}){
   const drinkFontSize=Math.min(25,Math.max(9,300/Math.max(10,sticker.drink.trim().length)));
+  const isMatcha=/matcha/i.test(sticker.category)||/matcha/i.test(sticker.drink);
+  if(isMatcha){
+    return <div className="art ref-art matcha-art">
+      <section className="ref-main">
+        <div className="matcha-heading">
+          <span className="matcha-brand">SYP ON CAFÉ</span>
+          <span className="matcha-series">— MATCHA SERIES —</span>
+          <span className="matcha-leaf">❧</span>
+          <span className="ref-order">ORDER #{sticker.orderNo}</span>
+        </div>
+        <div className="matcha-drink-group">
+          <div className="matcha-eyebrow">YOUR MATCHA FIX</div>
+          <div className="matcha-drink" style={{fontSize:drinkFontSize+"pt"}}>{sticker.drink}</div>
+          <div className="matcha-details">
+            <span>{sticker.size}</span><span>{sticker.sugar}</span><span>{sticker.ice}</span>
+          </div>
+        </div>
+        {sticker.quote&&<div className="matcha-quote">“{sticker.quote}”</div>}
+        <div className="matcha-customer">MADE FOR: {sticker.customer.trim()||"OUR KA-SYP"}</div>
+      </section>
+      <aside className="ref-right">
+        <div className="ref-brand"><strong>SYP ON CAFÉ</strong><span>GOOD VIBES IN EVERY SIP</span></div>
+        <div className="ref-qr"><img src={QR_URL} alt="SYP ON CAFÉ Facebook QR code"/><span className="ref-follow">SCAN TO FOLLOW</span></div>
+      </aside>
+    </div>;
+  }
   return <div className="art ref-art">
     <section className="ref-main">
       <div className="ref-topline">
