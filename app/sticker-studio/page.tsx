@@ -400,17 +400,17 @@ export default function StickerStudioPage() {
 
       /* UNIVERSAL SYP ON CAFE LABEL — reference-matched, monochrome thermal */
       .art.ref-art{position:relative!important;box-sizing:border-box!important;width:46mm!important;height:76mm!important;min-width:46mm!important;min-height:76mm!important;padding:1.4mm!important;border:.75mm double #000!important;border-radius:5mm!important;background:#fff!important;color:#000!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:0!important;overflow:hidden!important;font-family:Arial,Helvetica,sans-serif!important}
-      .ref-head{height:23%;flex:0 0 23%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4mm;border-bottom:.35mm solid #000;padding:0 0 1mm;min-height:0}
-      .ref-logo{display:block!important;width:17mm!important;height:16mm!important;object-fit:contain!important;object-position:center!important}
+      .ref-head{height:20%;flex:0 0 20%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4mm;border-bottom:.35mm solid #000;padding:0 0 1mm;min-height:0}
+      .ref-logo{display:block!important;width:11mm!important;height:10mm!important;object-fit:contain!important;object-position:center!important}
       .ref-wordmark{font-size:10pt;font-weight:1000;line-height:1;letter-spacing:-.035em;text-align:center;white-space:nowrap}
       .ref-tagline{font-size:5pt;font-weight:600;line-height:1.1;letter-spacing:.035em;text-align:center;white-space:nowrap}
-      .ref-orderline{height:7%;flex:0 0 7%;display:flex;align-items:center;justify-content:flex-start;padding:0 .5mm;font-size:9pt;font-weight:900;letter-spacing:.02em}
-      .ref-drinkline{height:14%;flex:0 0 14%;display:flex;align-items:center;justify-content:center;text-align:left;padding:0 .5mm;min-height:0;overflow:hidden}
+      .ref-orderline{height:6%;flex:0 0 6%;display:flex;align-items:center;justify-content:flex-start;padding:0 .5mm;font-size:9pt;font-weight:900;letter-spacing:.02em}
+      .ref-drinkline{height:13%;flex:0 0 13%;display:flex;align-items:center;justify-content:center;text-align:left;padding:0 .5mm;min-height:0;overflow:hidden}
       .ref-drink{font-family:Georgia,"Times New Roman",serif!important;font-weight:900!important;line-height:.98!important;letter-spacing:-.035em!important;color:#000!important;max-width:100%;max-height:100%;overflow:hidden;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
       .ref-detail-line{height:7%;flex:0 0 7%;display:flex;align-items:center;justify-content:flex-start;gap:1.4mm;padding:0 .5mm;font-size:7pt;line-height:1;font-weight:500;white-space:nowrap}
       .ref-detail-line .sparkle{font-size:11pt;line-height:1}
       .ref-detail-line .dot{font-size:9pt;font-weight:900}
-      .ref-date-line{height:7%;flex:0 0 7%;display:flex;align-items:center;justify-content:flex-end;padding:0 .5mm;border-bottom:.35mm solid #000;font-size:7pt;font-weight:500;white-space:nowrap}
+      .ref-date-line{height:6%;flex:0 0 6%;display:flex;align-items:center;justify-content:flex-end;padding:0 .5mm;border-bottom:.35mm solid #000;font-size:7pt;font-weight:500;white-space:nowrap}
       .ref-customer-line{height:8%;flex:0 0 8%;display:flex;align-items:center;justify-content:center;padding:.3mm .5mm 0;font-family:Georgia,"Times New Roman",serif;font-size:12pt;font-weight:900;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
       .ref-mood-line{height:22%;flex:0 0 22%;display:flex;align-items:center;justify-content:center;min-height:0;padding:.3mm}
       .ref-mood-circle{width:100%;height:100%;max-width:24mm;max-height:24mm;aspect-ratio:1/1;border:.55mm solid #000;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;text-align:center;padding:1.4mm}
@@ -563,7 +563,9 @@ function ReceiptArt({items,cashReceived,paymentMethod,paymentStatus,additionalCh
 }
 function StickerArt({sticker}:{sticker:Sticker}){
   const drinkFontSize=Math.min(24,Math.max(9,280/Math.max(10,sticker.drink.trim().length)));
-  const orderDate=sticker.createdAt||stamp();
+  const rawDate=sticker.createdAt||stamp();
+  const parsedDate=new Date(rawDate);
+  const orderDate=Number.isNaN(parsedDate.getTime())?rawDate:new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Manila",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:true}).format(parsedDate).replace(", "," ");
   return <div className="art ref-art">
     <header className="ref-head">
       <img className="ref-logo" src={LOGO_URL} alt="SYP ON CAFÉ logo"/>
