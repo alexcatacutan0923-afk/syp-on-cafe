@@ -400,19 +400,19 @@ export default function StickerStudioPage() {
 
       /* UNIVERSAL SYP ON CAFE LABEL — reference-matched, monochrome thermal */
       .art.ref-art{position:relative!important;box-sizing:border-box!important;width:46mm!important;height:76mm!important;min-width:46mm!important;min-height:76mm!important;padding:1.4mm!important;border:.75mm double #000!important;border-radius:5mm!important;background:#fff!important;color:#000!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:0!important;overflow:hidden!important;font-family:Arial,Helvetica,sans-serif!important}
-      .ref-head{height:24%;flex:0 0 24%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4mm;border-bottom:.35mm solid #000;padding:0 0 1mm;min-height:0}
+      .ref-head{height:23%;flex:0 0 23%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4mm;border-bottom:.35mm solid #000;padding:0 0 1mm;min-height:0}
       .ref-logo{display:block!important;width:11mm!important;height:10mm!important;object-fit:contain!important;object-position:center!important}
       .ref-wordmark{font-size:10pt;font-weight:1000;line-height:1;letter-spacing:-.035em;text-align:center;white-space:nowrap}
       .ref-tagline{font-size:5pt;font-weight:600;line-height:1.1;letter-spacing:.035em;text-align:center;white-space:nowrap}
       .ref-orderline{height:5%;flex:0 0 5%;display:flex;align-items:center;justify-content:flex-start;padding:0 .5mm;font-size:9pt;font-weight:900;letter-spacing:.02em}
-      .ref-drinkline{height:9%;flex:0 0 9%;display:flex;align-items:center;justify-content:center;text-align:left;padding:0 .5mm;min-height:0;overflow:hidden}
+      .ref-drinkline{height:8%;flex:0 0 8%;display:flex;align-items:center;justify-content:center;text-align:left;padding:0 .5mm;min-height:0;overflow:hidden}
       .ref-drink{font-family:Georgia,"Times New Roman",serif!important;font-weight:900!important;line-height:1.02!important;letter-spacing:-.025em!important;color:#000!important;max-width:100%;max-height:100%;overflow:hidden;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
       .ref-detail-line{height:7%;flex:0 0 7%;display:flex;align-items:center;justify-content:flex-start;gap:1.4mm;padding:0 .5mm;font-size:7pt;line-height:1;font-weight:500;white-space:nowrap}
       .ref-detail-line .sparkle{font-size:11pt;line-height:1}
       .ref-detail-line .dot{font-size:9pt;font-weight:900}
       .ref-date-line{height:7%;flex:0 0 7%;display:flex;align-items:center;justify-content:flex-end;padding:0 .5mm;border-bottom:.35mm solid #000;font-size:7pt;font-weight:500;white-space:nowrap}
       .ref-customer-line{height:8%;flex:0 0 8%;display:flex;align-items:center;justify-content:center;padding:.3mm .5mm 0;font-family:Georgia,"Times New Roman",serif;font-size:12pt;font-weight:900;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-      .ref-mood-line{height:25%;flex:0 0 25%;display:flex;align-items:center;justify-content:center;min-height:0;padding:.3mm}
+      .ref-mood-line{height:24%;flex:0 0 24%;display:flex;align-items:center;justify-content:center;min-height:0;padding:.3mm}
       .ref-mood-circle{width:100%;height:100%;max-width:26mm;max-height:26mm;aspect-ratio:1/1;border:.55mm solid #000;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;text-align:center;padding:1.4mm}
       .ref-mood-circle:after{content:"";position:absolute;inset:1.2mm;border:.25mm solid #000;border-radius:50%;pointer-events:none}
       .ref-mood-title{font-family:Georgia,"Times New Roman",serif;font-size:7pt;font-weight:900;letter-spacing:.06em;line-height:1}
@@ -420,7 +420,7 @@ export default function StickerStudioPage() {
       .ref-mood-copy{font-family:Georgia,"Times New Roman",serif;font-size:9pt;font-weight:900;line-height:.96;letter-spacing:-.025em}
       .ref-social-line{height:6%;flex:0 0 6%;display:flex;align-items:center;justify-content:center;gap:1.5mm;font-size:8pt;font-weight:700;white-space:nowrap}
       .ref-social-line .social-icons{display:flex;align-items:center;gap:1mm}.ref-social-line .social-icons svg{width:5mm;height:5mm;display:block;flex:0 0 auto}
-      .ref-qr-line{height:9%;flex:0 0 9%;display:flex;align-items:center;justify-content:center;min-height:0}
+      .ref-qr-line{height:12%;flex:0 0 12%;display:flex;align-items:center;justify-content:center;min-height:0}
       .ref-qr-line img{width:10mm;height:10mm;object-fit:contain;image-rendering:pixelated;display:block}
       .print-sheet .art.ref-art{width:${stickerInnerWidth}mm!important;height:${stickerInnerHeight}mm!important;min-width:${stickerInnerWidth}mm!important;max-width:${stickerInnerWidth}mm!important;min-height:${stickerInnerHeight}mm!important;max-height:${stickerInnerHeight}mm!important;margin:0!important;padding:1.4mm!important;transform:translate(-50%,-50%)!important}
       .preview-art{position:absolute;inset:0;container-type:size;overflow:hidden;background:#fff}
