@@ -353,36 +353,49 @@ export default function StickerStudioPage() {
   const filtered=useMemo(()=>MENU.map((m,i)=>({m,i})).filter(({m})=>menuCategory(String(m[3]))===activeCategory&&(m[0].toLowerCase().includes(search.toLowerCase())||m[3].toLowerCase().includes(search.toLowerCase()))),[search,activeCategory]);
   const product=MENU[selected] ?? MENU[0];
   function quoteGroup(category:string){return category.includes("Matcha")?"Matcha":category.includes("Soda")?"Soda":category.includes("Milky")?"Milky":category.includes("Signature")?"Signature":category==="Fries"?"Fries":"Coffee";}
+  const SIMPLE_QUOTES=[
+    "Kape muna, kaya mo yan.","One sip at a time.","Today is a fresh start.","You deserve a little break.","Keep smiling. Keep going.","Good things take time.","Take it easy today.","Small steps still count.","Choose happy moments.","You are doing great.","Make today a good one.","Stay kind to yourself.","Enjoy the little things.","Better days are coming.","Rest is productive too.","You got this!","Keep your head up.","Start where you are.","Do what makes you happy.","A little treat goes a long way.","Good vibes start here.","Take a breath and relax.","Be proud of yourself.","Every day is a new chance.","Slow down and enjoy life.","Kindness looks good on you.","Keep going, even slowly.","Make room for joy.","You are enough.","Smile, sip, repeat.","Life is better with good company.","Today deserves a good drink.","Pause. Sip. Recharge.","Let the good moments stay.","You made it through today.","Be your own sunshine.","Enjoy this little moment.","One happy sip at a time.","Keep things simple.","You deserve something nice.","Good mood in every sip.","Less stress, more smiles.","Stay cool and stay kind.","Do not forget to rest.","You are stronger than you think.","Make time for yourself.","A fresh sip, a fresh mood.","Good days begin with gratitude.","Find joy in today.","Choose peace today.","A little happiness matters.","Keep showing up.","You are worth the effort.","Make memories, not worries.","Take life one sip at a time.","A calm mind is a superpower.","You can do hard things.","Let yourself enjoy today.","Be gentle with yourself.","There is always a reason to smile.","Your best is enough.","More smiles, less worries.","Keep your dreams close.","Good things are on the way.","Be happy with small wins.","Take a break. You earned it.","Stay positive, stay real.","Every sip is a little pause.","Make today count.","You bring your own sunshine.","Enjoy now, worry less.","A little kindness goes far.","Choose joy whenever you can.","Keep growing at your own pace.","You deserve good days.","Sip slowly, smile often.","One good moment can change a day.","Be present. Enjoy your drink.","You are right where you need to be.","Let today be a good memory."
+  ];
   function pickUniqueQuote(category:string,used:string[]=[]){
-    const list=QUOTES[quoteGroup(category)]||QUOTES.Coffee;
-    const available=list.filter(line=>!used.includes(line));
-    const choices=available.length?available:list;
-    return choices[Math.floor(Math.random()*choices.length)];
+    const normalized=new Set(used.map(line=>String(line||"").trim().toLowerCase()).filter(Boolean));
+    const available=SIMPLE_QUOTES.filter(line=>!normalized.has(line.toLowerCase()));
+    if(!available.length)return "";
+    return available[Math.floor(Math.random()*available.length)];
+  }
+  function allUsedQuotes(){
+    return [...queue.map(item=>item.quote),...history.map(item=>item.quote),quote].filter(Boolean);
   }
   function randomQuote(category:string){
-    const group=quoteGroup(category);
-    const used=[...queue.filter(item=>quoteGroup(item.category)===group).map(item=>item.quote),...history.slice(0,40).filter(item=>quoteGroup(item.category)===group).map(item=>item.quote),quote];
-    const nextQuote=pickUniqueQuote(category,used);
+    const nextQuote=pickUniqueQuote(category,allUsedQuotes());
+    if(!nextQuote){setNotice("Nagamit na ang lahat ng quote. Magdagdag muna tayo ng bagong quote list.");return;}
     setQuote(nextQuote);
-    setQueue(rows=>rows.map(item=>({...item,quote:nextQuote})));
+  }
+  async function allocateOrderNumbers(count:number){
+    const numbers:string[]=[];
+    for(let i=0;i<count;i++){
+      const {data,error}=await supabase.rpc("syp_sticker_next_order_number");
+      if(error||!data)throw new Error(error?.message||"Please try again.");
+      numbers.push(String(data));
+    }
+    return numbers;
   }
   async function add(productIndex:number=selected){
     if(!isSupabaseConfigured){setNotice("Hindi naka-configure ang database. Hindi muna mase-save ang sale.");return;}
     const chosen=MENU[productIndex]??MENU[0];
     const count=Math.max(1,Math.min(100,quantity));
-    const activeOrder=[...queue].reverse().find(item=>item.salePending);
-    let allocatedNo=activeOrder?.orderNo;
-    if(!allocatedNo){const {data:allocated,error:counterError}=await supabase.rpc("syp_sticker_next_order_number");if(counterError||!allocated){setNotice("Hindi makakuha ng order number: "+(counterError?.message||"Please try again."));return;}allocatedNo=String(allocated);}
-    const group=quoteGroup(chosen[3]);
-    const used=[...queue.filter(item=>quoteGroup(item.category)===group).map(item=>item.quote),...history.slice(0,40).filter(item=>quoteGroup(item.category)===group).map(item=>item.quote),quote];
-    const made=Array.from({length:count},(_,i)=>{
+    let orderNumbers:string[];
+    try{orderNumbers=await allocateOrderNumbers(count);}catch(error:any){setNotice("Hindi makakuha ng order number: "+(error?.message||"Please try again."));return;}
+    const used=allUsedQuotes();
+    const made:Sticker[]=[];
+    for(let i=0;i<count;i++){
       const itemQuote=pickUniqueQuote(chosen[3],used);
+      if(!itemQuote){setNotice("Naubos na ang unique quotes. Magdagdag muna tayo ng bagong quote list.");return;}
       used.push(itemQuote);
-      return {id:nextId+i,customer:customer.trim(),drink:chosen[0],size:chosen[1],price:chosen[2],category:chosen[3],sugar,ice,note:note.trim(),quote:itemQuote,createdAt:stamp(),orderNo:allocatedNo!,salePending:true};
-    });
+      made.push({id:nextId+i,customer:customer.trim(),drink:chosen[0],size:chosen[1],price:chosen[2],category:chosen[3],sugar,ice,note:note.trim(),quote:itemQuote,createdAt:stamp(),orderNo:orderNumbers[i],salePending:true});
+    }
     setSelected(productIndex);setQuote(pickUniqueQuote(chosen[3],used));
     setQueue(q=>[...q,...made]);setNextId(n=>n+count);
-    setNotice(chosen[0]+" "+chosen[1]+" × "+count+" added · Order #"+allocatedNo+". Sales record kapag pinindot ang Print.");
+    setNotice(chosen[0]+" "+chosen[1]+" × "+count+" added · Order numbers: #"+orderNumbers.join(", #")+".");
     void refreshNextOrderNumber();
   }
   async function addCustomDrink(){
@@ -392,14 +405,18 @@ export default function StickerStudioPage() {
     if(customDrinkPrice.trim()===""||!Number.isFinite(price)||price<0){setNotice("Ilagay ang valid na presyo ng customized drink.");return;}
     if(!isSupabaseConfigured){setNotice("Hindi naka-configure ang database. Hindi muna mase-save ang sale.");return;}
     const count=Math.max(1,Math.min(100,quantity));
-    const activeOrder=[...queue].reverse().find(item=>item.salePending);
-    let allocatedNo=activeOrder?.orderNo;
-    if(!allocatedNo){const {data:allocated,error:counterError}=await supabase.rpc("syp_sticker_next_order_number");if(counterError||!allocated){setNotice("Hindi makakuha ng order number: "+(counterError?.message||"Please try again."));return;}allocatedNo=String(allocated);}
-    const customUsed=[...queue.filter(item=>item.orderNo===allocatedNo).map(item=>item.quote),...history.slice(0,40).map(item=>item.quote)];
-    const item:Sticker={id:nextId,customer:customer.trim(),drink:name,size:customDrinkSize.trim()||"Custom",price,category:"Custom",sugar,ice,note:note.trim(),quote:"",createdAt:stamp(),orderNo:allocatedNo,salePending:true};
-    const made=Array.from({length:count},(_,i)=>{const itemQuote=pickUniqueQuote("Coffee",customUsed);customUsed.push(itemQuote);return {...item,id:nextId+i,quote:itemQuote};});
+    let orderNumbers:string[];
+    try{orderNumbers=await allocateOrderNumbers(count);}catch(error:any){setNotice("Hindi makakuha ng order number: "+(error?.message||"Please try again."));return;}
+    const used=allUsedQuotes();
+    const made:Sticker[]=[];
+    for(let i=0;i<count;i++){
+      const itemQuote=pickUniqueQuote("Coffee",used);
+      if(!itemQuote){setNotice("Naubos na ang unique quotes. Magdagdag muna tayo ng bagong quote list.");return;}
+      used.push(itemQuote);
+      made.push({id:nextId+i,customer:customer.trim(),drink:name,size:customDrinkSize.trim()||"Custom",price,category:"Custom",sugar,ice,note:note.trim(),quote:itemQuote,createdAt:stamp(),orderNo:orderNumbers[i],salePending:true});
+    }
     setQueue(q=>[...q,...made]);setNextId(n=>n+count);
-    setNotice(name+" "+item.size+" × "+count+" added · ₱"+price.toFixed(2)+" each · Order #"+allocatedNo+".");
+    setNotice(name+" "+(customDrinkSize.trim()||"Custom")+" × "+count+" added · ₱"+price.toFixed(2)+" each · Order numbers: #"+orderNumbers.join(", #")+".");
     void refreshNextOrderNumber();
     setCustomDrinkName("");setCustomDrinkPrice("");
   }
