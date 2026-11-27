@@ -213,7 +213,7 @@ export default function StickerStudioPage() {
       const list=Array.isArray(found)?found:[found];
       setQzPrinters(list.filter(Boolean));
       setQzStatus("Connected · "+list.length+" printer(s) found");
-      localStorage.setItem("syp-qz-auto-connect","1");
+      localStorage.removeItem("syp-qz-auto-connect");
       setNotice("QZ Tray connected. Check that TP870 S and EPSON TM-T88IV Receipt are listed below.");
       return true;
     }catch(error){
