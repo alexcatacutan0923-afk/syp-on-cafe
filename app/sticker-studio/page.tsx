@@ -675,29 +675,33 @@ export default function StickerStudioPage() {
           /* Simple, high-contrast thermal drink label */
       /* Symmetric thermal label frame: fixed border on all four sides, contained sizing */
       .art.ref-art.simple-sticker{box-sizing:border-box!important;width:46mm!important;height:76mm!important;min-width:46mm!important;min-height:76mm!important;margin:0 auto!important;padding:2.5mm!important;border:.45mm solid #000!important;border-radius:0!important;background:#fff!important;color:#000!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:0!important;font-family:Arial,Helvetica,sans-serif!important;overflow:hidden!important}
-      .simple-sticker-head{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 0 1.2mm;border-bottom:.35mm solid #000;min-height:0;flex:0 0 auto}.simple-sticker-logo{display:block;width:25mm;height:21mm;max-width:100%;object-fit:contain;object-position:center;filter:grayscale(1) contrast(1.5);flex:0 0 auto}
-      
-      .simple-sticker-brand{display:flex;flex-direction:column;align-items:flex-start;gap:.7mm}
-      .simple-sticker-head strong{font-size:10pt;font-weight:900;letter-spacing:.01em;line-height:1}
-      .simple-sticker-head span{font-size:5.2pt;letter-spacing:.08em;font-weight:800}
-      .simple-sticker-order{font-size:8pt;font-weight:700;text-align:left;margin-top:1.8mm;flex:0 0 auto}
-      .simple-sticker-drink{font-family:Arial,Helvetica,sans-serif!important;font-weight:900!important;line-height:1.05!important;letter-spacing:0!important;text-align:center!important;overflow-wrap:anywhere!important;display:block!important;margin:auto 0 1mm!important;max-height:22mm!important;color:#000!important}
-      .simple-sticker-size{font-size:10pt;font-weight:800;text-align:center;margin-bottom:1.3mm;flex:0 0 auto}
-      .simple-sticker-options{display:flex;justify-content:center;gap:1.5mm;font-size:6.8pt;font-weight:700;padding:1.3mm 0;border-top:.3mm dashed #000;border-bottom:.3mm dashed #000;flex-wrap:wrap;flex:0 0 auto}
+      .simple-sticker-head{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;min-height:0;flex:0 0 auto;border:0}.simple-sticker-logo{display:block;width:22mm;height:19mm;max-width:100%;object-fit:contain;object-position:center;filter:grayscale(1) contrast(1.8);flex:0 0 auto}
+      .simple-sticker-divider{width:100%;font-family:Arial,Helvetica,sans-serif;font-size:9pt;font-weight:900;letter-spacing:1.05mm;line-height:1;text-align:center;white-space:nowrap;overflow:hidden;flex:0 0 auto;margin:1.2mm 0}
+      .simple-sticker-order-row{display:flex;align-items:center;justify-content:space-between;gap:1mm;flex:0 0 auto;margin:1mm 0 0}
+      .simple-sticker-order{font-size:9pt;font-weight:900;text-align:left;white-space:nowrap;flex:0 0 auto}
+      .simple-sticker-date{font-size:8pt;text-align:right;white-space:nowrap;flex:0 0 auto}
+      .simple-sticker-product{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1 1 auto;min-height:0;padding:2mm 0}
+      .simple-sticker-drink{font-family:Arial,Helvetica,sans-serif!important;font-weight:900!important;line-height:1.03!important;letter-spacing:0!important;text-align:center!important;overflow-wrap:anywhere!important;display:block!important;margin:0!important;max-height:25mm!important;color:#000!important}
+      .simple-sticker-size{font-size:12pt;font-weight:900;text-align:center;margin-top:1.4mm;flex:0 0 auto}
+      .simple-sticker-options{display:flex;justify-content:center;gap:1.5mm;font-size:8pt;font-weight:900;padding:1.4mm 0;flex-wrap:wrap;flex:0 0 auto;white-space:nowrap}
       .simple-sticker-options i{font-style:normal}
-      .simple-sticker-customer{font-size:8.5pt;font-weight:800;text-align:center;margin-top:1.8mm;overflow-wrap:anywhere;flex:0 0 auto}
-      .simple-sticker-date{font-size:5.8pt;text-align:center;margin-top:auto;padding-top:1.2mm;flex:0 0 auto}
-      .simple-sticker-social{font-size:5.2pt;font-weight:800;text-align:center;padding-top:1mm;margin-top:.8mm;border-top:.25mm solid #000;white-space:nowrap;flex:0 0 auto}
+      .simple-sticker-customer{display:flex;flex-direction:column;align-items:center;gap:.8mm;font-size:10pt;font-weight:400;text-align:center;margin:1.5mm 0 0;overflow-wrap:anywhere;flex:0 0 auto}
+      .simple-sticker-customer strong{font-size:13pt;font-weight:900;line-height:1.1}
+      .simple-sticker-customer-line{width:78%;border-top:.3mm solid #000;margin:5mm auto 1mm;flex:0 0 auto}
+      .simple-sticker-bottom-divider{margin:1mm 0 2mm}
+      .simple-sticker-social{display:flex;align-items:center;justify-content:center;gap:1.5mm;font-size:7.5pt;font-weight:900;text-align:center;white-space:nowrap;flex:0 0 auto;margin-top:auto;padding:0}
+      .simple-sticker-cup{font-size:15pt;line-height:1}
       .preview-art .art.ref-art.simple-sticker{box-sizing:border-box!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;margin:0!important;padding:3cqh 3cqw!important;border-width:.4cqh!important;border-radius:0!important}
-      .preview-art .simple-sticker-logo{width:25cqw;height:24cqh;max-width:100%;height:auto;max-height:24cqh;flex-basis:auto}
-      .preview-art .simple-sticker-head strong{font-size:clamp(8px,3.4cqh,20px)!important}
-      .preview-art .simple-sticker-head span{font-size:clamp(5px,1.7cqh,9px)!important}
-      .preview-art .simple-sticker-order{font-size:clamp(7px,2.3cqh,13px)!important}
-      .preview-art .simple-sticker-size{font-size:clamp(9px,3.2cqh,17px)!important}
-      .preview-art .simple-sticker-options{font-size:clamp(6px,2.3cqh,13px)!important}
-      .preview-art .simple-sticker-customer{font-size:clamp(8px,3.1cqh,17px)!important}
-      .preview-art .simple-sticker-date{font-size:clamp(6px,1.9cqh,11px)!important}
-      .preview-art .simple-sticker-social{font-size:clamp(5px,1.6cqh,9px)!important}
+      .preview-art .simple-sticker-logo{width:42cqw;height:21cqh;max-width:100%;max-height:21cqh;flex-basis:auto}
+      .preview-art .simple-sticker-divider{font-size:clamp(7px,2.5cqh,14px)!important;letter-spacing:.8cqw}
+      .preview-art .simple-sticker-order{font-size:clamp(8px,2.7cqh,15px)!important}
+      .preview-art .simple-sticker-date{font-size:clamp(7px,2.4cqh,13px)!important}
+      .preview-art .simple-sticker-size{font-size:clamp(10px,3.5cqh,19px)!important}
+      .preview-art .simple-sticker-options{font-size:clamp(7px,2.7cqh,15px)!important}
+      .preview-art .simple-sticker-customer{font-size:clamp(8px,2.9cqh,16px)!important}
+      .preview-art .simple-sticker-customer strong{font-size:clamp(11px,3.6cqh,20px)!important}
+      .preview-art .simple-sticker-social{font-size:clamp(6px,2.4cqh,13px)!important}
+      .preview-art .simple-sticker-cup{font-size:clamp(10px,4cqh,22px)!important}
 `}
 
 </style>
@@ -813,12 +817,14 @@ function StickerArt({sticker}:{sticker:Sticker}){
   const orderDate=Number.isNaN(parsedDate.getTime())?rawDate:new Intl.DateTimeFormat("en-PH",{timeZone:"Asia/Manila",month:"short",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:true}).format(parsedDate);
   return <div className="art ref-art simple-sticker">
     <header className="simple-sticker-head"><img className="simple-sticker-logo" src={LOGO_URL} alt="Syp On Café — Street, Iced, Brewed"/></header>
-    <div className="simple-sticker-order">ORDER #{sticker.orderNo}</div>
-    <div className="simple-sticker-drink" style={{fontSize:drinkFontSize+"pt"}}>{sticker.drink.toUpperCase()}</div>
-    <div className="simple-sticker-size">{sticker.size}</div>
-    <div className="simple-sticker-options"><span>{sticker.sugar}</span><i>·</i><span>{sticker.ice}</span></div>
-    <div className="simple-sticker-customer">{sticker.customer.trim()||"Our Ka-SYP"}</div>
-    <footer className="simple-sticker-date">{orderDate}</footer>
-    <div className="simple-sticker-social">f  Facebook · @SypOnCafe</div>
+    <div className="simple-sticker-divider">- - - - - - - - - - - - - - - - - - -</div>
+    <div className="simple-sticker-order-row"><div className="simple-sticker-order">ORDER #{sticker.orderNo}</div><div className="simple-sticker-date">{orderDate}</div></div>
+    <div className="simple-sticker-product"><div className="simple-sticker-drink" style={{fontSize:drinkFontSize+"pt"}}>{sticker.drink.toUpperCase()}</div><div className="simple-sticker-size">{sticker.size}</div></div>
+    <div className="simple-sticker-options"><span>{sticker.sugar.toUpperCase()}</span><i>•</i><span>{sticker.ice.toUpperCase()}</span></div>
+    <div className="simple-sticker-divider">- - - - - - - - - - - - - - - - - - -</div>
+    <div className="simple-sticker-customer"><span>Crafted with love for</span><strong>{sticker.customer.trim()||"OUR KA-SYP"}</strong></div>
+    <div className="simple-sticker-customer-line"/>
+    <div className="simple-sticker-divider simple-sticker-bottom-divider">- - - - - - - - - - - - - - - - - - -</div>
+    <div className="simple-sticker-social"><span className="simple-sticker-cup">♧</span><strong>Tag us on your story! FB / IG: @SypOnCafe</strong></div>
   </div>;
 }
