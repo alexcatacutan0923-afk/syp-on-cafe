@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
-const LOGO_URL = "/IMG_5996.jpeg";
+const LOGO_URL = "/syp-on-cafe-logo.svg";
 const QR_TARGET = "https://www.facebook.com/SypOnCafe";
 const MEMBERSHIP_QR_TARGET = "https://syponcafe.shop/member-register";
 
@@ -656,8 +656,8 @@ export default function StickerStudioPage() {
           /* Simple, high-contrast thermal drink label */
       /* Symmetric thermal label frame: fixed border on all four sides, contained sizing */
       .art.ref-art.simple-sticker{box-sizing:border-box!important;width:46mm!important;height:76mm!important;min-width:46mm!important;min-height:76mm!important;margin:0 auto!important;padding:2.5mm!important;border:.45mm solid #000!important;border-radius:0!important;background:#fff!important;color:#000!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:0!important;font-family:Arial,Helvetica,sans-serif!important;overflow:hidden!important}
-      .simple-sticker-head{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:1.8mm;padding:0 0 1.5mm;border-bottom:.35mm solid #000;min-height:10mm;flex:0 0 auto}
-      .simple-sticker-logo{display:block;width:10mm;height:9mm;object-fit:contain;object-position:center;filter:grayscale(1) contrast(1.5);flex:0 0 10mm}
+      .simple-sticker-head{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 0 1.2mm;border-bottom:.35mm solid #000;min-height:0;flex:0 0 auto}.simple-sticker-logo{display:block;width:25mm;height:21mm;max-width:100%;object-fit:contain;object-position:center;filter:grayscale(1) contrast(1.5);flex:0 0 auto}
+      
       .simple-sticker-brand{display:flex;flex-direction:column;align-items:flex-start;gap:.7mm}
       .simple-sticker-head strong{font-size:10pt;font-weight:900;letter-spacing:.01em;line-height:1}
       .simple-sticker-head span{font-size:5.2pt;letter-spacing:.08em;font-weight:800}
@@ -670,7 +670,7 @@ export default function StickerStudioPage() {
       .simple-sticker-date{font-size:5.8pt;text-align:center;margin-top:auto;padding-top:1.2mm;flex:0 0 auto}
       .simple-sticker-social{font-size:5.2pt;font-weight:800;text-align:center;padding-top:1mm;margin-top:.8mm;border-top:.25mm solid #000;white-space:nowrap;flex:0 0 auto}
       .preview-art .art.ref-art.simple-sticker{box-sizing:border-box!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;margin:0!important;padding:3cqh 3cqw!important;border-width:.4cqh!important;border-radius:0!important}
-      .preview-art .simple-sticker-logo{width:9cqh;height:9cqh;flex-basis:9cqh}
+      .preview-art .simple-sticker-logo{width:25cqw;height:24cqh;max-width:100%;height:auto;max-height:24cqh;flex-basis:auto}
       .preview-art .simple-sticker-head strong{font-size:clamp(8px,3.4cqh,20px)!important}
       .preview-art .simple-sticker-head span{font-size:clamp(5px,1.7cqh,9px)!important}
       .preview-art .simple-sticker-order{font-size:clamp(7px,2.3cqh,13px)!important}
@@ -793,7 +793,7 @@ function StickerArt({sticker}:{sticker:Sticker}){
   const parsedDate=new Date(rawDate);
   const orderDate=Number.isNaN(parsedDate.getTime())?rawDate:new Intl.DateTimeFormat("en-PH",{timeZone:"Asia/Manila",month:"short",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:true}).format(parsedDate);
   return <div className="art ref-art simple-sticker">
-    <header className="simple-sticker-head"><img className="simple-sticker-logo" src={LOGO_URL} alt="Syp On Café logo"/><div className="simple-sticker-brand"><strong>SYP ON CAFÉ</strong><span>ORANI, BATAAN</span></div></header>
+    <header className="simple-sticker-head"><img className="simple-sticker-logo" src={LOGO_URL} alt="Syp On Café — Street, Iced, Brewed"/></header>
     <div className="simple-sticker-order">ORDER #{sticker.orderNo}</div>
     <div className="simple-sticker-drink" style={{fontSize:drinkFontSize+"pt"}}>{sticker.drink.toUpperCase()}</div>
     <div className="simple-sticker-size">{sticker.size}</div>
