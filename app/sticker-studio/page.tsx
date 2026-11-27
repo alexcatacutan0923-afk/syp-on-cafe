@@ -675,6 +675,33 @@ export default function StickerStudioPage() {
           /* Simple, high-contrast thermal drink label */
       /* Symmetric thermal label frame: fixed border on all four sides, contained sizing */
       .art.ref-art.simple-sticker{box-sizing:border-box!important;width:46mm!important;height:76mm!important;min-width:46mm!important;min-height:76mm!important;margin:0 auto!important;padding:2.5mm!important;border:.45mm solid #000!important;border-radius:0!important;background:#fff!important;color:#000!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:0!important;font-family:Arial,Helvetica,sans-serif!important;overflow:hidden!important}
+      /* Rebuilt label to match the original SYP cup sticker reference */
+      .art.ref-art.simple-sticker{width:46mm!important;height:76mm!important;min-width:46mm!important;min-height:76mm!important;box-sizing:border-box!important;padding:2mm!important;border:.45mm solid #000!important;border-radius:1mm!important;background:#fff!important;color:#000!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:0!important;overflow:hidden!important;font-family:Arial,Helvetica,sans-serif!important}
+      .simple-sticker-order-row{display:flex;justify-content:flex-start;align-items:center;flex:0 0 auto;margin:0 0 1mm}
+      .simple-sticker-order{font-size:6.8pt;font-weight:900;line-height:1.1;white-space:normal;text-align:left}
+      .simple-sticker-product{display:flex;align-items:center;justify-content:center;flex:0 0 auto;min-height:13mm;padding:1mm 0}
+      .simple-sticker-drink{font-size:17pt!important;font-weight:900!important;line-height:1!important;text-align:center!important;overflow-wrap:anywhere!important;color:#000!important}
+      .simple-sticker-made{text-align:center;font-size:6.2pt;font-weight:900;margin:.5mm 0 1mm}
+      .simple-sticker-options{display:flex;justify-content:center;gap:1mm;font-size:6pt;font-weight:900;padding:0 0 1mm;white-space:normal;flex-wrap:wrap}
+      .simple-sticker-qr-row{display:grid;grid-template-columns:1fr 1fr;gap:1.5mm;flex:0 0 auto;margin:.5mm 0 1mm}
+      .simple-sticker-qr-box{border:.35mm solid #000;border-radius:1.5mm;min-width:0;padding:1mm .5mm;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:.5mm}
+      .simple-sticker-qr-box img{width:16mm;height:16mm;object-fit:contain;display:block;image-rendering:pixelated}
+      .simple-sticker-qr-box strong{font-size:5.2pt;font-weight:900;text-align:center;line-height:1}
+      .simple-sticker-qr-box span{font-size:4.5pt;font-weight:800;text-align:center}
+      .simple-sticker-quote{border-top:.3mm solid #000;border-bottom:.3mm solid #000;text-align:center;font-size:6.5pt!important;font-weight:900!important;font-style:normal!important;line-height:1.12!important;padding:1mm .5mm;margin:0 0 1mm;overflow-wrap:anywhere}
+      .simple-sticker-bottom{display:flex;justify-content:space-between;align-items:center;border-top:.3mm dashed #000;padding-top:1mm;margin-top:auto;font-size:5.3pt;font-weight:900}
+      .preview-art .art.ref-art.simple-sticker{width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;padding:2.5cqh 2.5cqw!important;border-width:.4cqh!important}
+      .preview-art .simple-sticker-order{font-size:clamp(7px,2.2cqh,12px)!important}
+      .preview-art .simple-sticker-drink{font-size:clamp(13px,5cqh,24px)!important}
+      .preview-art .simple-sticker-made{font-size:clamp(6px,1.9cqh,10px)!important}
+      .preview-art .simple-sticker-options{font-size:clamp(6px,1.8cqh,10px)!important}
+      .preview-art .simple-sticker-qr-box img{width:31cqw;height:31cqw}
+      .preview-art .simple-sticker-qr-box strong{font-size:clamp(5px,1.5cqh,9px)!important}
+      .preview-art .simple-sticker-quote{font-size:clamp(6px,1.8cqh,10px)!important}
+      .preview-art .simple-sticker-bottom{font-size:clamp(5px,1.5cqh,9px)!important}
+      .receipt-header{text-align:center}.receipt-logo{display:block;width:38mm;height:19mm;object-fit:contain;margin:0 auto 1mm}.receipt-tagline{text-align:center;font-size:7pt;font-weight:900;letter-spacing:.08em}.receipt-address{text-align:center;font-size:7pt;font-weight:800;margin-top:.8mm}
+      .receipt-meta{display:flex;flex-direction:column;gap:1mm;font-size:8pt}.receipt-meta div{display:flex;justify-content:space-between;gap:2mm}.receipt-meta span{color:#333}.receipt-meta strong{text-align:right}
+      .receipt-columns{font-size:8pt;margin-bottom:1.2mm}.receipt-row{font-size:8.5pt;line-height:1.3;margin:1.2mm 0}.receipt-item{margin:1.5mm 0}.receipt-item-main{font-size:8.5pt;line-height:1.25}.receipt-item small{font-size:7pt}.receipt-total{font-size:12pt;padding:1.5mm 0;margin:1.5mm 0}.receipt-change{font-size:10pt;font-weight:900}.receipt-loyalty{text-align:center;margin:2mm 0;font-size:8pt;font-weight:900}.receipt-loyalty>div{font-size:12pt;letter-spacing:.1em;margin:1mm 0}.receipt-loyalty b,.receipt-loyalty span,.receipt-loyalty small{display:block;margin:.7mm 0}.receipt-loyalty img{display:block;width:29mm;height:29mm;object-fit:contain;margin:1.5mm auto;image-rendering:pixelated}.receipt-foot{text-align:center;display:flex;flex-direction:column;gap:.8mm;font-size:8pt;font-weight:900;margin-top:2mm}
       .simple-sticker-head{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;min-height:0;flex:0 0 auto;border:0}.simple-sticker-logo{display:block;width:22mm;height:19mm;max-width:100%;object-fit:contain;object-position:center;filter:grayscale(1) contrast(1.8);flex:0 0 auto}
       .simple-sticker-divider{width:100%;height:1.4mm;box-sizing:border-box;border-top:1mm dashed #000;flex:0 0 auto;margin:1.2mm 0}
       .simple-sticker-order-row{display:flex;align-items:center;justify-content:space-between;gap:1mm;flex:0 0 auto;margin:1mm 0 0}
@@ -795,37 +822,44 @@ function paymentStatusForReceipt(total:number,cash:string,method:"Cash"|"GCash"|
 function ReceiptArt({items,cashReceived,paymentMethod,paymentStatus,additionalCharges,discountAmount,note,cashier,orderType}:{items:Sticker[];cashReceived:number;paymentMethod:"Cash"|"GCash"|"Maya"|"Bank Transfer";paymentStatus:string;additionalCharges:{name:string;amount:number}[];discountAmount:number;note:string;cashier:string;orderType:string}){
   const grouped=items.reduce((rows,item)=>{const key=item.drink+"|"+item.size+"|"+item.price;const found=rows.find(row=>row.key===key);if(found)found.quantity+=1;else rows.push({key,drink:item.drink,size:item.size,price:Number(item.price||0),quantity:1});return rows;},[] as {key:string;drink:string;size:string;price:number;quantity:number}[]);
   const drinksTotal=items.reduce((sum,item)=>sum+Number(item.price||0),0),extrasTotal=additionalCharges.reduce((sum,item)=>sum+Number(item.amount||0),0),subtotal=drinksTotal+extrasTotal,total=Math.max(0,subtotal-discountAmount),change=cashReceived-total;
-  const dateText=new Intl.DateTimeFormat("en-PH",{timeZone:"Asia/Manila",month:"2-digit",day:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:true}).format(new Date());
+  const dateText=new Intl.DateTimeFormat("en-PH",{timeZone:"Asia/Manila",month:"short",day:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:true}).format(new Date());
+  const qrUrl=`https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=4&format=png&data=${encodeURIComponent(MEMBERSHIP_QR_TARGET)}`;
   return <div className="receipt-sheet"><main className="receipt">
-    <header className="receipt-header"><img className="receipt-logo" src="/syp-on-cafe-logo.svg" alt="Syp On Café"/><div className="receipt-address">National Rd. Apollo Orani Bataan</div></header>
-    <div className="receipt-rule"/><section className="receipt-meta receipt-meta-top">
-      <div><strong>ORDER #{items[0]?.orderNo||"—"}</strong><b className="receipt-order-type">{orderType.toUpperCase()}</b></div>
-      <div><span>Date: {dateText}</span><span>Cashier: {cashier}</span></div>
-    </section>
+    <header className="receipt-header"><img className="receipt-logo" src={LOGO_URL} alt="SYP ON CAFÉ"/><div className="receipt-tagline">STREET · ICED · BREWED</div><div className="receipt-address">Apollo, Orani, Bataan</div></header>
+    <div className="receipt-rule"/>
+    <section className="receipt-meta"><div><span>Receipt</span><strong>SYP{items[0]?.orderNo||"—"}</strong></div><div><span>Date</span><strong>{dateText}</strong></div><div><span>Cashier</span><strong>{cashier||"—"}</strong></div><div><span>Customer</span><strong>{items[0]?.customer||"—"}</strong></div><div><span>Order Type</span><strong>{orderType.toUpperCase()}</strong></div></section>
     <div className="receipt-rule"/><div className="receipt-columns"><span>QTY&nbsp;&nbsp; ITEM</span><span>AMOUNT</span></div>
-    <section className="receipt-items">{grouped.map(row=><div className="receipt-item" key={row.key}><div className="receipt-item-main"><span>{row.quantity}&nbsp;&nbsp; {row.drink} ({row.size})</span><strong>{(row.price*row.quantity).toFixed(2)}</strong></div></div>)}{additionalCharges.filter(item=>Number(item.amount)>0).map((item,index)=><div className="receipt-row receipt-extra" key={item.name+"-"+index}><span>+ {item.name}</span><strong>{Number(item.amount).toFixed(2)}</strong></div>)}</section>
-    {note&&<div className="receipt-note">Note: {note}</div>}<div className="receipt-rule"/><section className="receipt-summary">
-      <div className="receipt-row"><span>Subtotal</span><strong>{subtotal.toFixed(2)}</strong></div>{discountAmount>0&&<div className="receipt-row"><span>Discount</span><strong>-{discountAmount.toFixed(2)}</strong></div>}
-      <div className="receipt-row receipt-total"><span>TOTAL DUE</span><strong>{total.toFixed(2)}</strong></div>
-      {paymentMethod==="Cash"?<><div className="receipt-row"><span>Cash Tendered</span><strong>{cashReceived.toFixed(2)}</strong></div><div className="receipt-row receipt-change"><span>{change>=0?"Change":"Balance Due"}</span><strong>{Math.abs(change).toFixed(2)}</strong></div></>:<div className="receipt-row"><span>{paymentMethod} · {paymentStatus}</span><strong>{total.toFixed(2)}</strong></div>}
-    </section><div className="receipt-rule"/><footer className="receipt-foot"><strong>FREE WIFI: Syp On Cafe</strong><span>PASS: spanishlatte</span><b>Thank you for visiting us!</b></footer><div className="receipt-rule receipt-bottom-rule"/>
+    <section className="receipt-items">{grouped.map(row=><div className="receipt-item" key={row.key}><div className="receipt-item-main"><span>{row.quantity} × {row.drink} {row.size}</span><strong>₱{(row.price*row.quantity).toFixed(2)}</strong></div></div>)}{additionalCharges.filter(item=>Number(item.amount)>0).map((item,index)=><div className="receipt-row" key={item.name+"-"+index}><span>{item.name}</span><strong>₱{Number(item.amount).toFixed(2)}</strong></div>)}</section>
+    {note&&<div className="receipt-note">Note: {note}</div>}
+    <div className="receipt-rule"/><section className="receipt-summary">
+      <div className="receipt-row"><span>Subtotal</span><strong>₱{subtotal.toFixed(2)}</strong></div>{discountAmount>0&&<div className="receipt-row"><span>Discount</span><strong>-₱{discountAmount.toFixed(2)}</strong></div>}
+      <div className="receipt-row receipt-total"><span>TOTAL</span><strong>₱{total.toFixed(2)}</strong></div>
+      <div className="receipt-row"><span>Payment</span><strong>{paymentMethod} · {paymentStatus}</strong></div>
+      {paymentMethod==="Cash"?<><div className="receipt-row"><span>Cash</span><strong>₱{cashReceived.toFixed(2)}</strong></div><div className="receipt-row receipt-change"><span>{change>=0?"Change":"Balance Due"}</span><strong>₱{Math.abs(change).toFixed(2)}</strong></div></>:null}
+    </section>
+    <div className="receipt-rule"/>
+    <section className="receipt-loyalty"><strong>SYP LOYALTY REWARDS</strong><div>☆ ☆ ☆ ☆ ☆ ☆ ☆ ☆ ☆ ☆</div><b>1 / 9 STAMPS</b><span>8 more drinks before your FREE DRINK</span><small>Scan to open your Digital Loyalty Card</small><img src={qrUrl} alt="KaSYP membership QR"/></section>
+    <div className="receipt-rule"/><footer className="receipt-foot"><strong>NOT AN OFFICIAL RECEIPT</strong><b>FOR ORDER REFERENCE ONLY</b><span>Thank you for visiting us!</span></footer>
   </main></div>;
 }
 function StickerArt({sticker}:{sticker:Sticker}){
   const drinkFontSize=Math.min(19,Math.max(10,310/Math.max(12,sticker.drink.trim().length)));
   const rawDate=sticker.createdAt||stamp();
   const parsedDate=new Date(rawDate);
-  const orderDate=Number.isNaN(parsedDate.getTime())?rawDate:new Intl.DateTimeFormat("en-PH",{timeZone:"Asia/Manila",month:"short",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:true}).format(parsedDate);
+  const orderDate=Number.isNaN(parsedDate.getTime())?rawDate:new Intl.DateTimeFormat("en-PH",{timeZone:"Asia/Manila",month:"short",day:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:true}).format(parsedDate);
+  const qr=(target:string)=>`https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=2&format=png&data=${encodeURIComponent(target)}`;
+  const wifiQr=qr("WIFI:T:WPA;S:Syp On Cafe;P:spanishlatte;;");
+  const memberQr=qr(MEMBERSHIP_QR_TARGET);
   return <div className="art ref-art simple-sticker">
-    <header className="simple-sticker-head"><img className="simple-sticker-logo" src={LOGO_URL} alt="Syp On Café — Street, Iced, Brewed"/></header>
-    <div className="simple-sticker-divider"/>
-    <div className="simple-sticker-order-row"><div className="simple-sticker-order">ORDER #{sticker.orderNo}</div><div className="simple-sticker-date">{orderDate}</div></div>
-    <div className="simple-sticker-product"><div className="simple-sticker-drink" style={{fontSize:drinkFontSize+"pt"}}>{sticker.drink.toUpperCase()}</div><div className="simple-sticker-size">{sticker.size}</div></div>
-    <div className="simple-sticker-options"><span>{sticker.sugar.toUpperCase()}</span><i>•</i><span>{sticker.ice.toUpperCase()}</span></div>
-    <div className="simple-sticker-divider">- - - - - - - - - - - - - - - - - - -</div>
-    <div className="simple-sticker-customer"><span>Crafted with love for</span><strong>{sticker.customer.trim()||"OUR KA-SYP"}</strong>{sticker.quote?.trim()&&<span className="simple-sticker-quote">“{sticker.quote.trim()}”</span>}</div>
-    <div className="simple-sticker-customer-line"/>
-    <div className="simple-sticker-divider simple-sticker-bottom-divider">- - - - - - - - - - - - - - - - - - -</div>
-    <div className="simple-sticker-social"><svg className="simple-sticker-cup" viewBox="0 0 28 34" aria-hidden="true"><path d="M4 7h20l-2 23H6L4 7Zm-1-4h22v4H3Zm3 8h16M9 2l-1-2m11 2 1-2" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 18c2-4 7-5 9-1-1 5-5 7-9 1Zm2 2 5-5" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg><strong>Tag us on your story! FB / IG: @SypOnCafe</strong></div>
+    <div className="simple-sticker-order-row"><div className="simple-sticker-order">ORDER #{sticker.orderNo} · {orderDate}</div></div>
+    <div className="simple-sticker-product"><div className="simple-sticker-drink" style={{fontSize:drinkFontSize+"pt"}}>{sticker.drink}</div></div>
+    <div className="simple-sticker-made">MADE FOR: {sticker.customer.trim()||"OUR KA-SYP"}</div>
+    <div className="simple-sticker-options"><strong>{sticker.size}</strong><span>·</span><span>{sticker.sugar.toUpperCase()}</span><span>·</span><span>{sticker.ice.toUpperCase()}</span></div>
+    <div className="simple-sticker-qr-row">
+      <div className="simple-sticker-qr-box"><img src={memberQr} alt="KaSYP membership QR"/><strong>KASYP MEMBERSHIP</strong></div>
+      <div className="simple-sticker-qr-box"><img src={wifiQr} alt="Free WiFi QR"/><strong>FREE WI-FI</strong><span>Syp On Café</span></div>
+    </div>
+    {sticker.quote?.trim()&&<div className="simple-sticker-quote">“{sticker.quote.trim()}”</div>}
+    <div className="simple-sticker-bottom"><strong>THANK YOU, KASYP!</strong><b>SYP ON CAFÉ</b></div>
   </div>;
 }
