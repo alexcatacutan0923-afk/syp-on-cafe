@@ -654,6 +654,27 @@ export default function StickerStudioPage() {
       .checkout-card{background:#151719!important;color:#f3eee7!important;border-color:#34383b!important}
       .checkout-card input,.checkout-card select{background:#202326!important;color:#f3eee7!important;border-color:#41474b!important;color-scheme:dark}
     `}
+
+      /* Simple, high-contrast thermal drink label */
+      .art.ref-art.simple-sticker{width:46mm!important;height:76mm!important;min-width:46mm!important;min-height:76mm!important;padding:3mm!important;border:1px solid #000!important;border-radius:0!important;background:#fff!important;color:#000!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:0!important;font-family:Arial,Helvetica,sans-serif!important;overflow:hidden!important}
+      .simple-sticker-head{display:flex;flex-direction:column;align-items:center;gap:1mm;padding-bottom:2mm;border-bottom:.35mm solid #000}
+      .simple-sticker-head strong{font-size:13pt;font-weight:900;letter-spacing:.02em;line-height:1}
+      .simple-sticker-head span{font-size:6pt;letter-spacing:.12em;font-weight:700}
+      .simple-sticker-order{font-size:8pt;font-weight:700;text-align:left;margin-top:2.5mm}
+      .simple-sticker-drink{font-family:Arial,Helvetica,sans-serif!important;font-weight:900!important;line-height:1.05!important;letter-spacing:0!important;text-align:center!important;overflow-wrap:anywhere!important;display:block!important;margin:auto 0 1mm!important;max-height:25mm!important;color:#000!important}
+      .simple-sticker-size{font-size:10pt;font-weight:800;text-align:center;margin-bottom:2mm}
+      .simple-sticker-options{display:flex;justify-content:center;gap:2mm;font-size:8pt;font-weight:700;padding:2mm 0;border-top:.3mm dashed #000;border-bottom:.3mm dashed #000}
+      .simple-sticker-options i{font-style:normal}
+      .simple-sticker-customer{font-size:10pt;font-weight:800;text-align:center;margin-top:3mm;overflow-wrap:anywhere}
+      .simple-sticker-date{font-size:6.5pt;text-align:center;margin-top:auto;padding-top:2mm}
+      .preview-art .art.ref-art.simple-sticker{width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;padding:4cqh 4cqw!important;border-width:.35cqh!important;border-radius:0!important}
+      .preview-art .simple-sticker-head strong{font-size:clamp(9px,4cqh,22px)!important}
+      .preview-art .simple-sticker-head span{font-size:clamp(5px,1.8cqh,10px)!important}
+      .preview-art .simple-sticker-order{font-size:clamp(7px,2.5cqh,14px)!important}
+      .preview-art .simple-sticker-size{font-size:clamp(9px,3.5cqh,18px)!important}
+      .preview-art .simple-sticker-options{font-size:clamp(7px,2.7cqh,15px)!important}
+      .preview-art .simple-sticker-customer{font-size:clamp(8px,3.5cqh,18px)!important}
+      .preview-art .simple-sticker-date{font-size:clamp(6px,2.1cqh,12px)!important}
 </style>
     <header className="head"><div className="brand"><img src={LOGO_URL} alt="SYP logo"/><div><h1>SYP Signature Sticker Studio</h1><p>STREET • ICED • BREWED</p></div></div><div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><button className="btn alt" type="button" onClick={async()=>{let device:any;try{const bt=(navigator as any).bluetooth;if(!bt){alert("Web Bluetooth is not available in this browser.");return;}if(!confirm("Print ONE 50 x 70mm test label?\\nNo sale or sticker queue record will be created."))return;device=await bt.requestDevice({acceptAllDevices:true,optionalServices:["ff00"]});const server=await device.gatt.connect();if(!server.connected)throw new Error("Bluetooth connected state is false.");const service=await server.getPrimaryService("ff00");const characteristic=await service.getCharacteristic("ff02");const payload='SIZE 50 mm,70 mm\\r\\nGAP 2 mm,0 mm\\r\\nDIRECTION 1\\r\\nCLS\\r\\nTEXT 55,75,"3",0,1,1,"SYP BLUETOOTH TEST"\\r\\nPRINT 1,1\\r\\n';const bytes=new TextEncoder().encode(payload);for(let i=0;i<bytes.length;i+=20){await characteristic.writeValueWithoutResponse(bytes.slice(i,i+20));await new Promise(resolve=>setTimeout(resolve,25));}await new Promise(resolve=>setTimeout(resolve,2500));if(!device.gatt.connected)throw new Error("Printer disconnected before the test could be confirmed.");alert("Data transfer finished and Bluetooth stayed connected. Check whether one label printed.");device.gatt.disconnect();}catch(e){try{device?.gatt?.disconnect();}catch{}alert("Test failed: "+((e as any)?.message||String(e))+"\\nIf the printer was not listed, ensure it is ON and not connected to the Grozziie app. No sale was created.");}}}>PRINT TEST LABEL</button><button className="btn" type="button" onClick={connectQz}>CONNECT QZ TRAY</button><a href="/" style={{color:"#65472f",fontSize:12,fontWeight:800}}>← Back</a></div></header>
     <nav className="pos-top-nav" aria-label="POS pages">
@@ -761,40 +782,17 @@ function ReceiptArt({items,cashReceived,paymentMethod,paymentStatus,additionalCh
   </main></div>;
 }
 function StickerArt({sticker}:{sticker:Sticker}){
-  const drinkFontSize=Math.min(25,Math.max(10,390/Math.max(14,sticker.drink.trim().length)));
+  const drinkFontSize=Math.min(19,Math.max(10,310/Math.max(12,sticker.drink.trim().length)));
   const rawDate=sticker.createdAt||stamp();
   const parsedDate=new Date(rawDate);
-  const orderDate=Number.isNaN(parsedDate.getTime())?rawDate:new Intl.DateTimeFormat("en-US",{timeZone:"Asia/Manila",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:true}).format(parsedDate).replace(", "," ");
-  return <div className="art ref-art">
-    <header className="ref-head">
-      <img className="ref-logo" src={LOGO_URL} alt="SYP ON CAFÉ logo"/>
-      <div className="ref-wordmark">SYP ON CAFÉ</div>
-      <div className="ref-tagline">— STREET · ICED · BREWED —</div>
-    </header>
-    <div className="ref-orderline">No. {sticker.orderNo}</div>
-    <div className="ref-drinkline">
-      <div className="ref-drink" style={{fontSize:drinkFontSize+"pt"}}>{sticker.drink.toUpperCase()} ({sticker.size})</div>
-    </div>
-    <div className="ref-detail-line">
-      <span className="sparkle">✧</span><span>{sticker.sugar}</span><span className="dot">▪</span><span>{sticker.ice}</span>
-    </div>
-    <div className="ref-date-line">{orderDate}</div>
-    <div className="ref-customer-line">For: {sticker.customer.trim()||"Our Ka-SYP"}</div>
-    <div className="ref-mood-line">
-      <div className="ref-mood-circle">
-        <div className="ref-mood-title">MOOD METER</div>
-        <div className="ref-mood-sparkle">✧ ✦ ✧</div>
-        <div className="ref-mood-copy">Main<br/>Character<br/>Energy in<br/><i>a Cup.</i></div>
-      </div>
-    </div>
-    <div className="ref-social-line">
-      <span>@syponcafe</span>
-      <span className="social-icons" aria-label="Facebook, TikTok and Instagram">
-        <svg viewBox="0 0 24 24" role="img" aria-label="Facebook"><circle cx="12" cy="12" r="11" fill="#000"/><path d="M13.6 20v-7h2.35l.35-2.75H13.6V8.5c0-.8.22-1.35 1.38-1.35h1.48V4.7c-.26-.04-1.16-.11-2.2-.11-2.18 0-3.67 1.33-3.67 3.78v1.88H8.1V13h2.49v7z" fill="#fff"/></svg>
-        <svg viewBox="0 0 24 24" role="img" aria-label="TikTok"><circle cx="12" cy="12" r="11" fill="#000"/><path d="M13.4 4.5h2.4c.1 1.7 1.1 2.8 2.7 3v2.5a6.2 6.2 0 0 1-2.7-.8v5.1a4.7 4.7 0 1 1-4.7-4.7c.4 0 .8 0 1.1.1v2.6a2.2 2.2 0 1 0 1.2 2V4.5z" fill="#fff"/></svg>
-        <svg viewBox="0 0 24 24" role="img" aria-label="Instagram"><circle cx="12" cy="12" r="11" fill="#000"/><rect x="6.5" y="6.5" width="11" height="11" rx="3" fill="none" stroke="#fff" stroke-width="1.7"/><circle cx="12" cy="12" r="2.7" fill="none" stroke="#fff" stroke-width="1.7"/><circle cx="15.5" cy="8.7" r="1" fill="#fff"/></svg>
-      </span>
-    </div>
-    <div className="ref-qr-line"><img src={QR_URL} alt="SYP ON CAFÉ Facebook QR code"/></div>
+  const orderDate=Number.isNaN(parsedDate.getTime())?rawDate:new Intl.DateTimeFormat("en-PH",{timeZone:"Asia/Manila",month:"short",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:true}).format(parsedDate);
+  return <div className="art ref-art simple-sticker">
+    <header className="simple-sticker-head"><strong>SYP ON CAFÉ</strong><span>ORANI, BATAAN</span></header>
+    <div className="simple-sticker-order">ORDER #{sticker.orderNo}</div>
+    <div className="simple-sticker-drink" style={{fontSize:drinkFontSize+"pt"}}>{sticker.drink.toUpperCase()}</div>
+    <div className="simple-sticker-size">{sticker.size}</div>
+    <div className="simple-sticker-options"><span>{sticker.sugar}</span><i>·</i><span>{sticker.ice}</span></div>
+    <div className="simple-sticker-customer">{sticker.customer.trim()||"Our Ka-SYP"}</div>
+    <footer className="simple-sticker-date">{orderDate}</footer>
   </div>;
 }
