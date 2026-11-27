@@ -653,9 +653,7 @@ export default function StickerStudioPage() {
       .pos-order-panel [style*="#ddcbb7"]{border-color:#41474b!important}
       .checkout-card{background:#151719!important;color:#f3eee7!important;border-color:#34383b!important}
       .checkout-card input,.checkout-card select{background:#202326!important;color:#f3eee7!important;border-color:#41474b!important;color-scheme:dark}
-    `}
-
-      /* Simple, high-contrast thermal drink label */
+          /* Simple, high-contrast thermal drink label */
       .art.ref-art.simple-sticker{width:46mm!important;height:76mm!important;min-width:46mm!important;min-height:76mm!important;padding:3mm!important;border:1px solid #000!important;border-radius:0!important;background:#fff!important;color:#000!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:0!important;font-family:Arial,Helvetica,sans-serif!important;overflow:hidden!important}
       .simple-sticker-head{display:flex;flex-direction:column;align-items:center;gap:1mm;padding-bottom:2mm;border-bottom:.35mm solid #000}
       .simple-sticker-head strong{font-size:13pt;font-weight:900;letter-spacing:.02em;line-height:1}
@@ -675,6 +673,8 @@ export default function StickerStudioPage() {
       .preview-art .simple-sticker-options{font-size:clamp(7px,2.7cqh,15px)!important}
       .preview-art .simple-sticker-customer{font-size:clamp(8px,3.5cqh,18px)!important}
       .preview-art .simple-sticker-date{font-size:clamp(6px,2.1cqh,12px)!important}
+`}
+
 </style>
     <header className="head"><div className="brand"><img src={LOGO_URL} alt="SYP logo"/><div><h1>SYP Signature Sticker Studio</h1><p>STREET • ICED • BREWED</p></div></div><div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><button className="btn alt" type="button" onClick={async()=>{let device:any;try{const bt=(navigator as any).bluetooth;if(!bt){alert("Web Bluetooth is not available in this browser.");return;}if(!confirm("Print ONE 50 x 70mm test label?\\nNo sale or sticker queue record will be created."))return;device=await bt.requestDevice({acceptAllDevices:true,optionalServices:["ff00"]});const server=await device.gatt.connect();if(!server.connected)throw new Error("Bluetooth connected state is false.");const service=await server.getPrimaryService("ff00");const characteristic=await service.getCharacteristic("ff02");const payload='SIZE 50 mm,70 mm\\r\\nGAP 2 mm,0 mm\\r\\nDIRECTION 1\\r\\nCLS\\r\\nTEXT 55,75,"3",0,1,1,"SYP BLUETOOTH TEST"\\r\\nPRINT 1,1\\r\\n';const bytes=new TextEncoder().encode(payload);for(let i=0;i<bytes.length;i+=20){await characteristic.writeValueWithoutResponse(bytes.slice(i,i+20));await new Promise(resolve=>setTimeout(resolve,25));}await new Promise(resolve=>setTimeout(resolve,2500));if(!device.gatt.connected)throw new Error("Printer disconnected before the test could be confirmed.");alert("Data transfer finished and Bluetooth stayed connected. Check whether one label printed.");device.gatt.disconnect();}catch(e){try{device?.gatt?.disconnect();}catch{}alert("Test failed: "+((e as any)?.message||String(e))+"\\nIf the printer was not listed, ensure it is ON and not connected to the Grozziie app. No sale was created.");}}}>PRINT TEST LABEL</button><button className="btn" type="button" onClick={connectQz}>CONNECT QZ TRAY</button><a href="/" style={{color:"#65472f",fontSize:12,fontWeight:800}}>← Back</a></div></header>
     <nav className="pos-top-nav" aria-label="POS pages">
