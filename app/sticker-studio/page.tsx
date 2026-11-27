@@ -676,7 +676,7 @@ export default function StickerStudioPage() {
       /* Symmetric thermal label frame: fixed border on all four sides, contained sizing */
       .art.ref-art.simple-sticker{box-sizing:border-box!important;width:46mm!important;height:76mm!important;min-width:46mm!important;min-height:76mm!important;margin:0 auto!important;padding:2.5mm!important;border:.45mm solid #000!important;border-radius:0!important;background:#fff!important;color:#000!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;gap:0!important;font-family:Arial,Helvetica,sans-serif!important;overflow:hidden!important}
       .simple-sticker-head{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;min-height:0;flex:0 0 auto;border:0}.simple-sticker-logo{display:block;width:22mm;height:19mm;max-width:100%;object-fit:contain;object-position:center;filter:grayscale(1) contrast(1.8);flex:0 0 auto}
-      .simple-sticker-divider{width:100%;font-family:Arial,Helvetica,sans-serif;font-size:9pt;font-weight:900;letter-spacing:1.05mm;line-height:1;text-align:center;white-space:nowrap;overflow:hidden;flex:0 0 auto;margin:1.2mm 0}
+      .simple-sticker-divider{width:100%;height:1.4mm;box-sizing:border-box;border-top:1mm dashed #000;flex:0 0 auto;margin:1.2mm 0}
       .simple-sticker-order-row{display:flex;align-items:center;justify-content:space-between;gap:1mm;flex:0 0 auto;margin:1mm 0 0}
       .simple-sticker-order{font-size:9pt;font-weight:900;text-align:left;white-space:nowrap;flex:0 0 auto}
       .simple-sticker-date{font-size:8pt;text-align:right;white-space:nowrap;flex:0 0 auto}
@@ -690,10 +690,10 @@ export default function StickerStudioPage() {
       .simple-sticker-customer-line{width:78%;border-top:.3mm solid #000;margin:5mm auto 1mm;flex:0 0 auto}
       .simple-sticker-bottom-divider{margin:1mm 0 2mm}
       .simple-sticker-social{display:flex;align-items:center;justify-content:center;gap:1.5mm;font-size:7.5pt;font-weight:900;text-align:center;white-space:nowrap;flex:0 0 auto;margin-top:auto;padding:0}
-      .simple-sticker-cup{font-size:15pt;line-height:1}
+      .simple-sticker-cup{width:6mm;height:7mm;flex:0 0 6mm;display:block;stroke:#000;fill:none}
       .preview-art .art.ref-art.simple-sticker{box-sizing:border-box!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;margin:0!important;padding:3cqh 3cqw!important;border-width:.4cqh!important;border-radius:0!important}
       .preview-art .simple-sticker-logo{width:42cqw;height:21cqh;max-width:100%;max-height:21cqh;flex-basis:auto}
-      .preview-art .simple-sticker-divider{font-size:clamp(7px,2.5cqh,14px)!important;letter-spacing:.8cqw}
+      .preview-art .simple-sticker-divider{height:1.5cqh;border-top-width:.9cqh;margin:1.2cqh 0}
       .preview-art .simple-sticker-order{font-size:clamp(8px,2.7cqh,15px)!important}
       .preview-art .simple-sticker-date{font-size:clamp(7px,2.4cqh,13px)!important}
       .preview-art .simple-sticker-size{font-size:clamp(10px,3.5cqh,19px)!important}
@@ -701,7 +701,7 @@ export default function StickerStudioPage() {
       .preview-art .simple-sticker-customer{font-size:clamp(8px,2.9cqh,16px)!important}
       .preview-art .simple-sticker-customer strong{font-size:clamp(11px,3.6cqh,20px)!important}
       .preview-art .simple-sticker-social{font-size:clamp(6px,2.4cqh,13px)!important}
-      .preview-art .simple-sticker-cup{font-size:clamp(10px,4cqh,22px)!important}
+      .preview-art .simple-sticker-cup{width:7cqw;height:6cqh;flex-basis:7cqw}
 `}
 
 </style>
@@ -817,7 +817,7 @@ function StickerArt({sticker}:{sticker:Sticker}){
   const orderDate=Number.isNaN(parsedDate.getTime())?rawDate:new Intl.DateTimeFormat("en-PH",{timeZone:"Asia/Manila",month:"short",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:true}).format(parsedDate);
   return <div className="art ref-art simple-sticker">
     <header className="simple-sticker-head"><img className="simple-sticker-logo" src={LOGO_URL} alt="Syp On Café — Street, Iced, Brewed"/></header>
-    <div className="simple-sticker-divider">- - - - - - - - - - - - - - - - - - -</div>
+    <div className="simple-sticker-divider"/>
     <div className="simple-sticker-order-row"><div className="simple-sticker-order">ORDER #{sticker.orderNo}</div><div className="simple-sticker-date">{orderDate}</div></div>
     <div className="simple-sticker-product"><div className="simple-sticker-drink" style={{fontSize:drinkFontSize+"pt"}}>{sticker.drink.toUpperCase()}</div><div className="simple-sticker-size">{sticker.size}</div></div>
     <div className="simple-sticker-options"><span>{sticker.sugar.toUpperCase()}</span><i>•</i><span>{sticker.ice.toUpperCase()}</span></div>
@@ -825,6 +825,6 @@ function StickerArt({sticker}:{sticker:Sticker}){
     <div className="simple-sticker-customer"><span>Crafted with love for</span><strong>{sticker.customer.trim()||"OUR KA-SYP"}</strong></div>
     <div className="simple-sticker-customer-line"/>
     <div className="simple-sticker-divider simple-sticker-bottom-divider">- - - - - - - - - - - - - - - - - - -</div>
-    <div className="simple-sticker-social"><span className="simple-sticker-cup">♧</span><strong>Tag us on your story! FB / IG: @SypOnCafe</strong></div>
+    <div className="simple-sticker-social"><svg className="simple-sticker-cup" viewBox="0 0 28 34" aria-hidden="true"><path d="M4 7h20l-2 23H6L4 7Zm-1-4h22v4H3Zm3 8h16M9 2l-1-2m11 2 1-2" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 18c2-4 7-5 9-1-1 5-5 7-9 1Zm2 2 5-5" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/></svg><strong>Tag us on your story! FB / IG: @SypOnCafe</strong></div>
   </div>;
 }
