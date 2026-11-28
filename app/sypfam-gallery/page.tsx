@@ -11,7 +11,7 @@ function reelEmbed(url: string) {
     const parsed = new URL(url);
     if (parsed.hostname.includes("instagram.com")) return `https://www.instagram.com/p/${parsed.pathname.split("/").filter(Boolean)[1]}/embed`;
     if (parsed.hostname.includes("facebook.com") || parsed.hostname.includes("fb.watch")) return `https://www.facebook.com/plugins/video.php?href=${encodeURIComponent(url)}&show_text=false&width=500`;
-    if (parsed.hostname.includes("tiktok.com")) return url;
+    if (parsed.hostname.includes("tiktok.com")) return null;
   } catch {}
   return url;
 }
@@ -60,7 +60,7 @@ export default function SypFamGalleryPage() {
         </section> : <p className="gallery-status">Wala pang photos dito. Check back for more SYP Fam moments!</p>
       ) : reels.length ? <section className="reels-grid" aria-label="SYP ON CAFÉ reels">
         {reels.map((item) => <article className="reel-card" key={item.id}>
-          <div className="reel-frame"><iframe src={reelEmbed(item.media_url)} title={item.title || "SYP ON CAFÉ Reel"} loading="lazy" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen /></div>
+          <div className="reel-frame">{reelEmbed(item.media_url) ? <iframe src={reelEmbed(item.media_url)!} title={item.title || "SYP ON CAFÉ Reel"} loading="lazy" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowFullScreen /> : <div className="reel-external"><span>▶</span><a href={item.media_url} target="_blank" rel="noreferrer">Watch this Reel on TikTok ↗</a></div>}</div>
           <h3>{item.title || "SYP ON CAFÉ Reel"}</h3>
           <a href={item.media_url} target="_blank" rel="noreferrer">Watch on original platform ↗</a>
         </article>)}
@@ -89,7 +89,7 @@ export default function SypFamGalleryPage() {
         .gallery-photo img{display:block;width:100%;aspect-ratio:4/5;object-fit:cover;transition:transform .35s ease}.gallery-photo:hover img{transform:scale(1.045)}
         .gallery-photo>span{position:absolute;inset:auto 0 0;display:flex;align-items:center;gap:12px;padding:34px 15px 14px;background:linear-gradient(transparent,rgba(0,0,0,.86));font:16px Georgia,serif}
         .gallery-photo small{color:#e7bd62;font:9px Arial,sans-serif}.gallery-photo b{margin-left:auto;color:#e7bd62;font:18px Arial,sans-serif}
-        .reel-card{overflow:hidden;border:1px solid rgba(255,255,255,.13);border-radius:13px;background:rgba(255,255,255,.04);padding:10px}.reel-frame{aspect-ratio:9/16;background:#000;border-radius:9px;overflow:hidden}.reel-frame iframe{width:100%;height:100%;border:0}.reel-card h3{font:17px Georgia,serif;margin:12px 5px 7px}.reel-card>a{display:inline-block;margin:0 5px 7px;color:#e7bd62;font-size:10px;text-decoration:none}
+        .reel-card{overflow:hidden;border:1px solid rgba(255,255,255,.13);border-radius:13px;background:rgba(255,255,255,.04);padding:10px}.reel-frame{aspect-ratio:9/16;background:#000;border-radius:9px;overflow:hidden}.reel-frame iframe{width:100%;height:100%;border:0}.reel-external{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:radial-gradient(circle,#263628,#090e0a)}.reel-external span{font-size:42px;color:#e7bd62}.reel-external a{color:#e7bd62;text-decoration:none;font-size:12px;font-weight:bold}.reel-card h3{font:17px Georgia,serif;margin:12px 5px 7px}.reel-card>a{display:inline-block;margin:0 5px 7px;color:#e7bd62;font-size:10px;text-decoration:none}
         .gallery-status{min-height:150px;display:grid;place-items:center;text-align:center;color:#a9b0a6;font-size:13px}
         .gallery-cta{width:min(100%,1100px);margin:62px auto 52px;padding:24px 28px;display:flex;align-items:center;gap:22px;border:1px solid rgba(231,189,98,.28);border-radius:15px;background:rgba(231,189,98,.07)}
         .gallery-cta img{width:76px;height:76px;object-fit:contain}.gallery-cta div{flex:1}.gallery-cta div>span{color:#e7bd62;font-size:9px;letter-spacing:.16em;font-weight:800}
