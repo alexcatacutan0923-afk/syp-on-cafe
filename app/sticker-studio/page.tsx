@@ -731,33 +731,31 @@ export default function StickerStudioPage() {
 `}
 
 
-      /* Multi-sticker Web Print: reset each sticker to its own page origin.
-         Prevent inherited absolute positioning/transforms from shifting later pages. */
+      /* Multi-sticker Web Print: one physical page per sticker, with a stable inset canvas. */
       @media print {
+        @page { size:${stickerWidth}mm ${stickerHeight}mm; margin:0; }
         .print-only-container {
-          display:block!important; position:static!important;
+          display:block!important; position:static!important; float:none!important;
           width:${stickerWidth}mm!important; margin:0!important; padding:0!important;
         }
         .print-sheet {
-          display:block!important; position:relative!important;
+          display:block!important; position:relative!important; float:none!important;
           box-sizing:border-box!important; width:${stickerWidth}mm!important;
           height:${stickerHeight}mm!important; min-width:${stickerWidth}mm!important;
           max-width:${stickerWidth}mm!important; min-height:${stickerHeight}mm!important;
           max-height:${stickerHeight}mm!important; margin:0!important; padding:0!important;
           overflow:hidden!important; break-inside:avoid!important; page-break-inside:avoid!important;
-          break-after:page!important; page-break-after:always!important;
+          break-after:auto!important; page-break-after:auto!important;
         }
-        .print-sheet:last-child { break-after:auto!important; page-break-after:auto!important; }
+        .print-sheet + .print-sheet { break-before:page!important; page-break-before:always!important; }
         .print-sheet .art.ref-art {
-          position:relative!important; inset:auto!important;
-          left:auto!important; top:auto!important; right:auto!important; bottom:auto!important;
+          position:absolute!important; inset:2mm!important;
+          left:2mm!important; top:2mm!important; right:2mm!important; bottom:2mm!important;
           transform:none!important; transform-origin:initial!important;
-          box-sizing:border-box!important;
-          width:calc(${stickerWidth}mm - 4mm)!important;
-          height:calc(${stickerHeight}mm - 4mm)!important;
+          box-sizing:border-box!important; width:auto!important; height:auto!important;
           min-width:0!important; max-width:none!important;
           min-height:0!important; max-height:none!important;
-          margin:2mm auto!important; padding:0!important; overflow:hidden!important;
+          margin:0!important; padding:0!important; overflow:hidden!important;
         }
       }
 </style>
