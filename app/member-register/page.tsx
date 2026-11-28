@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { findMember, saveCloudMember, setMemberSession } from "@/lib/member-store";
 import { registerCloudMember } from "@/lib/member-cloud";
@@ -9,9 +10,14 @@ import "../member/member.css";
 
 export default function MemberRegisterPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [form, setForm] = useState({ name: "", mobile: "", birthday: "", pin: "" });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    setForm(current => ({ ...current, name: searchParams.get("name") || current.name, mobile: searchParams.get("mobile") || current.mobile }));
+  }, [searchParams]);
 
   function update(key: keyof typeof form, value: string) { setForm(v => ({ ...v, [key]: value })); }
   async function submit(event: FormEvent<HTMLFormElement>) {
