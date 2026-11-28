@@ -41,5 +41,8 @@ create policy "SYP admins can delete gallery images" on storage.objects
 for delete to authenticated
 using (bucket_id = 'syp-gallery' and (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
 
--- In Supabase Dashboard > Authentication > Users, create your admin user.
--- Then edit that user and set app_metadata to: {"role":"admin"}
+-- First create your admin account in Supabase Dashboard > Authentication > Users.
+-- Replace the email below with your own admin email, then run this statement once:
+-- update auth.users
+-- set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb) || '{"role":"admin"}'::jsonb
+-- where email = 'YOUR_ADMIN_EMAIL';
