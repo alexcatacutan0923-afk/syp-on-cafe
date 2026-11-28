@@ -91,7 +91,7 @@ export default function SypFamGalleryPage() {
         </article>)}
       </section> : <p className="gallery-status">Wala pang reels dito. Abangan ang SYP ON CAFÉ moments!</p>}
       <section className="visitor-submit" id="share-photo">
-        <div className="visitor-copy"><span>YOUR MOMENT. OUR WALL.</span><h2>Be part of the <em>SYP Fam.</em></h2><p>Share your favorite SYP moment. We will display here at shop soon your photos soon — after our team reviews your submission.</p></div>
+        <div className="visitor-copy"><span>YOUR MOMENT. OUR WALL.</span><h2>Be part of the <em>SYP Fam.</em></h2><p>Share your favorite SYP moment. We’ll display your photos here and at the shop soon, after our team reviews your submission.</p></div>
         <form onSubmit={submitVisitorPhoto}>
           <label>Your name<input value={visitorName} onChange={e=>setVisitorName(e.target.value)} placeholder="Your name" required maxLength={70} /></label>
           <label>Choose your SYP photo<input type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setVisitorPhoto(e.target.files?.[0] || null)} required /></label>
