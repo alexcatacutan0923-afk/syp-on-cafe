@@ -52,10 +52,13 @@ export default function SocialMediaPage() {
 
       <header className="social-topbar">
         <a className="social-wordmark" href="/" aria-label="SYP ON CAFÉ home">
-          <span className="wordmark-icon">S</span>
+          <img className="social-brand-logo" src="/brand/syp-logo-clean-v2.webp" alt="SYP ON CAFÉ official logo" />
           <span>SYP ON <b>CAFÉ</b></span>
         </a>
-        <span className="topbar-note">OFFICIAL SOCIALS</span>
+        <div className="social-topbar-actions">
+          <a href="/sypfam-gallery">SYP FAM GALLERY ↗</a>
+          <span className="topbar-note">OFFICIAL SOCIALS</span>
+        </div>
       </header>
 
       <section className="social-hero">
@@ -110,7 +113,9 @@ export default function SocialMediaPage() {
       </section>
 
       <footer className="social-footer">
+        <img className="social-footer-logo" src="/brand/syp-logo-clean-v2.webp" alt="SYP ON CAFÉ official logo" />
         <div className="footer-brand">SYP ON <b>CAFÉ</b></div>
+        <a href="/sypfam-gallery">SYP Fam Gallery ↗</a>
         <p>Street • Iced • Brewed</p>
         <span>National Road, Apollo, Orani, Bataan</span>
         <a href="/">Visit our website ↗</a>
@@ -142,7 +147,10 @@ export default function SocialMediaPage() {
         .social-topbar { width: min(100%, 980px); margin: auto; height: 82px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,.09); }
         .social-wordmark { display: inline-flex; align-items: center; gap: 11px; text-decoration: none; color: var(--cream); font-size: 13px; letter-spacing: .19em; font-weight: 800; }
         .social-wordmark b, .footer-brand b { color: var(--gold); }
-        .wordmark-icon { width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid var(--gold); border-radius: 50%; color: var(--gold); font-family: Georgia, serif; font-size: 21px; }
+        .social-brand-logo { width: 48px; height: 48px; object-fit: contain; display: block; }
+        .social-topbar-actions { display: flex; align-items: center; gap: 22px; }
+        .social-topbar-actions > a { color: var(--gold); font-size: 10px; letter-spacing: .08em; text-decoration: none; font-weight: 800; }
+        .social-footer-logo { width: 86px; height: 86px; object-fit: contain; margin-bottom: 10px; }
         .topbar-note, .section-eyebrow { color: var(--gold); font-size: 9px; letter-spacing: .23em; font-weight: 800; }
         .social-hero { width: min(100%, 720px); margin: 0 auto; text-align: center; padding: 78px 0 46px; }
         .hero-kicker { display: flex; align-items: center; justify-content: center; gap: 12px; color: #c9cfc4; font-size: 9px; letter-spacing: .25em; font-weight: 700; }
@@ -185,6 +193,9 @@ export default function SocialMediaPage() {
           .social-topbar { height: 70px; }
           .social-wordmark { font-size: 11px; }
           .topbar-note { font-size: 8px; }
+          .social-topbar-actions { gap: 10px; }
+          .social-topbar-actions > a { font-size: 8px; }
+          .social-brand-logo { width: 40px; height: 40px; }
           .social-hero { padding: 65px 0 35px; }
           .hero-copy { font-size: 13px; }
           .social-card { min-height: 104px; padding: 17px 13px; gap: 11px; }
