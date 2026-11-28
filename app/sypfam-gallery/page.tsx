@@ -4,14 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 type GalleryItem = { id: string; type: "photo" | "reel"; title: string; media_url: string; created_at: string; };
-const fallbackPhotos = [
-  { id: "legacy-1", type: "photo" as const, title: "SYP Fam Moment", media_url: "/community/IMG_3227.webp", created_at: "" },
-  { id: "legacy-2", type: "photo" as const, title: "SYP Fam Moment", media_url: "/community/IMG_3228.webp", created_at: "" },
-  { id: "legacy-3", type: "photo" as const, title: "SYP Fam Moment", media_url: "/community/IMG_3229.webp", created_at: "" },
-  { id: "legacy-4", type: "photo" as const, title: "SYP Fam Moment", media_url: "/community/IMG_3230.webp", created_at: "" },
-  { id: "legacy-5", type: "photo" as const, title: "SYP Fam Moment", media_url: "/community/IMG_3231.webp", created_at: "" },
-  { id: "legacy-6", type: "photo" as const, title: "SYP Fam Moment", media_url: "/community/IMG_3232.webp", created_at: "" },
-];
+const fallbackPhotos: GalleryItem[] = [];
 
 function reelEmbed(url: string) {
   try {
@@ -47,7 +40,7 @@ export default function SypFamGalleryPage() {
     <main className="syp-gallery">
       <header className="gallery-header">
         <a href="/" aria-label="SYP ON CAFÉ home"><img src="/brand/syp-logo-clean-v2.webp" alt="SYP ON CAFÉ official logo" /></a>
-        <a className="gallery-back" href="/socialmedia">← Social Media</a>
+        <div className="gallery-header-links"><a className="gallery-back" href="/sypfam-gallery/manage">MANAGE GALLERY</a><a className="gallery-back" href="/socialmedia">← Social Media</a></div>
       </header>
       <section className="gallery-intro">
         <span className="gallery-kicker">THE PEOPLE. THE MOMENTS. THE SYP FAM.</span>
@@ -86,7 +79,7 @@ export default function SypFamGalleryPage() {
         *{box-sizing:border-box} body{margin:0;background:#080c09}
         .syp-gallery{min-height:100vh;padding:0 26px 38px;color:#f6f0df;background:radial-gradient(ellipse at 50% 0%,rgba(95,120,75,.22),transparent 42%),linear-gradient(180deg,#101710,#080c09 65%);font-family:Arial,Helvetica,sans-serif}
         .gallery-header{width:min(100%,1100px);height:88px;margin:auto;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,.1)}
-        .gallery-header img{width:62px;height:62px;object-fit:contain}.gallery-back{color:#e7bd62;text-decoration:none;font-size:11px;font-weight:700;letter-spacing:.08em}
+        .gallery-header img{width:62px;height:62px;object-fit:contain}.gallery-header-links{display:flex;align-items:center;gap:18px}.gallery-back{color:#e7bd62;text-decoration:none;font-size:11px;font-weight:700;letter-spacing:.08em}
         .gallery-intro{max-width:760px;margin:0 auto;padding:76px 0 38px;text-align:center}.gallery-kicker{color:#e7bd62;font-size:9px;letter-spacing:.24em;font-weight:800}
         .gallery-intro h1{margin:20px 0 16px;font:500 clamp(48px,8vw,78px)/.98 Georgia,serif;letter-spacing:-.05em}.gallery-intro h1 em{color:#e7bd62;font-weight:400}
         .gallery-intro p{max-width:520px;margin:auto;color:#a9b0a6;font-size:13px;line-height:1.8}
@@ -104,7 +97,7 @@ export default function SypFamGalleryPage() {
         .gallery-footer{width:min(100%,1100px);margin:auto;padding-top:22px;display:flex;justify-content:space-between;gap:15px;border-top:1px solid rgba(255,255,255,.1);color:#818a80;font-size:9px;letter-spacing:.1em}
         .gallery-lightbox{position:fixed;z-index:50;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:30px;background:rgba(0,0,0,.92)}.gallery-lightbox img{max-width:min(92vw,900px);max-height:78vh;object-fit:contain;border-radius:8px}.gallery-lightbox>span{color:#e7bd62;font:16px Georgia,serif}
         .lightbox-close{position:absolute;top:18px;right:22px;width:42px;height:42px;border:1px solid rgba(255,255,255,.3);border-radius:50%;background:transparent;color:white;font-size:27px;cursor:pointer}
-        @media(max-width:760px){.syp-gallery{padding:0 16px 28px}.gallery-header{height:74px}.gallery-header img{width:52px;height:52px}.gallery-intro{padding:60px 0 30px}.gallery-grid,.reels-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.gallery-photo>span{padding:28px 10px 11px;gap:7px;font-size:13px}.gallery-cta{margin:42px auto;padding:20px 16px;flex-wrap:wrap;gap:12px}.gallery-cta img{width:58px;height:58px}.gallery-cta div{min-width:calc(100% - 78px)}.gallery-cta>a{margin-left:70px}.gallery-footer{flex-direction:column;text-align:center}}
+        @media(max-width:760px){.syp-gallery{padding:0 16px 28px}.gallery-header{height:74px}.gallery-header img{width:52px;height:52px}.gallery-header-links{gap:10px}.gallery-back{font-size:9px}.gallery-intro{padding:60px 0 30px}.gallery-grid,.reels-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.gallery-photo>span{padding:28px 10px 11px;gap:7px;font-size:13px}.gallery-cta{margin:42px auto;padding:20px 16px;flex-wrap:wrap;gap:12px}.gallery-cta img{width:58px;height:58px}.gallery-cta div{min-width:calc(100% - 78px)}.gallery-cta>a{margin-left:70px}.gallery-footer{flex-direction:column;text-align:center}}
         @media(max-width:480px){.reels-grid{grid-template-columns:1fr;max-width:360px}}
         @media(prefers-reduced-motion:reduce){.gallery-photo img{transition:none}}
       `}</style>
