@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 const LOGO_URL = "/syp-on-cafe-logo.svg";
-const QR_TARGET = "https://www.facebook.com/SypOnCafe";
+const QR_TARGET = "https://syponcafe.shop/socialmedia";
 const MEMBERSHIP_QR_TARGET = "https://syponcafe.shop/member-register";
 
 const MENU = [
@@ -126,7 +126,7 @@ QUOTES.Signature.push("Premium ang drink, budget meal ang lifestyle.","Main char
 QUOTES.Fries.push("Ang fries ko, parang trust. Huwag mong gagalawin.","Sharing is caring. Pero bili ka sarili mo.","Hindi ako madamot. May boundaries lang ang fries.","One fry lang daw. Tapos kalahati nawala.","Fries ang tunay na ride or die.","Masakit ang betrayal, lalo na pag huling fries.","Calories don't count kapag masaya.","Barkada kayo? Ambagan muna bago kuha.","May feelings ako. At lahat sila gutom.","Huwag kang magtanong kung ilan kinain ko.");
 
 type Sticker = { id:number; customer:string; drink:string; size:string; price:number; category:string; sugar:string; ice:string; note:string; quote:string; createdAt:string; orderNo:string; salePending?:boolean };
-const QR_URL = "https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=1&data="+encodeURIComponent(QR_TARGET);
+const QR_URL = "/syp-social-qr.svg";
 const WIFI_QR_TARGET = "WIFI:T:WPA;S:Syp On Café;P:spanishlatte;;";
 const WIFI_QR_URL = "https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=4&data="+encodeURIComponent(WIFI_QR_TARGET);
 const MEMBERSHIP_QR_URL = "https://api.qrserver.com/v1/create-qr-code/?size=500x500&margin=4&data="+encodeURIComponent(MEMBERSHIP_QR_TARGET);
@@ -178,6 +178,7 @@ export default function StickerStudioPage() {
   const [settingsLoaded,setSettingsLoaded]=useState(false);
   useEffect(()=>{try{const raw=localStorage.getItem("syp-printer-paper-settings");const v=raw?JSON.parse(raw):{};const orientationMigrated=localStorage.getItem("syp-sticker-landscape-default-v1")==="1";if(!orientationMigrated){setStickerWidth(80);setStickerHeight(50);localStorage.setItem("syp-sticker-landscape-default-v1","1");}else{if(Number.isFinite(v.stickerWidth)&&v.stickerWidth>=30&&v.stickerWidth<=120)setStickerWidth(v.stickerWidth);if(Number.isFinite(v.stickerHeight)&&v.stickerHeight>=30&&v.stickerHeight<=150)setStickerHeight(v.stickerHeight);}if(Number.isFinite(v.receiptWidth)&&v.receiptWidth>=40&&v.receiptWidth<=100)setReceiptWidth(v.receiptWidth);if(v.printScale==="fit"||v.printScale==="actual")setPrintScale(v.printScale);}catch{}setSettingsLoaded(true);},[]);
   useEffect(()=>{if(settingsLoaded){try{localStorage.setItem("syp-printer-paper-settings",JSON.stringify({stickerWidth,stickerHeight,receiptWidth,printScale}));}catch{}}},[settingsLoaded,stickerWidth,stickerHeight,receiptWidth,printScale]);
+  useEffect(()=>{if("serviceWorker" in navigator){navigator.serviceWorker.register("/sw.js").catch(()=>{});}},[]);
   const stickerOrientation=stickerWidth<=stickerHeight?"Portrait":"Landscape";
   const stickerInnerWidth=Math.max(10,stickerWidth-4);
   const stickerInnerHeight=Math.max(10,stickerHeight-4);
@@ -864,9 +865,10 @@ function StickerArt({sticker}:{sticker:Sticker}){
         <div className="ref-quote-box">“{sticker.quote}”</div>
       </div>
       <div className="ref-mid-right">
-        <img src={QR_URL} alt="SYP ON CAFÉ Facebook QR code"/>
+        <img src={QR_URL} alt="QR code linking to SYP ON CAFÉ social media"/>
         <strong>SCAN &amp; TAG</strong>
         <span>@SYPONCAFE</span>
+        <small className="ref-qr-caption">SHARE YOUR SYP MOMENT WITH US</small>
       </div>
     </div>
     <div className="ref-foot">
