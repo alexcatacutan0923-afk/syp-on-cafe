@@ -70,6 +70,7 @@ export default function SocialMediaPage() {
         </p>
       </section>
 
+      <a className="gallery-feature-link" href="/sypfam-gallery"><span>THE PEOPLE. THE MOMENTS. THE SYP FAM.</span><strong>CHECK SYP FAM GALLERY <b>↗</b></strong><small>See our café memories, Reels, and the SYP Baristas. Your next photo could be featured here!</small></a>
       <section className="social-links" aria-label="Official SYP ON CAFÉ social media links">
         {socials.map((social, index) => (
           <a
@@ -158,7 +159,7 @@ export default function SocialMediaPage() {
         .social-hero h1 { margin: 22px 0 16px; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(54px, 10vw, 88px); line-height: .94; letter-spacing: -.055em; font-weight: 500; }
         .social-hero h1 em, .qr-copy h2 em { color: var(--gold); font-weight: 400; }
         .hero-copy { max-width: 490px; margin: 0 auto; color: var(--muted); font-size: 14px; line-height: 1.8; }
-        .social-links { width: min(100%, 620px); margin: 0 auto; display: grid; gap: 12px; }
+        .gallery-feature-link{width:min(100%,760px);margin:0 auto 28px;padding:24px 28px;display:grid;gap:9px;border:1px solid rgba(231,189,98,.55);border-radius:15px;background:linear-gradient(110deg,rgba(231,189,98,.18),rgba(255,255,255,.035));color:var(--cream);text-decoration:none;box-shadow:0 12px 40px rgba(0,0,0,.2);transition:transform .2s,border-color .2s}.gallery-feature-link:hover{transform:translateY(-3px);border-color:var(--gold)}.gallery-feature-link>span{color:var(--gold);font-size:9px;font-weight:800;letter-spacing:.18em}.gallery-feature-link strong{font:28px Georgia,serif;letter-spacing:.02em}.gallery-feature-link strong b{color:var(--gold)}.gallery-feature-link small{color:var(--muted);font-size:11px;line-height:1.6}.social-links { width: min(100%, 620px); margin: 0 auto; display: grid; gap: 12px; }
         .social-card { position: relative; min-height: 112px; display: flex; align-items: center; gap: 18px; padding: 20px 22px; border: 1px solid rgba(255,255,255,.12); border-radius: 13px; background: linear-gradient(110deg, rgba(255,255,255,.075), rgba(255,255,255,.025)); color: var(--cream); text-decoration: none; transition: transform .2s ease, border-color .2s ease, background .2s ease; }
         .social-card:hover { transform: translateY(-3px); border-color: rgba(231,189,98,.65); background: rgba(255,255,255,.09); }
         .social-number { align-self: flex-start; color: #788176; font-size: 9px; letter-spacing: .1em; padding-top: 4px; }
@@ -198,7 +199,7 @@ export default function SocialMediaPage() {
           .social-brand-logo { width: 40px; height: 40px; }
           .social-hero { padding: 65px 0 35px; }
           .hero-copy { font-size: 13px; }
-          .social-card { min-height: 104px; padding: 17px 13px; gap: 11px; }
+          .gallery-feature-link{padding:21px 17px}.gallery-feature-link strong{font-size:22px}.social-card { min-height: 104px; padding: 17px 13px; gap: 11px; }
           .social-number { font-size: 8px; }
           .platform-mark { width: 42px; height: 42px; flex-basis: 42px; font-size: 25px; }
           .social-card-copy strong { font-size: 19px; }
