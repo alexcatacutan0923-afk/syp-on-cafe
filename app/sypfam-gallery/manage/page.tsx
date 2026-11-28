@@ -3,7 +3,8 @@
 import { FormEvent, useEffect, useState } from "react";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
-type Item = { id: string; type: "photo" | "reel"; title: string; media_url: string; created_at: string; };
+type Item = { id: string; type: "photo" | "reel" | "barista"; title: string; media_url: string; created_at: string; };
+type Submission = { id: string; name: string; media_url: string; storage_path: string; created_at: string; };
 
 export default function GalleryManagerPage() {
   const [sessionEmail, setSessionEmail] = useState("");
@@ -13,12 +14,16 @@ export default function GalleryManagerPage() {
   const [title, setTitle] = useState("");
   const [reelUrl, setReelUrl] = useState("");
   const [photo, setPhoto] = useState<File | null>(null);
+  const [baristaPhoto, setBaristaPhoto] = useState<File | null>(null);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
   async function refresh() {
     const { data } = await supabase.from("gallery_items").select("*").order("created_at", { ascending: false });
     setItems((data || []) as Item[]);
+    const pending = await supabase.from("gallery_submissions").select("*").order("created_at", { ascending: false });
+    setSubmissions((pending.data || []) as Submission[]);
   }
   useEffect(() => {
     if (!isSupabaseConfigured) return;
@@ -47,6 +52,31 @@ export default function GalleryManagerPage() {
     setMessage(error ? error.message : "Photo added to SYP Fam Gallery!");
     if (!error) { setPhoto(null); setTitle(""); await refresh(); }
     setBusy(false);
+  }
+  async function addBarista(event: FormEvent) {
+    event.preventDefault(); if (!baristaPhoto) return;
+    setBusy(true); setMessage("");
+    const ext = baristaPhoto.name.split(".").pop()?.toLowerCase() || "jpg";
+    const path = `baristas/${crypto.randomUUID()}.${ext}`;
+    const upload = await supabase.storage.from("syp-gallery").upload(path, baristaPhoto, { upsert: false, contentType: baristaPhoto.type });
+    if (upload.error) { setMessage(upload.error.message); setBusy(false); return; }
+    const { data } = supabase.storage.from("syp-gallery").getPublicUrl(path);
+    const { error } = await supabase.from("gallery_items").insert({ type: "barista", title: title.trim() || "SYP Barista", media_url: data.publicUrl, storage_path: path });
+    setMessage(error ? error.message : "SYP Barista added!");
+    if (!error) { setTitle(""); setBaristaPhoto(null); await refresh(); }
+    setBusy(false);
+  }
+  async function approveSubmission(item: Submission) {
+    setBusy(true); setMessage("");
+    const { error } = await supabase.from("gallery_items").insert({ type: "photo", title: item.name ? `${item.name} • SYP Fam Moment` : "SYP Fam Moment", media_url: item.media_url, storage_path: item.storage_path });
+    if (!error) await supabase.from("gallery_submissions").delete().eq("id", item.id);
+    setMessage(error ? error.message : "Photo approved and published."); await refresh(); setBusy(false);
+  }
+  async function rejectSubmission(item: Submission) {
+    setBusy(true);
+    await supabase.from("gallery_submissions").delete().eq("id", item.id);
+    if (item.storage_path) await supabase.storage.from("syp-gallery").remove([item.storage_path]);
+    setMessage("Submission removed."); await refresh(); setBusy(false);
   }
   async function addReel(event: FormEvent) {
     event.preventDefault(); setBusy(true); setMessage("");
@@ -77,7 +107,7 @@ export default function GalleryManagerPage() {
         <form className="panel" onSubmit={addPhoto}><h2>Add SYP Fam Photo</h2><label>Photo title (optional)<input value={title} onChange={e=>setTitle(e.target.value)} placeholder="Coffee date with the fam" /></label><label>Choose photo<input type="file" accept="image/*" onChange={e=>setPhoto(e.target.files?.[0] || null)} required /></label><button disabled={busy || !photo}>{busy ? "Saving…" : "Upload photo"}</button></form>
         <form className="panel" onSubmit={addReel}><h2>Add SYP ON CAFÉ Reel</h2><label>Reel title (optional)<input value={title} onChange={e=>setTitle(e.target.value)} placeholder="Latest café reel" /></label><label>Facebook / Instagram / TikTok URL<input type="url" value={reelUrl} onChange={e=>setReelUrl(e.target.value)} placeholder="Paste public Reel link" required /></label><button disabled={busy || !reelUrl.trim()}>{busy ? "Saving…" : "Add reel link"}</button><p>Public Facebook and Instagram Reel links can be embedded. TikTok links are listed with an open-original link.</p></form>
       </div>
-      <div className="items"><h2>Published items ({items.length})</h2>{items.map(item=><div className="item" key={item.id}><span>{item.type === "photo" ? "📷" : "▶"} {item.title || item.type}</span><button type="button" disabled={busy} onClick={()=>void removeItem(item)}>Delete</button></div>)}{!items.length && <p>No items added yet.</p>}</div>
+      <div className="items"><h2>Customer photo submissions ({submissions.length})</h2>{submissions.map(item=><div className="item" key={item.id}><span>{item.name || "Guest"}<br/><img src={item.media_url} alt="Customer submission" style={{width:64,height:64,objectFit:"cover",borderRadius:8,marginTop:6}} /></span><div><button type="button" disabled={busy} onClick={()=>void approveSubmission(item)}>Approve</button> <button type="button" disabled={busy} onClick={()=>void rejectSubmission(item)}>Reject</button></div></div>)}{!submissions.length && <p>No pending customer photos.</p>}</div><div className="items"><h2>Published items ({items.length})</h2>{items.map(item=><div className="item" key={item.id}><span>{item.type === "photo" ? "📷" : "▶"} {item.title || item.type}</span><button type="button" disabled={busy} onClick={()=>void removeItem(item)}>Delete</button></div>)}{!items.length && <p>No items added yet.</p>}</div>
     </>}
     {message && <p className="message">{message}</p>}
   </section><style jsx global>{`
