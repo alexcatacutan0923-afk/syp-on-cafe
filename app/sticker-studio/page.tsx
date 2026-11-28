@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
 const LOGO_URL = "/syp-on-cafe-logo.svg";
-const QR_TARGET = "https://syponcafe.shop/socialmedia";
 const MEMBERSHIP_QR_TARGET = "https://syponcafe.shop/member-register";
 
 const MENU = [
@@ -529,6 +528,7 @@ export default function StickerStudioPage() {
       .ref-mid-right img{width:15.5mm;height:15.5mm;object-fit:contain;image-rendering:pixelated;display:block}
       .ref-mid-right strong{font-size:4.2pt;font-weight:900;letter-spacing:.04em;line-height:1;text-align:center}
       .ref-mid-right span{font-size:3.6pt;font-weight:800;line-height:1;text-align:center}
+      .ref-qr-caption{font-size:2.65pt;font-weight:800;line-height:1.05;text-align:center;max-width:100%;letter-spacing:.015em}
       .ref-foot{border-top:.45mm solid #000;padding:0 1.8mm;display:flex;align-items:center;justify-content:space-between;gap:1.5mm;font-size:5pt;font-weight:900;background:#fff;min-width:0}
       .ref-foot-customer{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
       .ref-foot-loc{font-size:4.2pt;white-space:nowrap;flex-shrink:0}
