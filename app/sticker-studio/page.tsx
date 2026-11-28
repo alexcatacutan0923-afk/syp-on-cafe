@@ -730,6 +730,36 @@ export default function StickerStudioPage() {
       .preview-art .simple-sticker-cup{width:7cqw;height:6cqh;flex-basis:7cqw}
 `}
 
+
+      /* Multi-sticker Web Print: reset each sticker to its own page origin.
+         Prevent inherited absolute positioning/transforms from shifting later pages. */
+      @media print {
+        .print-only-container {
+          display:block!important; position:static!important;
+          width:${stickerWidth}mm!important; margin:0!important; padding:0!important;
+        }
+        .print-sheet {
+          display:block!important; position:relative!important;
+          box-sizing:border-box!important; width:${stickerWidth}mm!important;
+          height:${stickerHeight}mm!important; min-width:${stickerWidth}mm!important;
+          max-width:${stickerWidth}mm!important; min-height:${stickerHeight}mm!important;
+          max-height:${stickerHeight}mm!important; margin:0!important; padding:0!important;
+          overflow:hidden!important; break-inside:avoid!important; page-break-inside:avoid!important;
+          break-after:page!important; page-break-after:always!important;
+        }
+        .print-sheet:last-child { break-after:auto!important; page-break-after:auto!important; }
+        .print-sheet .art.ref-art {
+          position:relative!important; inset:auto!important;
+          left:auto!important; top:auto!important; right:auto!important; bottom:auto!important;
+          transform:none!important; transform-origin:initial!important;
+          box-sizing:border-box!important;
+          width:calc(${stickerWidth}mm - 4mm)!important;
+          height:calc(${stickerHeight}mm - 4mm)!important;
+          min-width:0!important; max-width:none!important;
+          min-height:0!important; max-height:none!important;
+          margin:2mm auto!important; padding:0!important; overflow:hidden!important;
+        }
+      }
 </style>
     <header className="head"><div className="brand"><img src={LOGO_URL} alt="SYP logo"/><div><h1>SYP Signature Sticker Studio</h1><p>STREET • ICED • BREWED</p></div></div><div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}><button className="btn alt" type="button" onClick={async()=>{let device:any;try{const bt=(navigator as any).bluetooth;if(!bt){alert("Web Bluetooth is not available in this browser.");return;}if(!confirm("Print ONE 50 x 70mm test label?\\nNo sale or sticker queue record will be created."))return;device=await bt.requestDevice({acceptAllDevices:true,optionalServices:["ff00"]});const server=await device.gatt.connect();if(!server.connected)throw new Error("Bluetooth connected state is false.");const service=await server.getPrimaryService("ff00");const characteristic=await service.getCharacteristic("ff02");const payload='SIZE 50 mm,70 mm\\r\\nGAP 2 mm,0 mm\\r\\nDIRECTION 1\\r\\nCLS\\r\\nTEXT 55,75,"3",0,1,1,"SYP BLUETOOTH TEST"\\r\\nPRINT 1,1\\r\\n';const bytes=new TextEncoder().encode(payload);for(let i=0;i<bytes.length;i+=20){await characteristic.writeValueWithoutResponse(bytes.slice(i,i+20));await new Promise(resolve=>setTimeout(resolve,25));}await new Promise(resolve=>setTimeout(resolve,2500));if(!device.gatt.connected)throw new Error("Printer disconnected before the test could be confirmed.");alert("Data transfer finished and Bluetooth stayed connected. Check whether one label printed.");device.gatt.disconnect();}catch(e){try{device?.gatt?.disconnect();}catch{}alert("Test failed: "+((e as any)?.message||String(e))+"\\nIf the printer was not listed, ensure it is ON and not connected to the Grozziie app. No sale was created.");}}}>PRINT TEST LABEL</button><button className="btn" type="button" onClick={connectQz}>CONNECT QZ TRAY</button><a href="/" style={{color:"#65472f",fontSize:12,fontWeight:800}}>← Back</a></div></header>
     <nav className="pos-top-nav" aria-label="POS pages">
